@@ -1,0 +1,110 @@
+{ inputs, pkgs, ... }:
+{
+  programs.yazi = {
+    enable = true;
+    enableFishIntegration = true;
+
+    # TODO: Check which to keep
+    settings = {
+      manager = {
+        linemode = "size";
+        show_hidden = true;
+        show_symlink = true;
+        sort_by = "natural";
+        sort_dir_first = true;
+        sort_reverse = false;
+        sort_sensitive = false;
+      };
+
+      plugins = {
+        mediainfo = "${inputs.yazi-plugins}/mediainfo.yazi";
+      };
+
+      keymap = {
+        manager.prepend_keymap = [
+          {
+            on = [ "<C-n>" ];
+            run = ''shell 'ripdrag "$@" -x 2>/dev/null &' --confirm'';
+            desc = "Drag & Drop with ripdrag";
+          }
+          # Swap tab/space
+          {
+            on = [ "<Tab>" ];
+            run = [
+              "toggle"
+              "arrow next"
+            ];
+            desc = "Toggle selection and move to next";
+          }
+          {
+            on = [ "<Space>" ];
+            run = "spot";
+            desc = "Quick preview (spot) file";
+          }
+        ];
+
+        # In spot mode, use Space to close (not Tab)
+        spot.prepend_keymap = [
+          {
+            on = [ "<Space>" ];
+            run = "close";
+            desc = "Close the spot";
+          }
+        ];
+      };
+
+      # from original yazi.toml plugin settings
+      plugin = {
+        prepend_preloaders = [
+          {
+            mime = "{audio,video,image}/*";
+            run = "mediainfo";
+          }
+          {
+            mime = "application/subrip";
+            run = "mediainfo";
+          }
+          {
+            mime = "application/postscript";
+            run = "mediainfo";
+          }
+        ];
+        prepend_previewers = [
+          {
+            mime = "{audio,video,image}/*";
+            run = "mediainfo";
+          }
+          {
+            mime = "application/subrip";
+            run = "mediainfo";
+          }
+          {
+            mime = "application/postscript";
+            run = "mediainfo";
+          }
+        ];
+      };
+
+      tasks = {
+        # Preview for large image files
+        image_alloc = 1073741824; # 1GB for large images
+      };
+    };
+  };
+
+  # Install Catppuccin theme
+  xdg.configFile."yazi/flavors/catppuccin-macchiato.yazi" = {
+    source = pkgs.fetchFromGitHub {
+      owner = "catppuccin";
+      repo = "yazi";
+      rev = "main";
+      sha256 = "sha256-zkL46h1+U9ThD4xXkv1uuddrlQviEQD3wNZFRgv7M8Y=";
+    };
+  };
+
+  # Use the theme
+  xdg.configFile."yazi/theme.toml".text = ''
+    [flavor]
+    use = "catppuccin-macchiato"
+  '';
+}
