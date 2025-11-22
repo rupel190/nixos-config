@@ -20,15 +20,22 @@
     ./lazygit.nix
     ./spicetify.nix # spotify client
     ./mpv.nix # media player
-
-    ./browser.nix # firefox based browser
-    ./gnome.nix # gnome apps
+    ./packages.nix # additional packages
+    ./browser.nix # zen browser
     ./gtk.nix # gtk theme
-    ./hyprland # window manager
-    ./nvim.nix # neovim editor
-    ./obsidian.nix
-    ./packages.nix # other packages
-    ./scripts/scripts.nix # personal scripts
-    ./xdg-mimes.nix # xdg config
+    ./xdg-mimes.nix # file associations
+
+    # Ready to enable when needed:
+    # ./ags - Simple bar widget (migrated from chezmoi)
+
+    # TODO: FINAL STEP
+    # ./hyprland - Window manager (most important, save for last)
+
+    # Skipped (not using):
+    # - obsidian.nix (using standalone?)
+    # - xdg-mimes.nix (using system defaults?)
+    # - viewnior.nix (image viewer)
+    # - waypaper.nix (not using wallpaper management)
+    # - scripts/ (removed - using AGS instead)
   ];
 }

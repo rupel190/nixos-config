@@ -4,7 +4,6 @@
     settings = {
       # autostart
       exec-once = [
-        # "hash dbus-update-activation-environment 2>/dev/null"
         "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
 
@@ -12,10 +11,11 @@
         "poweralertd &"
         "wl-clip-persist --clipboard both &"
         "wl-paste --watch cliphist store &"
-        "waybar &"
         "swaync &"
         "hyprctl setcursor Bibata-Modern-Ice 24 &"
-        "swww-daemon &"
+
+        # TODO: Add AGS startup here
+        # "ags &"
 
         "hyprlock"
       ];
@@ -144,13 +144,12 @@
         "$mainMod, Q, killactive,"
         "$mainMod, F, fullscreen, 0"
         "$mainMod SHIFT, F, fullscreen, 1"
-        "$mainMod, Space, exec, toggle_float"
-        "$mainMod, D, exec, rofi -show drun || pkill rofi"
+        # "$mainMod, Space, exec, toggle_float" # removed toggle script
+        "$mainMod, D, exec, fuzzel"
         "$mainMod SHIFT, D, exec, webcord --enable-features=UseOzonePlatform --ozone-platform=wayland"
         "$mainMod SHIFT, S, exec, hyprctl dispatch exec '[workspace 5 silent] SoundWireServer'"
-        "$mainMod, Escape, exec, swaylock"
-        "ALT, Escape, exec, hyprlock"
-        "$mainMod SHIFT, Escape, exec, power-menu"
+        "$mainMod, Escape, exec, hyprlock"
+        # "$mainMod SHIFT, Escape, exec, power-menu" # TODO: Use AGS power menu
         "$mainMod, P, pseudo,"
         "$mainMod, X, togglesplit,"
         "$mainMod, T, exec, toggle_oppacity"
@@ -245,7 +244,7 @@
         "$mainMod, mouse_up, workspace, e+1"
 
         # clipboard manager
-        "$mainMod, V, exec, cliphist list | rofi -dmenu -theme-str 'window {width: 50%;} listview {columns: 1;}' | cliphist decode | wl-copy"
+        "$mainMod, V, exec, cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"
       ];
 
       # # binds active in lockscreen
@@ -276,8 +275,6 @@
         "float,mpv"
         "tile,Aseprite"
         "float,audacious"
-        "pin,rofi"
-        "pin,waypaper"
         "tile, neovide"
         "idleinhibit focus,mpv"
         "float,udiskie"

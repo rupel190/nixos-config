@@ -1,8 +1,8 @@
 { ... }:
 {
-  # TODO: What's it do exactly?
-  # security.rtkit.enable = true;
-  # security.sudo.enable = true;
-  # security.pam.services.swaylock = { };
-  # security.pam.services.hyprlock = { };
+  # rtkit - Real-time scheduling for PipeWire (prevents audio crackling)
+  security.rtkit.enable = true;
+
+  # PAM service for hyprlock (screen locker authentication)
+  security.pam.services.hyprlock = { };
 }

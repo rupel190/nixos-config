@@ -1,8 +1,9 @@
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, inputs, username, host, ... }:
 {
+  imports = [ ./modules/home ];
 
-  home.username = "rupel";
-  home.homeDirectory = "/home/rupel";
+  home.username = username;
+  home.homeDirectory = "/home/${username}";
 
 
   ### X11 with scaling ###
@@ -18,24 +19,6 @@
 
   # Auto-load xresources
   xsession.enable = true;
-
-  ####################################################
-
-  # Virt-manager
-  dconf.settings = {
-    "org/virt-manager/virt-manager/connections" = {
-      autoconnect = ["qemu:///system"];
-      uris = ["qemu:///system"];
-    };
-  };
-
-  # Packages that should be installed to the user profile.
-  home.packages = with pkgs; [
-
-    digikam
-    bitwig-studio
-    betterdiscordctl
-  ];
 
   home.stateVersion = "25.05";
 }

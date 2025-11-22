@@ -1,31 +1,16 @@
 { pkgs, lib, ... }:
 {
+  # dconf - Settings database for GTK applications
+  # Allows GTK apps (virt-manager, file pickers, etc.) to save preferences
+  # Without this, apps lose all settings on restart
   programs.dconf.enable = true;
 
-  # TODO: Enable if necessary
-  # programs.dconf.profiles.user.databases = [
-  #   {
-  #     settings."org/gnome/desktop/interface" = {
-  #       gtk-theme = "Adwaita";
-  #       icon-theme = "Flat-Remix-Red-Dark";
-  #       font-name = "Noto Sans Medium 11";
-  #       document-font-name = "Noto Sans Medium 11";
-  #       monospace-font-name = "Noto Sans Mono Medium 11";
-  #     };
-  #   }
-  # ];
-
+  # System-wide program enables (user config in home-manager)
   programs.yazi.enable = true;
   programs.fish.enable = true;
 
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  #   # pinentryFlavor = "";
-  # };
-
-  # TODO: Allows applications to refer to linux default paths -
-  # mason nvim plugin would need that, but maybe keep it working without
+  # NOTE: nix-ld allows apps to use system libraries (e.g., Mason nvim plugin)
+  # Currently using Nix packages instead, so this is disabled
   # programs.nix-ld.enable = true;
   # programs.nix-ld.libraries = with pkgs; [ ];
 }

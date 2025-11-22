@@ -2,26 +2,20 @@
 {
   services = {
     gvfs.enable = true;
-    # TODO: why udev and dbus?
-    udev.enable = true;
+    udev = {
+      enable = true;
+      packages = [ pkgs.libmtp ]; # Android MTP connection
+    };
     dbus.enable = true;
 
-    # TODO: Helpful? Move to GPU definitions?
     xserver.videoDrivers = lib.mkForce [ "amdgpu" ];
 
-    # ???
-    # fstrim.enable = true;
-
-    # TODO: Probably useless
-    # needed for GNOME services outside of GNOME Desktop
-    # dbus.packages = with pkgs; [
-    #   gcr
-    #   gnome-settings-daemon
-    # ];
+    # SSD TRIM service (weekly optimization)
+    fstrim.enable = true;
   };
 
+  # NOTE: Uncomment for laptop - prevents shutdown on power button short-press
   # services.logind.extraConfig = ''
-  #   # don’t shutdown when power button is short-pressed
   #   HandlePowerKey=ignore
   # '';
 }

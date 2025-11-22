@@ -6,10 +6,13 @@
       xkb.layout = "us,fr";
     };
 
-    displayManager.autoLogin = {
-      enable = true;
-      user = "${username}";
-    };
+    # Auto-login - SECURITY RISK! Skips login screen entirely
+    # Disabled for security (enable only on trusted single-user systems)
+    # displayManager.autoLogin = {
+    #   enable = true;
+    #   user = "${username}";
+    # };
+
     libinput = {
       enable = true;
     };

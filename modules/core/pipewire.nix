@@ -1,13 +1,11 @@
 { pkgs, ... }:
 {
-  # services.pulseaudio.enable = false;
-  # services.pipewire = {
-  #   enable = true;
-  #   alsa.enable = true;
-  #   alsa.support32Bit = true;
-  #   pulse.enable = true;
-  #   TODO: Low latency ??? !!!
-  #   # lowLatency.enable = true;
-  # };
-  # environment.systemPackages = with pkgs; [ pulseaudioFull ];
+  services.pulseaudio.enable = false;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # lowLatency.enable = true; # Enable if you need low latency audio
+  };
 }

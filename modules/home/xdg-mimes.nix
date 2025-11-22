@@ -3,20 +3,20 @@ with lib;
 let
   defaultApps = {
     browser = [ "zen.desktop" ];
-    text = [ "org.gnome.TextEditor.desktop" ];
+    # text = [ "nvim.desktop" ]; # Using nvim from terminal
     image = [ "imv-dir.desktop" ];
     audio = [ "mpv.desktop" ];
     video = [ "mpv.desktop" ];
-    directory = [ "nemo.desktop" ];
-    office = [ "libreoffice.desktop" ];
+    # directory = [ "yazi.desktop" ]; # Using yazi from terminal
+    office = [ "onlyoffice.desktop" ];
     pdf = [ "org.gnome.Evince.desktop" ];
-    terminal = [ "ghostty.desktop" ];
-    archive = [ "org.gnome.FileRoller.desktop" ];
-    discord = [ "webcord.desktop" ];
+    terminal = [ "wezterm.desktop" ];
+    # archive - using terminal tools
+    discord = [ "discord.desktop" ];
   };
 
   mimeMap = {
-    text = [ "text/plain" ];
+    # text = [ "text/plain" ]; # Using terminal editor
     image = [
       "image/bmp"
       "image/gif"
@@ -47,7 +47,7 @@ let
       "video/x-matroska"
       "video/x-msvideo"
     ];
-    directory = [ "inode/directory" ];
+    # directory = [ "inode/directory" ]; # Using terminal file manager
     browser = [
       "text/html"
       "x-scheme-handler/about"
@@ -69,12 +69,12 @@ let
     ];
     pdf = [ "application/pdf" ];
     terminal = [ "terminal" ];
-    archive = [
-      "application/zip"
-      "application/rar"
-      "application/7z"
-      "application/*tar"
-    ];
+    # archive = [ # Using terminal tools
+    #   "application/zip"
+    #   "application/rar"
+    #   "application/7z"
+    #   "application/*tar"
+    # ];
     discord = [ "x-scheme-handler/discord" ];
   };
 

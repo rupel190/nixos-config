@@ -20,6 +20,13 @@
       url = "github:yazi-rs/plugins";
       flake = false;
     };
+
+    spicetify-nix = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
   };
 
   outputs =
@@ -33,16 +40,13 @@
     {
       nixosConfigurations.amanita = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
+        specialArgs = {
+          inherit inputs self;
+          username = "rupel";
+          host = "amanita";
+        };
         modules = [
-          ./configuration.nix
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.users.rupel = ./home.nix;
-            home-manager.extraSpecialArgs = { inherit inputs; };
-          }
+          ./hosts/amanita
         ];
       };
     };
