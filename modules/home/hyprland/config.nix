@@ -325,12 +325,10 @@
       #   "w[tg1], gapsout:0, gapsin:0"
       #   "f[1], gapsout:0, gapsin:0"
       # ];
-    };
 
-    
-
-    debug = {
+      debug = {
         disable_logs = false;
+      };
     };
 
     extraConfig = "

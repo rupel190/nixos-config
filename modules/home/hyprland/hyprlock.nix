@@ -8,7 +8,9 @@ in
     # BACKGROUND
     background {
       monitor =
-      path = ${../../../wallpapers/otherWallpaper/gruvbox/forest_road.jpg}
+      # TODO: Add wallpaper path when wallpapers directory is set up
+      # path = /path/to/wallpaper.jpg
+      color = rgba(40, 40, 40, 1.0)
       blur_passes = 2
       contrast = 0.8916
       brightness = 0.8172
