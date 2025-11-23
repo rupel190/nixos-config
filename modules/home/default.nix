@@ -31,9 +31,12 @@
     # TODO: FINAL STEP
     # ./hyprland - Window manager (most important, save for last)
 
+    # Laptop-specific (import in hosts/cordyceps home config):
+    # ./laptop-only.nix - poweralertd, brightness tools
+
     # Skipped (not using):
+    # - nvim.nix (deleted - using Lazyvim config)
     # - obsidian.nix (using standalone?)
-    # - xdg-mimes.nix (using system defaults?)
     # - viewnior.nix (image viewer)
     # - waypaper.nix (not using wallpaper management)
     # - scripts/ (removed - using AGS instead)

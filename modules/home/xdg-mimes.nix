@@ -4,7 +4,7 @@ let
   defaultApps = {
     browser = [ "zen.desktop" ];
     # text = [ "nvim.desktop" ]; # Using nvim from terminal
-    image = [ "imv-dir.desktop" ];
+    image = [ "oculante.desktop" ];
     audio = [ "mpv.desktop" ];
     video = [ "mpv.desktop" ];
     # directory = [ "yazi.desktop" ]; # Using yazi from terminal

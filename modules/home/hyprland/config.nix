@@ -4,27 +4,41 @@
     settings = {
       # autostart
       exec-once = [
-        "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-
-        "nm-applet &"
-        "poweralertd &"
-        "wl-clip-persist --clipboard both &"
-        "wl-paste --watch cliphist store &"
+        # "nm-applet &"
+        # "poweralertd &"
+        # "wl-clip-persist --clipboard both &"
+        # "wl-paste --watch cliphist store &"
         "swaync &"
-        "hyprctl setcursor Bibata-Modern-Ice 24 &"
+        "hyprctl setcursor catppuccin-macchiato-yellow-cursors 24 &"
 
         # TODO: Add AGS startup here
         # "ags &"
 
         "hyprlock"
+
+        # https://wiki.hypr.land/FAQ/#fullscreen-applicationssteam-games-open-with-secondary-monitors-resolution
+        # Not sure it works on wayland
+        "xrandr --output DP-2 --primary"
+        # Auth daemon for GUI apps requesting privilege elevation
+        "systemctl --user start hyprpolkitagent"
+        # which to choose?
+        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        # which to choose?
+        "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        # exec-once = hyprpaper			# Wallpaper
+        "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
+        "hypridle" # Needs env vars to find its own config
+        #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
+        #ianny					# Reminder utility for taking screen breaks
       ];
 
+      #TODO: not sure which to keep
       input = {
-        kb_layout = "us,fr";
-        kb_options = "grp:alt_caps_toggle";
+        kb_layout = "us,de";
+        # kb_options = "grp:alt_caps_toggle";
         numlock_by_default = true;
-        follow_mouse = 0;
+        follow_mouse = 0; # -> true?
         float_switch_override_focus = 0;
         mouse_refocus = 0;
         sensitivity = 0;
@@ -33,6 +47,7 @@
         };
       };
 
+      #TODO: not sure about defaults and which to keep
       general = {
         "$mainMod" = "SUPER";
         layout = "dwindle";
@@ -45,6 +60,7 @@
         no_border_on_floating = false;
       };
 
+      #TODO: same
       misc = {
         disable_autoreload = true;
         disable_hyprland_logo = true;
@@ -57,6 +73,7 @@
         middle_click_paste = false;
       };
 
+      #TODO: ssame
       dwindle = {
         # no_gaps_when_only = false;
         force_split = 0;
@@ -67,12 +84,14 @@
         preserve_split = "yes";
       };
 
+      #TODO: same
       master = {
         new_status = "master";
         special_scale_factor = 1;
         # no_gaps_when_only = false;
       };
 
+      #TODO: same
       decoration = {
         rounding = 0;
         # active_opacity = 0.90;
@@ -132,162 +151,41 @@
         ];
       };
 
-      bind = [
-        # show keybinds list
-        "$mainMod, F1, exec, show-keybinds"
-
-        # keybindings
-        "$mainMod, Return, exec, ghostty"
-        "ALT, Return, exec, [float; size 1111 700] ghostty"
-        "$mainMod SHIFT, Return, exec, [fullscreen] ghostty"
-        "$mainMod, B, exec, hyprctl dispatch exec '[workspace 1 silent] zen'"
-        "$mainMod, Q, killactive,"
-        "$mainMod, F, fullscreen, 0"
-        "$mainMod SHIFT, F, fullscreen, 1"
-        # "$mainMod, Space, exec, toggle_float" # removed toggle script
-        "$mainMod, D, exec, fuzzel"
-        "$mainMod SHIFT, D, exec, webcord --enable-features=UseOzonePlatform --ozone-platform=wayland"
-        "$mainMod SHIFT, S, exec, hyprctl dispatch exec '[workspace 5 silent] SoundWireServer'"
-        "$mainMod, Escape, exec, hyprlock"
-        # "$mainMod SHIFT, Escape, exec, power-menu" # TODO: Use AGS power menu
-        "$mainMod, P, pseudo,"
-        "$mainMod, X, togglesplit,"
-        "$mainMod, T, exec, toggle_oppacity"
-        "$mainMod, E, exec, nemo"
-        "ALT, E, exec, hyprctl dispatch exec '[float; size 1111 700] nemo'"
-        "$mainMod SHIFT, E, exec, hyprctl dispatch exec '[float; size 1111 700] ghostty -e yazi'"
-        "$mainMod SHIFT, B, exec, toggle_waybar"
-        "$mainMod, C ,exec, hyprpicker -a"
-        "$mainMod, W,exec, wallpaper-picker"
-        "$mainMod SHIFT, W,exec, hyprctl dispatch exec '[float; size 925 615] waypaper'"
-        "$mainMod, N, exec, swaync-client -t -sw"
-        "CTRL SHIFT, Escape, exec, hyprctl dispatch exec '[workspace 11] resources'"
-        "$mainMod, equal, exec, woomer"
-        # "$mainMod SHIFT, W, exec, vm-start"
-
-        # screenshot
-        ",Print, exec, screenshot --copy"
-        "$mainMod, Print, exec, screenshot --save"
-        "$mainMod SHIFT, Print, exec, screenshot --swappy"
-
-        # switch focus
-        "$mainMod, left, movefocus, l"
-        "$mainMod, right, movefocus, r"
-        "$mainMod, up, movefocus, u"
-        "$mainMod, down, movefocus, d"
-        "$mainMod, h, movefocus, l"
-        "$mainMod, j, movefocus, d"
-        "$mainMod, k, movefocus, u"
-        "$mainMod, l, movefocus, r"
-
-        # switch workspace
-        "$mainMod, 1, workspace, 1"
-        "$mainMod, 2, workspace, 2"
-        "$mainMod, 3, workspace, 3"
-        "$mainMod, 4, workspace, 4"
-        "$mainMod, 5, workspace, 5"
-        "$mainMod, 6, workspace, 6"
-        "$mainMod, 7, workspace, 7"
-        "$mainMod, 8, workspace, 8"
-        "$mainMod, 9, workspace, 9"
-        "$mainMod, 0, workspace, 10"
-
-        # same as above, but switch to the workspace
-        "$mainMod SHIFT, 1, movetoworkspacesilent, 1" # movetoworkspacesilent
-        "$mainMod SHIFT, 2, movetoworkspacesilent, 2"
-        "$mainMod SHIFT, 3, movetoworkspacesilent, 3"
-        "$mainMod SHIFT, 4, movetoworkspacesilent, 4"
-        "$mainMod SHIFT, 5, movetoworkspacesilent, 5"
-        "$mainMod SHIFT, 6, movetoworkspacesilent, 6"
-        "$mainMod SHIFT, 7, movetoworkspacesilent, 7"
-        "$mainMod SHIFT, 8, movetoworkspacesilent, 8"
-        "$mainMod SHIFT, 9, movetoworkspacesilent, 9"
-        "$mainMod SHIFT, 0, movetoworkspacesilent, 10"
-        "$mainMod CTRL, c, movetoworkspace, empty"
-
-        # window control
-        "$mainMod SHIFT, left, movewindow, l"
-        "$mainMod SHIFT, right, movewindow, r"
-        "$mainMod SHIFT, up, movewindow, u"
-        "$mainMod SHIFT, down, movewindow, d"
-        "$mainMod SHIFT, h, movewindow, l"
-        "$mainMod SHIFT, j, movewindow, d"
-        "$mainMod SHIFT, k, movewindow, u"
-        "$mainMod SHIFT, l, movewindow, r"
-
-        "$mainMod CTRL, left, resizeactive, -80 0"
-        "$mainMod CTRL, right, resizeactive, 80 0"
-        "$mainMod CTRL, up, resizeactive, 0 -80"
-        "$mainMod CTRL, down, resizeactive, 0 80"
-        "$mainMod CTRL, h, resizeactive, -80 0"
-        "$mainMod CTRL, j, resizeactive, 0 80"
-        "$mainMod CTRL, k, resizeactive, 0 -80"
-        "$mainMod CTRL, l, resizeactive, 80 0"
-
-        "$mainMod ALT, left, moveactive,  -80 0"
-        "$mainMod ALT, right, moveactive, 80 0"
-        "$mainMod ALT, up, moveactive, 0 -80"
-        "$mainMod ALT, down, moveactive, 0 80"
-        "$mainMod ALT, h, moveactive,  -80 0"
-        "$mainMod ALT, j, moveactive, 0 80"
-        "$mainMod ALT, k, moveactive, 0 -80"
-        "$mainMod ALT, l, moveactive, 80 0"
-
-        # media and volume controls
-        # ",XF86AudioMute,exec, pamixer -t"
-        ",XF86AudioPlay,exec, playerctl play-pause"
-        ",XF86AudioNext,exec, playerctl next"
-        ",XF86AudioPrev,exec, playerctl previous"
-        ",XF86AudioStop,exec, playerctl stop"
-
-        "$mainMod, mouse_down, workspace, e-1"
-        "$mainMod, mouse_up, workspace, e+1"
-
-        # clipboard manager
-        "$mainMod, V, exec, cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"
-      ];
-
-      # # binds active in lockscreen
-      # bindl = [
-      #   # laptop brigthness
-      #   ",XF86MonBrightnessUp, exec, brightnessctl set 5%+"
-      #   ",XF86MonBrightnessDown, exec, brightnessctl set 5%-"
-      #   "$mainMod, XF86MonBrightnessUp, exec, brightnessctl set 100%+"
-      #   "$mainMod, XF86MonBrightnessDown, exec, brightnessctl set 100%-"
-      # ];
-
-      # # binds that repeat when held
-      # binde = [
-      #   ",XF86AudioRaiseVolume,exec, pamixer -i 2"
-      #   ",XF86AudioLowerVolume,exec, pamixer -d 2"
-      # ];
-
-      # mouse binding
-      bindm = [
-        "$mainMod, mouse:272, movewindow"
-        "$mainMod, mouse:273, resizewindow"
-      ];
-
-      # windowrule
       windowrule = [
-        "float,Viewnior"
-        "float,imv"
-        "float,mpv"
-        "tile,Aseprite"
-        "float,audacious"
-        "tile, neovide"
-        "idleinhibit focus,mpv"
-        "float,udiskie"
-        "float,title:^(Transmission)$"
-        "float,title:^(Volume Control)$"
-        "float,title:^(Firefox — Sharing Indicator)$"
-        "move 0 0,title:^(Firefox — Sharing Indicator)$"
-        "size 700 450,title:^(Volume Control)$"
-        "move 40 55%,title:^(Volume Control)$"
+        # See https://wiki.hyprland.org/Configuring/Window-Rules/
+        # See https://wiki.hyprland.org/Configuring/Workspace-Rules/
+
+        # Fix some dragging issues with XWayland
+        "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
+
+        # Ignore maximize requests from apps. TODO: Good idea?
+        "suppressevent maximize, class:.*"
+
+        # CS2 tweak, https://wiki.hypr.land/Configuring/Tearing/#enabling-tearing
+        "immediate, class:^(cs2)$"
+        # "float,Viewnior"
+        # "float,imv"
+        # "float,mpv"
+        # "tile,Aseprite"
+        # "float,audacious"
+        # "tile, neovide"
+        # "idleinhibit focus,mpv"
+        # "float,udiskie"
+        # "float,title:^(Transmission)$"
+        # "float,title:^(Volume Control)$"
+        # "float,title:^(Firefox — Sharing Indicator)$"
+        # "move 0 0,title:^(Firefox — Sharing Indicator)$"
+        # "size 700 450,title:^(Volume Control)$"
+        # "move 40 55%,title:^(Volume Control)$"
       ];
 
-      # windowrulev2
       windowrulev2 = [
+        "workspace 4 silent, class:^(app.zen_browser.zen)$"
+        "workspace 4, class:^(zen)$"
+        "workspace 7 silent, class:^(ticktick|Proton Mail|Slack|class.org.keepassxc.KeePassXC)$"
+        "workspace 8 silent, class:^(discord|Signal)$"
+        "workspace 9 silent, class:^(Spotify)$"
+
         "float, title:^(Picture-in-Picture)$"
         "opacity 1.0 override 1.0 override, title:^(Picture-in-Picture)$"
         "pin, title:^(Picture-in-Picture)$"
@@ -297,15 +195,6 @@
         "opacity 1.0 override 1.0 override, class:(Unity)"
         "opacity 1.0 override 1.0 override, class:(zen)"
         "opacity 1.0 override 1.0 override, class:(evince)"
-        "workspace 1, class:^(zen)$"
-        "workspace 3, class:^(evince)$"
-        "workspace 4, class:^(Gimp-2.10)$"
-        "workspace 4, class:^(Aseprite)$"
-        "workspace 5, class:^(Audacious)$"
-        "workspace 5, class:^(Spotify)$"
-        "workspace 8, class:^(com.obsproject.Studio)$"
-        "workspace 10, class:^(discord)$"
-        "workspace 10, class:^(WebCord)$"
         "idleinhibit focus, class:^(mpv)$"
         "idleinhibit fullscreen, class:^(firefox)$"
         "float,class:^(org.gnome.Calculator)$"

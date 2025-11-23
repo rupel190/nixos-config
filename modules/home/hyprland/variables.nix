@@ -1,6 +1,25 @@
 { ... }:
 {
   home.sessionVariables = {
+
+    # env = SDL_VIDEODRIVER,wayland									# Run SDL2 applications on Wayland. Remove or set to x11 if games that provide older versions of SDL cause compatibility issues
+    GDK_BACKEND = "wayland,x11,*"; # GTK: Use wayland if available. If not: try x11, then any other GDK backend.
+
+    QT_QPA_PLATFORM = "wayland,xcb"; # Qt: Use wayland if available, fall back to x11 if not.
+    QT_WAYLAND_DISABLE_WINDOWDECORATION = 1; # Disables window decorations on Qt applications
+    QT_QPA_PLATFORMTHEME = "qt5ct"; # Tells Qt based applications to pick your theme from qt5ct, use with Kvantum.
+
+    XDG_CURRENT_DESKTOP = "Hyprland";
+    XDG_SESSION_TYPE = "wayland";
+    XDG_SESSION_DESKTOP = "Hyprland";
+
+    XCURSOR_SIZE = 24;
+    HYPRCURSOR_SIZE = 32;
+    XCURSOR_THEME = "catppuccin-macchiato-yellow-cursors";
+
+    TERMINAL = "wezterm";
+
+    #from template:
     NIXOS_OZONE_WL = 1;
     __GL_GSYNC_ALLOWED = 0;
     __GL_VRR_ALLOWED = 0;
@@ -12,17 +31,12 @@
     DIRENV_LOG_FORMAT = "";
     WLR_DRM_NO_ATOMIC = 1;
     QT_AUTO_SCREEN_SCALE_FACTOR = 1;
-    QT_WAYLAND_DISABLE_WINDOWDECORATION = 1;
     QT_QPA_PLATFORM = "xcb";
-    QT_QPA_PLATFORMTHEME = "qt5ct";
     QT_STYLE_OVERRIDE = "kvantum";
     MOZ_ENABLE_WAYLAND = 1;
     WLR_BACKEND = "vulkan";
     WLR_RENDERER = "vulkan";
     WLR_NO_HARDWARE_CURSORS = 1;
-    XDG_CURRENT_DESKTOP = "Hyprland";
-    XDG_SESSION_TYPE = "wayland";
-    XDG_SESSION_DESKTOP = "Hyprland";
     SDL_VIDEODRIVER = "wayland";
     CLUTTER_BACKEND = "wayland";
     GTK_THEME = "Colloid-Green-Dark-Gruvbox";

@@ -8,6 +8,23 @@
   # Host-specific configuration
   networking.hostName = "amanita";
 
+  # AMD + Wayland environment variables
+  environment.variables = {
+    EDITOR = "nvim";
+    # Force discrete GPU (RX 9070 XT) -> Abiotic Factor would use iGPU otherwise
+    DRI_PRIME = "1";
+    # Use RADV (Mesa) driver for Vulkan
+    AMD_VULKAN_ICD = "RADV";
+    # Wayland specific
+    WLR_RENDERER = "vulkan";
+    # Disable shader cache issues
+    MESA_SHADER_CACHE_DISABLE = "false";
+  };
+
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+  };
+
   # Filesystems
   boot.supportedFilesystems = [
     "ntfs"
@@ -70,20 +87,4 @@
     ];
   };
 
-  # AMD + Wayland environment variables
-  environment.variables = {
-    EDITOR = "nvim";
-    # Force discrete GPU (RX 9070 XT) -> Abiotic Factor would use iGPU otherwise
-    DRI_PRIME = "1";
-    # Use RADV (Mesa) driver for Vulkan
-    AMD_VULKAN_ICD = "RADV";
-    # Wayland specific
-    WLR_RENDERER = "vulkan";
-    # Disable shader cache issues
-    MESA_SHADER_CACHE_DISABLE = "false";
-  };
-
-  environment.sessionVariables = {
-    NIXOS_OZONE_WL = "1";
-  };
 }

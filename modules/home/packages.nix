@@ -5,12 +5,10 @@
     [
       ## CLI utility
       eza # ls replacement
-      entr # perform action when file change
       fd # find replacement
       ffmpeg
       gifsicle # gif utility
       gtrash # rm replacement, put deleted files in system trash
-      imv # image viewer
       jq # JSON processor
       killall
       man-pages # extra man pages
@@ -19,8 +17,6 @@
       nixfmt-rfc-style # nix formatter
 
       openssl
-      poweralertd
-      programmer-calculator
       ripgrep # grep replacement
       shfmt # bash formatter
       swappy # snapshot editing tool
@@ -48,15 +44,12 @@
 
       ## GUI Apps
       fuzzel # launcher
-      bleachbit # cache cleaner
       gimp
+      oculante # image viewer
       onlyoffice
-      nix-prefetch-github
       obs-studio
-      pitivi # video editing
       winetricks
       wineWowPackages.wayland
-      zenity
 
       # C / C++
       gcc

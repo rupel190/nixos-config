@@ -1,18 +1,18 @@
 { inputs, pkgs, ... }:
 {
   home.packages = with pkgs; [
-    swww
-    inputs.hypr-contrib.packages.${pkgs.system}.grimblast
+    # swww
+    # inputs.hypr-contrib.packages.${pkgs.system}.grimblast
     hyprpicker
-    inputs.hyprmag.packages.${pkgs.system}.hyprmag
+    # inputs.hyprmag.packages.${pkgs.system}.hyprmag
     grim
     slurp
-    wl-clip-persist
-    cliphist
+    # wl-clip-persist
+    # cliphist
     wf-recorder
-    glib
+    # glib
     wayland
-    direnv
+    # direnv
   ];
   systemd.user.targets.hyprland-session.Unit.Wants = [
     "xdg-desktop-autostart.target"
@@ -23,7 +23,6 @@
       enable = true;
       # hidpi = true;
     };
-    # enableNvidiaPatches = false;
     systemd.enable = true;
   };
 }
