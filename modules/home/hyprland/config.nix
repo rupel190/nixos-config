@@ -1,39 +1,56 @@
-{ ... }:
+{ host, ... }:
 {
   wayland.windowManager.hyprland = {
     settings = {
       # autostart
-      exec-once = [
-        # "nm-applet &"
-        # "poweralertd &"
-        # "wl-clip-persist --clipboard both &"
-        # "wl-paste --watch cliphist store &"
-        "swaync &"
-        "hyprctl setcursor catppuccin-macchiato-yellow-cursors 24 &"
+      exec-once =
+        [
+          # "nm-applet &"
+          # "poweralertd &"
+          # "wl-clip-persist --clipboard both &"
+          # "wl-paste --watch cliphist store &"
+          "swaync &"
+          "hyprctl setcursor catppuccin-macchiato-yellow-cursors 24 &"
 
-        # TODO: Add AGS startup here
-        # "ags &"
+          # TODO: Add AGS startup here
+          # "ags &"
 
-        "hyprlock"
+          "hyprlock"
 
-        # https://wiki.hypr.land/FAQ/#fullscreen-applicationssteam-games-open-with-secondary-monitors-resolution
-        # Not sure it works on wayland
-        "xrandr --output DP-2 --primary"
-        # Auth daemon for GUI apps requesting privilege elevation
-        "systemctl --user start hyprpolkitagent"
-        # which to choose?
-        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        # which to choose?
-        "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        # exec-once = hyprpaper			# Wallpaper
-        "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
-        "hypridle" # Needs env vars to find its own config
-        #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
-        #ianny					# Reminder utility for taking screen breaks
-      ];
+          # https://wiki.hypr.land/FAQ/#fullscreen-applicationssteam-games-open-with-secondary-monitors-resolution
+          # Not sure it works on wayland
+          "xrandr --output DP-2 --primary"
+          # Auth daemon for GUI apps requesting privilege elevation
+          "systemctl --user start hyprpolkitagent"
+          # which to choose?
+          "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+          "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+          # which to choose?
+          "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+          # exec-once = hyprpaper			# Wallpaper
+          "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
+          "hypridle" # Needs env vars to find its own config
+          #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
+          #ianny					# Reminder utility for taking screen breaks
+        ]
+        ++ (
+          if host == "amanita" then
+            [
+              # Workspace-specific application launches for amanita
+              "[workspace 1 silent] obsidian"
+              "[workspace 4] flatpak run app.zen_browser.zen"
+              "[workspace 7 silent] slack"
+              "[workspace 7 silent] proton-mail"
+              "[workspace 7 silent] keepassxc"
+              "[workspace 7 silent] ticktick"
+              "[workspace 8 silent] signal-messenger"
+              "[workspace 9 silent] spotify"
+              "[workspace 9 silent] wezterm start pulsemixer"
+            ]
+          else
+            [ ]
+        );
 
-      #TODO: not sure which to keep
       input = {
         kb_layout = "us";
         # kb_layout = "us,de";
@@ -41,7 +58,7 @@
         # kb_model =
         # kb_options =
         # kb_rules =
-        
+
         numlock_by_default = true;
         repeat_delay = 240;
         repeat_rate = 35;
@@ -51,29 +68,19 @@
         # mouse_refocus = 0;
         # float_switch_override_focus = 0;
 
-        {{- if eq .chezmoi.hostname "cordyceps" }}
-        sensitivity = 0.2; # -1.0 - 1.0, 0 means no modification.
-        accel_profile = adaptive;
-        scroll_factor = 0.2;
-        natural_scroll = true;
-        {{ else }}
-        sensitivity = 0; # -1.0 - 1.0, 0 means no modification.
-        accel_profile = flat;
-        scroll_factor = 1;
-        {{- end }}
-
-
+        # Host-specific input settings
+        sensitivity = if host == "cordyceps" then 0.2 else 0; # -1.0 - 1.0, 0 means no modification.
+        accel_profile = if host == "cordyceps" then "adaptive" else "flat";
+        scroll_factor = if host == "cordyceps" then 0.2 else 1.0;
+        natural_scroll = host == "cordyceps";
       };
 
       general = {
         "$mainMod" = "SUPER";
 
         gaps_in = 5;
-        gaps_out = 5, 15, 15, 15;
-
-        # {{- if eq .chezmoi.hostname "cordyceps" }}
-        # gaps_out = 1, 1, 0, 1
-        # {{- end }}
+        gaps_out = [ 5 15 15 15 ];
+        # gaps_out = if host == "cordyceps" then [ 1 1 0 1 ] else [ 5 15 15 15 ];
 
         border_size = 2;
         layout = "dwindle";
@@ -167,17 +174,16 @@
       };
 
       animations = {
-        enabled = true
+        enabled = true;
 
         # hyprfocus plugin
         # animation = hyprfocusIn, 1, 0.8, default
         # animation = hyprfocusOut, 1, 2.7, default
 
         # Default animations, see https://wiki.hyprland.org/Configuring/Animations/ for more
-      
-        {{- if eq .chezmoi.hostname "amanita" }}
-        workspace_wraparound = true
-        {{- end }}
+
+        # Host-specific: enable workspace wraparound on amanita (desktop with multiple monitors)
+        workspace_wraparound = host == "amanita";
 
         bezier = [
           "easeOutQuint,0.23,1,0.32,1"

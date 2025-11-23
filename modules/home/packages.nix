@@ -21,7 +21,7 @@
       shfmt # bash formatter
       swappy # snapshot editing tool
       tdf # cli pdf viewer
-      treefmt2 # project formatter
+      treefmt # project formatter
       tldr
       toipe # typing test in the terminal
       ttyper # cli typing test
@@ -46,7 +46,7 @@
       fuzzel # launcher
       gimp
       oculante # image viewer
-      onlyoffice
+      onlyoffice-desktopeditors
       obs-studio
       winetricks
       wineWowPackages.wayland

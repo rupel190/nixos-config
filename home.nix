@@ -1,13 +1,20 @@
-{ config, pkgs, inputs, username, host, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  username,
+  host,
+  ...
+}:
 {
   imports = [ ./modules/home ];
 
   home.username = username;
   home.homeDirectory = "/home/${username}";
 
-
   ### X11 with scaling ###
   home.sessionVariables = {
+    # TODO: Set in envvars??
     GDK_BACKEND = "wayland,x11";
     QT_QPA_PLATFORM = "wayland;xcb";
   };

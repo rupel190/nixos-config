@@ -6,7 +6,7 @@
     enable = true;
     clean = {
       enable = true;
-      extraArgs = "--keep-since 7d --keep 5";
+      extraArgs = "--keep-since 30d --keep 20";
     };
     flake = "/home/${username}/projects/nixos-config";
   };

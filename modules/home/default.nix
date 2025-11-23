@@ -9,8 +9,8 @@
     ./fish.nix # shell
     ./fzf.nix # fuzzy finder
     ./yazi.nix # terminal file manager
-    ./cava.nix # audio visualizer
-    ./btop.nix # resouces monitor
+    ./cava/cava.nix # audio visualizer
+    ./btop # resouces monitor
     ./bat.nix # better cat command
     ./fastfetch.nix # fetch tool
     ./swaync/swaync.nix # notification daemon
@@ -28,8 +28,8 @@
     # Ready to enable when needed:
     # ./ags - Simple bar widget (migrated from chezmoi)
 
-    # TODO: FINAL STEP
-    # ./hyprland - Window manager (most important, save for last)
+    # Window manager - fully migrated!
+    ./hyprland
 
     # Laptop-specific (import in hosts/cordyceps home config):
     # ./laptop-only.nix - poweralertd, brightness tools

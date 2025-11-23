@@ -15,7 +15,7 @@
     spice
     spice-gtk
     spice-protocol
-    win-virtio
+    virtio-win
     win-spice
     adwaita-icon-theme
   ];
@@ -26,8 +26,7 @@
       enable = true;
       qemu = {
         swtpm.enable = true;
-        ovmf.enable = true;
-        ovmf.packages = [ pkgs.OVMFFull.fd ];
+        # OVMF images are now available by default with QEMU
       };
     };
     spiceUSBRedirection.enable = true;

@@ -1,58 +1,84 @@
-{ _ }:
-
+{ host, ... }:
 {
   wayland.windowManager.hyprland = {
     settings = {
+      # Main modifier is set in general section of config.nix as "$mainMod" = "SUPER"
 
       bind = [
-        # show keybinds list
-        "$mainMod, F1, exec, show-keybinds"
+        # Apps
+        "$mainMod, T, exec, wezterm"
+        "$mainMod, RETURN, exec, fuzzel"
+        "$mainMod, E, exec, wezterm start --always-new-process yazi"
+        "$mainMod, C, killactive,"
+        # "$mainMod, M, exit,"
+        "$mainMod, F, togglefloating,"
+        "$mainMod, P, pseudo," # dwindle
+        "$mainMod, V, togglesplit," # dwindle
 
-        # keybindings
-        "$mainMod, Return, exec, ghostty"
-        "ALT, Return, exec, [float; size 1111 700] ghostty"
-        "$mainMod SHIFT, Return, exec, [fullscreen] ghostty"
-        "$mainMod, B, exec, hyprctl dispatch exec '[workspace 1 silent] zen'"
-        "$mainMod, Q, killactive,"
-        "$mainMod, F, fullscreen, 0"
-        "$mainMod SHIFT, F, fullscreen, 1"
-        # "$mainMod, Space, exec, toggle_float" # removed toggle script
-        "$mainMod, D, exec, fuzzel"
-        "$mainMod SHIFT, D, exec, webcord --enable-features=UseOzonePlatform --ozone-platform=wayland"
-        "$mainMod SHIFT, S, exec, hyprctl dispatch exec '[workspace 5 silent] SoundWireServer'"
-        "$mainMod, Escape, exec, hyprlock"
-        # "$mainMod SHIFT, Escape, exec, power-menu" # TODO: Use AGS power menu
-        "$mainMod, P, pseudo,"
-        "$mainMod, X, togglesplit,"
-        "$mainMod, T, exec, toggle_oppacity"
-        "$mainMod, E, exec, nemo"
-        "ALT, E, exec, hyprctl dispatch exec '[float; size 1111 700] nemo'"
-        "$mainMod SHIFT, E, exec, hyprctl dispatch exec '[float; size 1111 700] ghostty -e yazi'"
-        "$mainMod SHIFT, B, exec, toggle_waybar"
-        "$mainMod, C ,exec, hyprpicker -a"
-        "$mainMod, W,exec, wallpaper-picker"
-        "$mainMod SHIFT, W,exec, hyprctl dispatch exec '[float; size 925 615] waypaper'"
-        "$mainMod, N, exec, swaync-client -t -sw"
-        "CTRL SHIFT, Escape, exec, hyprctl dispatch exec '[workspace 11] resources'"
-        "$mainMod, equal, exec, woomer"
-        # "$mainMod SHIFT, W, exec, vm-start"
+        # Screenshots
+        "$mainMod, S, exec, slurp | grim -g - - | wl-copy"
+        "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | tee /tmp/screenshot.png | wl-copy && swappy -f /tmp/screenshot.png -o ~/Pictures/swappy/$(date +%F_%H-%M-%S).png"
 
-        # screenshot
-        ",Print, exec, screenshot --copy"
-        "$mainMod, Print, exec, screenshot --save"
-        "$mainMod SHIFT, Print, exec, screenshot --swappy"
+        # Screen recording
+        "$mainMod ALT, S, exec, wl-screenrec -g \"$(slurp)\" --audio --filename ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4 &; notify-send \"Screenrec started\""
+        "$mainMod ALT SHIFT, S, exec, pkill wl-screenrec && notify-send \"Screenrec saved to ~/Videos/screenrec/\""
 
-        # switch focus
-        "$mainMod, left, movefocus, l"
-        "$mainMod, right, movefocus, r"
-        "$mainMod, up, movefocus, u"
-        "$mainMod, down, movefocus, d"
-        "$mainMod, h, movefocus, l"
-        "$mainMod, j, movefocus, d"
-        "$mainMod, k, movefocus, u"
-        "$mainMod, l, movefocus, r"
+        # Move focus
+        "$mainMod, J, movefocus, d"
+        "$mainMod, K, movefocus, u"
+        "$mainMod, H, movefocus, l"
+        "$mainMod, L, movefocus, r"
 
-        # switch workspace
+        # Move window
+        "$mainMod ALT, J, movewindow, d"
+        "$mainMod ALT, K, movewindow, u"
+        "$mainMod ALT, H, movewindow, l"
+        "$mainMod ALT, L, movewindow, r"
+
+        # Cycle workspaces
+        "$mainMod, O, workspace, m-1"
+        "$mainMod, I, workspace, m+1"
+        "$mainMod ALT, O, movetoworkspace, m-1"
+        "$mainMod ALT, I, movetoworkspace, m+1"
+
+        # Mouse workspace navigation
+        "$mainMod, mouse:275, workspace, m+1"
+        "$mainMod, mouse:276, workspace, m-1"
+        "$mainMod ALT, mouse:275, movetoworkspace, m+1"
+        "$mainMod ALT, mouse:276, movetoworkspace, m-1"
+
+        # Alt-Tab workspace cycling
+        "ALT_L, TAB, workspace, m+1"
+        "ALT_L SHIFT, TAB, workspace, m-1"
+
+        # Special workspace (scratchpad)
+        "$mainMod, SPACE, togglespecialworkspace, magic"
+        "$mainMod SHIFT, SPACE, movetoworkspace, special:magic"
+
+        # Resize window
+        "$mainMod, left, resizeactive, -50 0"
+        "$mainMod, right, resizeactive, 50 0"
+        "$mainMod, up, resizeactive, 0 -50"
+        "$mainMod, down, resizeactive, 0 50"
+
+        # Buffer submap (prefix key)
+        "$mainMod, B, submap, buffer"
+      ] ++ [
+        # Submap: buffer
+        "submap = buffer"
+        ", 1, workspace, 1"
+        ", 2, workspace, 2"
+        ", 3, workspace, 3"
+        ", 4, workspace, 4"
+        ", 5, workspace, 5"
+        ", 6, workspace, 6"
+        ", 7, workspace, 7"
+        ", 8, workspace, 8"
+        ", 9, workspace, 9"
+        ", catchall, submap, reset"
+        "submap = reset"
+      ] ++ [
+        # Switch workspaces with mainMod + [0-9]
         "$mainMod, 1, workspace, 1"
         "$mainMod, 2, workspace, 2"
         "$mainMod, 3, workspace, 3"
@@ -64,77 +90,40 @@
         "$mainMod, 9, workspace, 9"
         "$mainMod, 0, workspace, 10"
 
-        # same as above, but switch to the workspace
-        "$mainMod SHIFT, 1, movetoworkspacesilent, 1" # movetoworkspacesilent
-        "$mainMod SHIFT, 2, movetoworkspacesilent, 2"
-        "$mainMod SHIFT, 3, movetoworkspacesilent, 3"
-        "$mainMod SHIFT, 4, movetoworkspacesilent, 4"
-        "$mainMod SHIFT, 5, movetoworkspacesilent, 5"
-        "$mainMod SHIFT, 6, movetoworkspacesilent, 6"
-        "$mainMod SHIFT, 7, movetoworkspacesilent, 7"
-        "$mainMod SHIFT, 8, movetoworkspacesilent, 8"
-        "$mainMod SHIFT, 9, movetoworkspacesilent, 9"
-        "$mainMod SHIFT, 0, movetoworkspacesilent, 10"
-        "$mainMod CTRL, c, movetoworkspace, empty"
+        # Move active window to a workspace with mainMod + ALT + [0-9]
+        "$mainMod ALT, 1, movetoworkspace, 1"
+        "$mainMod ALT, 2, movetoworkspace, 2"
+        "$mainMod ALT, 3, movetoworkspace, 3"
+        "$mainMod ALT, 4, movetoworkspace, 4"
+        "$mainMod ALT, 5, movetoworkspace, 5"
+        "$mainMod ALT, 6, movetoworkspace, 6"
+        "$mainMod ALT, 7, movetoworkspace, 7"
+        "$mainMod ALT, 8, movetoworkspace, 8"
+        "$mainMod ALT, 9, movetoworkspace, 9"
+        "$mainMod ALT, 0, movetoworkspace, 10"
+      ] ++ (
+        # Additional binds for laptop brightness (cordyceps)
+        if host == "cordyceps" then
+          [
+            ", XF86MonBrightnessUp, exec, brightnessctl s +10%"
+            ", XF86MonBrightnessDown, exec, brightnessctl s 10%-"
+          ]
+        else
+          [ ]
+      );
 
-        # window control
-        "$mainMod SHIFT, left, movewindow, l"
-        "$mainMod SHIFT, right, movewindow, r"
-        "$mainMod SHIFT, up, movewindow, u"
-        "$mainMod SHIFT, down, movewindow, d"
-        "$mainMod SHIFT, h, movewindow, l"
-        "$mainMod SHIFT, j, movewindow, d"
-        "$mainMod SHIFT, k, movewindow, u"
-        "$mainMod SHIFT, l, movewindow, r"
+      # Binds that repeat when held (laptop multimedia keys for cordyceps)
+      bindel =
+        if host == "cordyceps" then
+          [
+            ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
+            ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+            ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+          ]
+        else
+          [ ];
 
-        "$mainMod CTRL, left, resizeactive, -80 0"
-        "$mainMod CTRL, right, resizeactive, 80 0"
-        "$mainMod CTRL, up, resizeactive, 0 -80"
-        "$mainMod CTRL, down, resizeactive, 0 80"
-        "$mainMod CTRL, h, resizeactive, -80 0"
-        "$mainMod CTRL, j, resizeactive, 0 80"
-        "$mainMod CTRL, k, resizeactive, 0 -80"
-        "$mainMod CTRL, l, resizeactive, 80 0"
-
-        "$mainMod ALT, left, moveactive,  -80 0"
-        "$mainMod ALT, right, moveactive, 80 0"
-        "$mainMod ALT, up, moveactive, 0 -80"
-        "$mainMod ALT, down, moveactive, 0 80"
-        "$mainMod ALT, h, moveactive,  -80 0"
-        "$mainMod ALT, j, moveactive, 0 80"
-        "$mainMod ALT, k, moveactive, 0 -80"
-        "$mainMod ALT, l, moveactive, 80 0"
-
-        # media and volume controls
-        # ",XF86AudioMute,exec, pamixer -t"
-        ",XF86AudioPlay,exec, playerctl play-pause"
-        ",XF86AudioNext,exec, playerctl next"
-        ",XF86AudioPrev,exec, playerctl previous"
-        ",XF86AudioStop,exec, playerctl stop"
-
-        "$mainMod, mouse_down, workspace, e-1"
-        "$mainMod, mouse_up, workspace, e+1"
-
-        # clipboard manager
-        "$mainMod, V, exec, cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"
-      ];
-
-      # # binds active in lockscreen
-      # bindl = [
-      #   # laptop brigthness
-      #   ",XF86MonBrightnessUp, exec, brightnessctl set 5%+"
-      #   ",XF86MonBrightnessDown, exec, brightnessctl set 5%-"
-      #   "$mainMod, XF86MonBrightnessUp, exec, brightnessctl set 100%+"
-      #   "$mainMod, XF86MonBrightnessDown, exec, brightnessctl set 100%-"
-      # ];
-
-      # # binds that repeat when held
-      # binde = [
-      #   ",XF86AudioRaiseVolume,exec, pamixer -i 2"
-      #   ",XF86AudioLowerVolume,exec, pamixer -d 2"
-      # ];
-
-      # mouse binding
+      # Mouse bindings
       bindm = [
         "$mainMod, mouse:272, movewindow"
         "$mainMod, mouse:273, resizewindow"
