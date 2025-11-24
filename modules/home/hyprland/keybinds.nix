@@ -92,27 +92,9 @@
         "$mainMod ALT, 8, movetoworkspace, 8"
         "$mainMod ALT, 9, movetoworkspace, 9"
         "$mainMod ALT, 0, movetoworkspace, 10"
-      ] ++ (
-        # Additional binds for laptop brightness (cordyceps)
-        if host == "cordyceps" then
-          [
-            ", XF86MonBrightnessUp, exec, brightnessctl s +10%"
-            ", XF86MonBrightnessDown, exec, brightnessctl s 10%-"
-          ]
-        else
-          [ ]
-      );
+      ];
 
-      # Binds that repeat when held (laptop multimedia keys for cordyceps)
-      bindel =
-        if host == "cordyceps" then
-          [
-            ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
-            ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
-            ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
-          ]
-        else
-          [ ];
+      # Note: Laptop-specific keybinds (brightness, audio) are in laptop-only.nix
 
       # Mouse bindings
       bindm = [

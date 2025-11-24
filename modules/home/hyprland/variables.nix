@@ -19,6 +19,9 @@
 
     TERMINAL = "wezterm";
 
+    # Force dark theme for Electron apps (Signal, Slack, Discord, etc.)
+    GTK_THEME = "Adwaita:dark";
+
     #from template:
     # NIXOS_OZONE_WL = 1;
     # __GL_GSYNC_ALLOWED = 0;

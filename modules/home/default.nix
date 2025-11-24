@@ -18,6 +18,7 @@
     ./discord/discord.nix # discord with gruvbox
     ./git.nix # version control
     ./lazygit.nix
+    ./claude.nix # AI coding assistant
     ./spicetify.nix # spotify client
     ./mpv.nix # media player
     ./packages.nix # additional packages

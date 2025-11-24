@@ -72,7 +72,6 @@
       tty-clock # cli clock
 
       ## GUI Apps
-      claude-code # AI coding assistant
       fuzzel # launcher
       gimp
       oculante # image viewer
@@ -129,7 +128,7 @@
       yaml-language-server
       marksman # Markdown LSP
       taplo # TOML LSP
-      dockerfile-language-server-nodejs
+      dockerfile-language-server
 
       # Formatters
       stylua # Lua formatter

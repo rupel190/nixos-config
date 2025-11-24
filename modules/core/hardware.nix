@@ -20,10 +20,15 @@
   hardware.enableRedistributableFirmware = true;
 
   # Fix USB devices (mouse/keyboard) going to sleep after reboot
-  # USB autosuspend was causing devices to sleep and not wake up
+  # Based on: https://discourse.nixos.org/t/external-mouse-and-keyboard-sleep/14900
   boot.kernelParams = [
     "usbcore.autosuspend=-1"  # Disable USB autosuspend (-1 = never suspend)
   ];
+
+  # Force all USB devices to stay awake via udev rules
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"
+  '';
 
   # Bluetooth
   hardware.bluetooth = {

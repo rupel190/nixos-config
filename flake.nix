@@ -27,6 +27,8 @@
     };
 
     nix-flatpak.url = "github:gmodena/nix-flatpak";
+
+    claude-code.url = "github:sadjow/claude-code-nix";
   };
 
   outputs =

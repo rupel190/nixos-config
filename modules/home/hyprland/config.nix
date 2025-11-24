@@ -68,17 +68,11 @@
         # mouse_refocus = 0;
         # float_switch_override_focus = 0;
 
-        # Host-specific input settings
-        sensitivity = if host == "cordyceps" then 0.2 else 0; # -1.0 - 1.0, 0 means no modification.
-        accel_profile = if host == "cordyceps" then "adaptive" else "flat";
-        scroll_factor = if host == "cordyceps" then 0.2 else 1.0;
-        natural_scroll = host == "cordyceps";
-      };
-
-      # Touchpad gestures (for laptop)
-      gestures = {
-        workspace_swipe = true;
-        workspace_swipe_fingers = 3;
+        # Desktop input settings (laptop settings are in laptop-only.nix)
+        sensitivity = 0; # -1.0 - 1.0, 0 means no modification
+        accel_profile = "flat"; # Flat for desktop mouse
+        scroll_factor = 1.0;
+        natural_scroll = false;
       };
 
       general = {

@@ -24,6 +24,14 @@
     };
   };
 
+  # Laptop monitor configuration (for Hyprland)
+  # This will be available as a home-manager module when cordyceps is set up
+  # Monitor: eDP-1 (laptop display), 2880x1920@120Hz
+  # Uncomment when setting up cordyceps:
+  # wayland.windowManager.hyprland.settings.monitor = [
+  #   "eDP-1, 2880x1920@120.00000, 0x0, 1"
+  # ];
+
   # NOTE: Add your laptop's filesystems here when you set it up
   # boot.supportedFilesystems = [ "ntfs" "exfat" ];
   # fileSystems."/mnt/backup" = { ... };
