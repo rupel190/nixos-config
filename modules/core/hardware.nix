@@ -19,6 +19,12 @@
   # Improve stability
   hardware.enableRedistributableFirmware = true;
 
+  # Fix USB devices (mouse/keyboard) going to sleep after reboot
+  # USB autosuspend was causing devices to sleep and not wake up
+  boot.kernelParams = [
+    "usbcore.autosuspend=-1"  # Disable USB autosuspend (-1 = never suspend)
+  ];
+
   # Bluetooth
   hardware.bluetooth = {
     enable = true;

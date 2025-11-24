@@ -15,7 +15,7 @@
 
     XCURSOR_SIZE = 24;
     HYPRCURSOR_SIZE = 32;
-    XCURSOR_THEME = "catppuccin-macchiato-yellow-cursors";
+    XCURSOR_THEME = "catppuccin-macchiato-teal-cursors";
 
     TERMINAL = "wezterm";
 

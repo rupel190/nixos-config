@@ -13,10 +13,11 @@ in
       default_monitor = "DP-2";
     };
 
-    gestures = {
-      workspace_swipe = true;
-      workspace_swipe_fingers = 3;
-    };
+    # Gestures are configured in input section of config.nix
+    # gestures = {
+    #   workspace_swipe = true;
+    #   workspace_swipe_fingers = 3;
+    # };
 
     monitor = [
       "DP-1, 3840x2160@120.00000, -2560x0, 1.5"

@@ -2,7 +2,8 @@
 {
   programs.wezterm = {
     enable = true;
-    package = inputs.wezterm.packages.${pkgs.system}.default; # Nightly
+    package = pkgs.wezterm; # Stable from nixpkgs (better OpenGL integration)
+    # package = inputs.wezterm.packages.${pkgs.system}.default; # Nightly (has OpenGL issues)
 
     extraConfig = ''
       -- Configuration

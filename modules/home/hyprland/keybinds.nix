@@ -61,22 +61,13 @@
         "$mainMod, up, resizeactive, 0 -50"
         "$mainMod, down, resizeactive, 0 50"
 
-        # Buffer submap (prefix key)
-        "$mainMod, B, submap, buffer"
+        # Buffer submap (prefix key) - DISABLED for now, causing number key conflicts
+        # "$mainMod, B, submap, buffer"
       ] ++ [
-        # Submap: buffer
-        "submap = buffer"
-        ", 1, workspace, 1"
-        ", 2, workspace, 2"
-        ", 3, workspace, 3"
-        ", 4, workspace, 4"
-        ", 5, workspace, 5"
-        ", 6, workspace, 6"
-        ", 7, workspace, 7"
-        ", 8, workspace, 8"
-        ", 9, workspace, 9"
-        ", catchall, submap, reset"
-        "submap = reset"
+        # Submap buffer - commented out to fix number key issue
+        # When enabled, this allows Super+B then number to switch workspace
+        # But the syntax was causing ALL number keys to switch workspaces
+        # TODO: Fix submap syntax properly if you want this feature
       ] ++ [
         # Switch workspaces with mainMod + [0-9]
         "$mainMod, 1, workspace, 1"

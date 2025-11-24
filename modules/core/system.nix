@@ -36,6 +36,15 @@
     keyMap = "us";
   };
 
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config = {
+    allowUnfree = true;
+    # Temporarily allow insecure qtwebengine for Qt5 apps
+    # TODO: Identify which package needs this and find alternative
+    # Likely culprits: teamspeak3, cryptomator, protonvpn-gui, keepassxc, digikam
+    permittedInsecurePackages = [
+      "qtwebengine-5.15.19"
+    ];
+  };
+
   system.stateVersion = "25.05";
 }

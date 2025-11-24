@@ -10,16 +10,16 @@
           # "wl-clip-persist --clipboard both &"
           # "wl-paste --watch cliphist store &"
           "swaync &"
-          "hyprctl setcursor catppuccin-macchiato-yellow-cursors 24 &"
+          "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
 
           # TODO: Add AGS startup here
           # "ags &"
 
-          "hyprlock"
+          # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
+          # "hyprlock"
 
-          # https://wiki.hypr.land/FAQ/#fullscreen-applicationssteam-games-open-with-secondary-monitors-resolution
-          # Not sure it works on wayland
-          "xrandr --output DP-2 --primary"
+          # Set primary monitor (Wayland-native way)
+          # "hyprctl dispatch focusmonitor DP-2"
           # Auth daemon for GUI apps requesting privilege elevation
           "systemctl --user start hyprpolkitagent"
           # which to choose?
@@ -75,6 +75,12 @@
         natural_scroll = host == "cordyceps";
       };
 
+      # Touchpad gestures (for laptop)
+      gestures = {
+        workspace_swipe = true;
+        workspace_swipe_fingers = 3;
+      };
+
       general = {
         "$mainMod" = "SUPER";
 
@@ -94,11 +100,6 @@
 
         # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
         allow_tearing = true;
-
-
-        # add this??
-        border_part_of_window = false;
-        no_border_on_floating = false;
       };
 
       #TODO: same
