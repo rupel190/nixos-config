@@ -38,7 +38,7 @@
             [
               # Workspace-specific application launches for amanita
               "[workspace 1 silent] obsidian"
-              "[workspace 4] flatpak run app.zen_browser.zen"
+              "[workspace 4] zen"  # Native Zen from flake
               "[workspace 7 silent] slack"
               "[workspace 7 silent] proton-mail"
               "[workspace 7 silent] keepassxc"

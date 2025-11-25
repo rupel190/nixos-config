@@ -14,7 +14,7 @@
     };
 
     wezterm.url = "github:wez/wezterm?dir=nix";
-    zen-browser.url = "github:MarceColl/zen-browser-flake";
+    zen-browser.url = "github:youwen5/zen-browser-flake"; # Auto-updates daily
 
     yazi-plugins = {
       url = "github:yazi-rs/plugins";
