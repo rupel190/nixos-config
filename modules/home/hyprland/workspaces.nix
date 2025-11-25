@@ -47,15 +47,16 @@ in
           "${toString workspaces.communication}, monitor:HDMI-A-1"
         ];
 
-    windowrulev2 = [
-      "workspace ${toString workspaces.browser} silent, class:^(firefox)$"
-      "workspace ${toString workspaces.code} silent, class:^(code)$"
-      "workspace 4 silent, class:^(app.zen_browser.zen)$"
-      "workspace 4, class:^(zen)$"
-      "workspace 7 silent, class:^(ticktick|Proton Mail|Slack|class.org.keepassxc.KeePassXC)$"
-      "workspace 8 silent, class:^(discord|Signal)$"
-      "workspace 9 silent, class:^(Spotify)$"
-    ];
+    # TODO: fix, maybe deprecated on new hyprland conf?
+    # windowrulev2 = [
+    #   "workspace ${toString workspaces.browser} silent, class:^(firefox)$"
+    #   "workspace ${toString workspaces.code} silent, class:^(code)$"
+    #   "workspace 4 silent, class:^(app.zen_browser.zen)$"
+    #   "workspace 4, class:^(zen)$"
+    #   "workspace 7 silent, class:^(ticktick|Proton Mail|Slack|class.org.keepassxc.KeePassXC)$"
+    #   "workspace 8 silent, class:^(discord|Signal)$"
+    #   "workspace 9 silent, class:^(Spotify)$"
+    # ];
 
     bind = [
       "$mainMod, 1, workspace, ${toString workspaces.browser}"

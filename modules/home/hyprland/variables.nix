@@ -22,6 +22,10 @@
     # Force dark theme for Electron apps (Signal, Slack, Discord, etc.)
     GTK_THEME = "Adwaita:dark";
 
+    # Removed GDK_SCALE and QT_AUTO_SCREEN_SCALE_FACTOR
+    # Let Wayland apps handle per-monitor fractional scaling themselves
+    # XWayland apps use force_zero_scaling instead
+
     #from template:
     # NIXOS_OZONE_WL = 1;
     # __GL_GSYNC_ALLOWED = 0;

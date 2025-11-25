@@ -3,53 +3,52 @@
   wayland.windowManager.hyprland = {
     settings = {
       # autostart
-      exec-once =
-        [
-          # "nm-applet &"
-          # "poweralertd &"
-          # "wl-clip-persist --clipboard both &"
-          # "wl-paste --watch cliphist store &"
-          "swaync &"
-          "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
+      exec-once = [
+        # "nm-applet &"
+        # "poweralertd &"
+        # "wl-clip-persist --clipboard both &"
+        # "wl-paste --watch cliphist store &"
+        "swaync &"
+        "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
 
-          # TODO: Add AGS startup here
-          # "ags &"
+        # TODO: Add AGS startup here
+        # "ags &"
 
-          # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
-          # "hyprlock"
+        # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
+        # "hyprlock"
 
-          # Set primary monitor (Wayland-native way)
-          # "hyprctl dispatch focusmonitor DP-2"
-          # Auth daemon for GUI apps requesting privilege elevation
-          "systemctl --user start hyprpolkitagent"
-          # which to choose?
-          "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-          "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-          # which to choose?
-          "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-          # exec-once = hyprpaper			# Wallpaper
-          "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
-          "hypridle" # Needs env vars to find its own config
-          #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
-          #ianny					# Reminder utility for taking screen breaks
-        ]
-        ++ (
-          if host == "amanita" then
-            [
-              # Workspace-specific application launches for amanita
-              "[workspace 1 silent] obsidian"
-              "[workspace 4] zen"  # Native Zen from flake
-              "[workspace 7 silent] slack"
-              "[workspace 7 silent] proton-mail"
-              "[workspace 7 silent] keepassxc"
-              "[workspace 7 silent] ticktick"
-              "[workspace 8 silent] signal-messenger"
-              "[workspace 9 silent] spotify"
-              "[workspace 9 silent] wezterm start pulsemixer"
-            ]
-          else
-            [ ]
-        );
+        # Set primary monitor (Wayland-native way)
+        # "hyprctl dispatch focusmonitor DP-2"
+        # Auth daemon for GUI apps requesting privilege elevation
+        "systemctl --user start hyprpolkitagent"
+        # which to choose?
+        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        # which to choose?
+        "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+        # exec-once = hyprpaper			# Wallpaper
+        "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
+        "hypridle" # Needs env vars to find its own config
+        #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
+        #ianny					# Reminder utility for taking screen breaks
+      ]
+      ++ (
+        if host == "amanita" then
+          [
+            # Workspace-specific application launches for amanita
+            "[workspace 1 silent] obsidian"
+            "[workspace 4] zen" # Native Zen from flake
+            "[workspace 7 silent] slack"
+            "[workspace 7 silent] proton-mail"
+            "[workspace 7 silent] keepassxc"
+            "[workspace 7 silent] ticktick"
+            "[workspace 8 silent] signal-messenger"
+            "[workspace 9 silent] spotify"
+            "[workspace 9 silent] wezterm start pulsemixer"
+          ]
+        else
+          [ ]
+      );
 
       input = {
         kb_layout = "us";
@@ -79,7 +78,12 @@
         "$mainMod" = "SUPER";
 
         gaps_in = 5;
-        gaps_out = [ 5 15 15 15 ];
+        gaps_out = [
+          5
+          15
+          15
+          15
+        ];
         # gaps_out = if host == "cordyceps" then [ 1 1 0 1 ] else [ 5 15 15 15 ];
 
         border_size = 2;
@@ -101,7 +105,6 @@
         force_default_wallpaper = 0; # Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo = true;
 
-  
         # disable_autoreload = true;
         # always_follow_on_dnd = true;
         # layers_hog_keyboard_focus = true;
@@ -115,7 +118,6 @@
         pseudotile = true; # Master switch for pseudotiling. Enabling is bound to mainMod + P in the keybinds section below
         preserve_split = true;
 
-
         # no_gaps_when_only = false;
         # force_split = 0;
         # special_scale_factor = 1.0;
@@ -127,7 +129,7 @@
         new_status = "master";
         mfact = 0.60;
         # workspace = $layoutopt
-          
+
         # special_scale_factor = 1;
         # no_gaps_when_only = false;
       };
@@ -187,30 +189,29 @@
           "almostLinear,0.5,0.5,0.75,1.0"
           "quick,0.15,0,0.1,1"
         ];
-          # maybe add later
-          # "fade_curve, 0, 0.55, 0.45, 1"
-          # "fluent_decel, 0, 0.2, 0.4, 1"
-
+        # maybe add later
+        # "fade_curve, 0, 0.55, 0.45, 1"
+        # "fluent_decel, 0, 0.2, 0.4, 1"
 
         # name, enable, speed, curve, style
         animation = [
-              "global, 1, 10, default"
-              "border, 1, 5.39, easeOutQuint"
-              "windows, 1, 4.79, easeOutQuint"
-              "windowsIn, 1, 4.1, easeOutQuint, popin 87%"
-              "windowsOut, 1, 1.49, linear, popin 87%"
-              "fadeIn, 1, 1.73, almostLinear"
-              "fadeOut, 1, 1.46, almostLinear"
-              "fade, 1, 3.03, quick"
-              "layers, 1, 3.81, easeOutQuint"
-              "layersIn, 1, 4, easeOutQuint, fade"
-              "layersOut, 1, 1.5, linear, fade"
-              "fadeLayersIn, 1, 1.79, almostLinear"
-              "fadeLayersOut, 1, 1.39, almostLinear"
-              "workspaces, 1, 1.94, almostLinear, fade"
-              "workspacesIn, 1, 1.21, almostLinear, fade"
-              "workspacesOut, 1, 1.94, almostLinear, fade"
-          ];
+          "global, 1, 10, default"
+          "border, 1, 5.39, easeOutQuint"
+          "windows, 1, 4.79, easeOutQuint"
+          "windowsIn, 1, 4.1, easeOutQuint, popin 87%"
+          "windowsOut, 1, 1.49, linear, popin 87%"
+          "fadeIn, 1, 1.73, almostLinear"
+          "fadeOut, 1, 1.46, almostLinear"
+          "fade, 1, 3.03, quick"
+          "layers, 1, 3.81, easeOutQuint"
+          "layersIn, 1, 4, easeOutQuint, fade"
+          "layersOut, 1, 1.5, linear, fade"
+          "fadeLayersIn, 1, 1.79, almostLinear"
+          "fadeLayersOut, 1, 1.39, almostLinear"
+          "workspaces, 1, 1.94, almostLinear, fade"
+          "workspacesIn, 1, 1.21, almostLinear, fade"
+          "workspacesOut, 1, 1.94, almostLinear, fade"
+        ];
 
         #
         # animation = [
@@ -237,13 +238,14 @@
         # See https://wiki.hyprland.org/Configuring/Workspace-Rules/
 
         # Fix some dragging issues with XWayland
-        "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
+        # TODO: doesn't work, fix? -> all 3 lines
+        # "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
 
         # Ignore maximize requests from apps. TODO: Good idea?
-        "suppressevent maximize, class:.*"
+        # "suppressevent maximize, class:.*"
 
         # CS2 tweak, https://wiki.hypr.land/Configuring/Tearing/#enabling-tearing
-        "immediate, class:^(cs2)$"
+        # "immediate, class:^(cs2)$"
         # "float,Viewnior"
         # "float,imv"
         # "float,mpv"
@@ -259,61 +261,61 @@
         # "size 700 450,title:^(Volume Control)$"
         # "move 40 55%,title:^(Volume Control)$"
       ];
-
-      windowrulev2 = [
-
-        # "float, title:^(Picture-in-Picture)$"
-        # "opacity 1.0 override 1.0 override, title:^(Picture-in-Picture)$"
-        # "pin, title:^(Picture-in-Picture)$"
-        # "opacity 1.0 override 1.0 override, title:^(.*imv.*)$"
-        # "opacity 1.0 override 1.0 override, title:^(.*mpv.*)$"
-        # "opacity 1.0 override 1.0 override, class:(Aseprite)"
-        # "opacity 1.0 override 1.0 override, class:(Unity)"
-        # "opacity 1.0 override 1.0 override, class:(zen)"
-        # "opacity 1.0 override 1.0 override, class:(evince)"
-        # "idleinhibit focus, class:^(mpv)$"
-        # "idleinhibit fullscreen, class:^(firefox)$"
-        # "float,class:^(org.gnome.Calculator)$"
-        # "float,class:^(waypaper)$"
-        # "float,class:^(zenity)$"
-        # "float,class:^(SoundWireServer)$"
-        # "float,class:^(.sameboy-wrapped)$"
-        # "float,class:^(file_progress)$"
-        # "float,class:^(confirm)$"
-        # "float,class:^(dialog)$"
-        # "float,class:^(download)$"
-        # "float,class:^(notification)$"
-        # "float,class:^(error)$"
-        # "float,class:^(confirmreset)$"
-        # "float,title:^(Open File)$"
-        # "float,title:^(File Upload)$"
-        # "float,title:^(branchdialog)$"
-        # "float,title:^(Confirm to replace files)$"
-        # "float,title:^(File Operation Progress)$"
-        #
-        # "opacity 0.0 override,class:^(xwaylandvideobridge)$"
-        # "noanim,class:^(xwaylandvideobridge)$"
-        # "noinitialfocus,class:^(xwaylandvideobridge)$"
-        # "maxsize 1 1,class:^(xwaylandvideobridge)$"
-        # "noblur,class:^(xwaylandvideobridge)$"
-        #
-        # No gaps when only
-        # "bordersize 0, floating:0, onworkspace:w[t1]"
-        # "rounding 0, floating:0, onworkspace:w[t1]"
-        # "bordersize 0, floating:0, onworkspace:w[tg1]"
-        # "rounding 0, floating:0, onworkspace:w[tg1]"
-        # "bordersize 0, floating:0, onworkspace:f[1]"
-        # "rounding 0, floating:0, onworkspace:f[1]"
-        #
-        # "maxsize 1111 700, floating: 1"
-        # "center, floating: 1"
-
-        # Remove context menu transparency in chromium based apps
-        # "opaque,class:^()$,title:^()$"
-        # "noshadow,class:^()$,title:^()$"
-        # "noblur,class:^()$,title:^()$"
-      ];
-
+      #
+      # windowrulev2 = [
+      #
+      #   # "float, title:^(Picture-in-Picture)$"
+      #   # "opacity 1.0 override 1.0 override, title:^(Picture-in-Picture)$"
+      #   # "pin, title:^(Picture-in-Picture)$"
+      #   # "opacity 1.0 override 1.0 override, title:^(.*imv.*)$"
+      #   # "opacity 1.0 override 1.0 override, title:^(.*mpv.*)$"
+      #   # "opacity 1.0 override 1.0 override, class:(Aseprite)"
+      #   # "opacity 1.0 override 1.0 override, class:(Unity)"
+      #   # "opacity 1.0 override 1.0 override, class:(zen)"
+      #   # "opacity 1.0 override 1.0 override, class:(evince)"
+      #   # "idleinhibit focus, class:^(mpv)$"
+      #   # "idleinhibit fullscreen, class:^(firefox)$"
+      #   # "float,class:^(org.gnome.Calculator)$"
+      #   # "float,class:^(waypaper)$"
+      #   # "float,class:^(zenity)$"
+      #   # "float,class:^(SoundWireServer)$"
+      #   # "float,class:^(.sameboy-wrapped)$"
+      #   # "float,class:^(file_progress)$"
+      #   # "float,class:^(confirm)$"
+      #   # "float,class:^(dialog)$"
+      #   # "float,class:^(download)$"
+      #   # "float,class:^(notification)$"
+      #   # "float,class:^(error)$"
+      #   # "float,class:^(confirmreset)$"
+      #   # "float,title:^(Open File)$"
+      #   # "float,title:^(File Upload)$"
+      #   # "float,title:^(branchdialog)$"
+      #   # "float,title:^(Confirm to replace files)$"
+      #   # "float,title:^(File Operation Progress)$"
+      #   #
+      #   # "opacity 0.0 override,class:^(xwaylandvideobridge)$"
+      #   # "noanim,class:^(xwaylandvideobridge)$"
+      #   # "noinitialfocus,class:^(xwaylandvideobridge)$"
+      #   # "maxsize 1 1,class:^(xwaylandvideobridge)$"
+      #   # "noblur,class:^(xwaylandvideobridge)$"
+      #   #
+      #   # No gaps when only
+      #   # "bordersize 0, floating:0, onworkspace:w[t1]"
+      #   # "rounding 0, floating:0, onworkspace:w[t1]"
+      #   # "bordersize 0, floating:0, onworkspace:w[tg1]"
+      #   # "rounding 0, floating:0, onworkspace:w[tg1]"
+      #   # "bordersize 0, floating:0, onworkspace:f[1]"
+      #   # "rounding 0, floating:0, onworkspace:f[1]"
+      #   #
+      #   # "maxsize 1111 700, floating: 1"
+      #   # "center, floating: 1"
+      #
+      #   # Remove context menu transparency in chromium based apps
+      #   # "opaque,class:^()$,title:^()$"
+      #   # "noshadow,class:^()$,title:^()$"
+      #   # "noblur,class:^()$,title:^()$"
+      # ];
+      #
       # No gaps when only
       # workspace = [
       #   "w[t1], gapsout:0, gapsin:0"
