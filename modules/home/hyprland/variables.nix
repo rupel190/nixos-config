@@ -22,6 +22,16 @@
     # Force dark theme for Electron apps (Signal, Slack, Discord, etc.)
     GTK_THEME = "Adwaita:dark";
 
+    # XWayland/Multi-monitor scaling fixes
+    # With force_zero_scaling, apps render at scale 1 and Hyprland scales them
+    GDK_SCALE = "1";  # Base scale for GTK apps
+    GDK_DPI_SCALE = "1";  # DPI scaling
+    QT_AUTO_SCREEN_SCALE_FACTOR = "1";  # Qt auto-scaling
+    QT_ENABLE_HIGHDPI_SCALING = "1";  # Qt HiDPI support
+
+    # Force Firefox/Zen browser to use native Wayland (better scaling than XWayland)
+    MOZ_ENABLE_WAYLAND = "1";
+
     #from template:
     # NIXOS_OZONE_WL = 1;
     # __GL_GSYNC_ALLOWED = 0;

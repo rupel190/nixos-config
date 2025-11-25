@@ -19,16 +19,39 @@
   # Improve stability
   hardware.enableRedistributableFirmware = true;
 
-  # Fix USB devices (mouse/keyboard) going to sleep after reboot
-  # Based on: https://discourse.nixos.org/t/external-mouse-and-keyboard-sleep/14900
+  # Fix USB devices (mouse/keyboard) going to sleep - AGGRESSIVE FIX
+  # Multiple layers of USB power management disabling
   boot.kernelParams = [
-    "usbcore.autosuspend=-1"  # Disable USB autosuspend (-1 = never suspend)
+    "usbcore.autosuspend=-1"     # Disable USB autosuspend at kernel level
+    "usb-storage.quirks=:u"      # Disable USB storage autosuspend
   ];
 
-  # Force all USB devices to stay awake via udev rules
-  services.udev.extraRules = ''
-    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"
+  # Disable USB autosuspend entirely via kernel module
+  boot.extraModprobeConfig = ''
+    options usbcore autosuspend=-1
   '';
+
+  # Comprehensive udev rules to keep ALL USB devices awake
+  services.udev.extraRules = ''
+    # Disable autosuspend for all USB devices
+    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/control", ATTR{power/control}="on"
+
+    # Disable autosuspend for USB input devices specifically
+    ACTION=="add", SUBSYSTEM=="usb", ATTR{bInterfaceClass}=="03", TEST=="power/control", ATTR{power/control}="on"
+
+    # Keep USB HID devices (keyboards/mice) always on
+    ACTION=="add", SUBSYSTEM=="hid", TEST=="../power/control", ATTR{../power/control}="on"
+
+    # Disable runtime PM for all USB devices
+    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/autosuspend", ATTR{power/autosuspend}="-1"
+    ACTION=="add", SUBSYSTEM=="usb", TEST=="power/autosuspend_delay_ms", ATTR{power/autosuspend_delay_ms}="-1"
+  '';
+
+  # systemd tmpfiles rule as backup - runs after boot
+  systemd.tmpfiles.rules = [
+    "w /sys/module/usbcore/parameters/autosuspend - - - - -1"
+    "w /sys/bus/usb/devices/*/power/control - - - - on"
+  ];
 
   # Bluetooth
   hardware.bluetooth = {
