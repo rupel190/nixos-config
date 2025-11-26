@@ -59,15 +59,16 @@
     ];
   };
 
-  #fileSystems."/mnt/nvme950" = {
-  #  device = "/dev/disk/by-uuid/836d4a09-5b71-46d1-9433-b52713b3cb14";
-  #  fsType = "ext4";
-  #  options = [
-  #    "noatime"
-  #    "nodiratime"
-  #    "discard"
-  #  ]; # SSD
-  #};
+  fileSystems."/mnt/nvme950" = {
+    device = "/dev/disk/by-uuid/836d4a09-5b71-46d1-9433-b52713b3cb14";
+    fsType = "ext4";
+    options = [
+      "noatime"
+      "nodiratime"
+      "discard"
+      "nofail" # Don't fail boot if drive is missing
+    ]; # SSD
+  };
 
   fileSystems."/mnt/bak-internal" = {
     device = "/dev/disk/by-uuid/6FFF-FCF9";

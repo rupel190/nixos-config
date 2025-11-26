@@ -5,7 +5,7 @@
     # env = SDL_VIDEODRIVER,wayland									# Run SDL2 applications on Wayland. Remove or set to x11 if games that provide older versions of SDL cause compatibility issues
     GDK_BACKEND = "wayland,x11,*"; # GTK: Use wayland if available. If not: try x11, then any other GDK backend.
 
-    QT_QPA_PLATFORM = "wayland,xcb"; # Qt: Use wayland if available, fall back to x11 if not.
+    # QT_QPA_PLATFORM = "wayland,xcb"; # Removed: causes issues with Qt5 apps. Qt6 apps use Wayland by default.
     QT_WAYLAND_DISABLE_WINDOWDECORATION = 1; # Disables window decorations on Qt applications
     QT_QPA_PLATFORMTHEME = "qt5ct"; # Tells Qt based applications to pick your theme from qt5ct, use with Kvantum.
 

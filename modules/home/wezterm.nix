@@ -29,10 +29,15 @@
       config.keys = {
         { key = "UpArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) },
         { key = "DownArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) },
+        -- Scroll without shift
+        { key = "PageUp", mods = "", action = wezterm.action.ScrollByPage(-0.9) },
+        { key = "PageDown", mods = "", action = wezterm.action.ScrollByPage(0.9) },
         { key = "h", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
         { key = "l", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(1) },
         { key = "{", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
         { key = "}", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(1) },
+        -- Disable close tab confirmation
+        { key = "w", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentTab { confirm = false } },
 
         -- Simpler splits
         { key = "|", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },

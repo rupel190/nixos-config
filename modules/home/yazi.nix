@@ -25,6 +25,17 @@
           run = "spot";
           desc = "Quick preview (spot) file";
         }
+        # zoxide and fzf
+        {
+          on = [ "z" ];
+          run = "plugin zoxide";
+          desc = "Jump to directory with zoxide";
+        }
+        {
+          on = [ "Z" ];
+          run = ''shell 'ya pub dds-cd --str "$(fd -td | fzf)"' --confirm'';
+          desc = "Jump to directory with fzf";
+        }
       ];
 
       # In spot mode, use Space to close (not Tab)
