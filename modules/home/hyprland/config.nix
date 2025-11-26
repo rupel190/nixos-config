@@ -90,8 +90,9 @@
         layout = "dwindle";
 
         # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-        "col.active_border" = "rgba(8aadf4ee) rgba(eed49fee) 45deg";
-        "col.inactive_border" = "rgba(595959aa)";
+        # Catppuccin Macchiato: Red (#ed8796) -> Pink (#f5bde6)
+        "col.active_border" = "rgba(ed8796ee) rgba(f5bde6ee) 45deg";
+        "col.inactive_border" = "rgba(5b6078aa)"; # Catppuccin surface1
 
         # Set to true enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = true;

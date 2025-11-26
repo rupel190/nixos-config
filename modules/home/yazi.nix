@@ -4,9 +4,42 @@
     enable = true;
     enableFishIntegration = true;
 
+    keymap = {
+      manager.prepend_keymap = [
+        {
+          on = [ "<C-n>" ];
+          run = ''shell 'ripdrag "$@" -x 2>/dev/null &' --confirm'';
+          desc = "Drag & Drop with ripdrag";
+        }
+        # Swap tab/space
+        {
+          on = [ "<Tab>" ];
+          run = [
+            "toggle"
+            "arrow next"
+          ];
+          desc = "Toggle selection and move to next";
+        }
+        {
+          on = [ "<Space>" ];
+          run = "spot";
+          desc = "Quick preview (spot) file";
+        }
+      ];
+
+      # In spot mode, use Space to close (not Tab)
+      spot.prepend_keymap = [
+        {
+          on = [ "<Space>" ];
+          run = "close";
+          desc = "Close the spot";
+        }
+      ];
+    };
+
     # TODO: Check which to keep
     settings = {
-      manager = {
+      mgr = {
         linemode = "size";
         show_hidden = true;
         show_symlink = true;
@@ -18,39 +51,6 @@
 
       plugins = {
         mediainfo = "${inputs.yazi-plugins}/mediainfo.yazi";
-      };
-
-      keymap = {
-        manager.prepend_keymap = [
-          {
-            on = [ "<C-n>" ];
-            run = ''shell 'ripdrag "$@" -x 2>/dev/null &' --confirm'';
-            desc = "Drag & Drop with ripdrag";
-          }
-          # Swap tab/space
-          {
-            on = [ "<Tab>" ];
-            run = [
-              "toggle"
-              "arrow next"
-            ];
-            desc = "Toggle selection and move to next";
-          }
-          {
-            on = [ "<Space>" ];
-            run = "spot";
-            desc = "Quick preview (spot) file";
-          }
-        ];
-
-        # In spot mode, use Space to close (not Tab)
-        spot.prepend_keymap = [
-          {
-            on = [ "<Space>" ];
-            run = "close";
-            desc = "Close the spot";
-          }
-        ];
       };
 
       # from original yazi.toml plugin settings

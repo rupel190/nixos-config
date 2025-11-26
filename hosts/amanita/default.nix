@@ -59,15 +59,15 @@
     ];
   };
 
-  fileSystems."/mnt/bak-btrfs" = {
-    device = "/dev/disk/by-uuid/2cf4acdd-ebf1-4134-8225-80b7982f68f7";
-    fsType = "btrfs";
-    options = [
-      "noatime"
-      "compress=zstd"
-      "discard=async"
-    ]; # SSD + btrfs-specific optimizations
-  };
+  #fileSystems."/mnt/nvme950" = {
+  #  device = "/dev/disk/by-uuid/836d4a09-5b71-46d1-9433-b52713b3cb14";
+  #  fsType = "ext4";
+  #  options = [
+  #    "noatime"
+  #    "nodiratime"
+  #    "discard"
+  #  ]; # SSD
+  #};
 
   fileSystems."/mnt/bak-internal" = {
     device = "/dev/disk/by-uuid/6FFF-FCF9";

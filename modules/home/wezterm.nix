@@ -14,7 +14,8 @@
       config.enable_scroll_bar = true
       config.scrollback_lines = 200000
       config.window_background_opacity = 0.9
-      config.window_decorations = "NONE" -- No title bar or decorations
+      config.enable_wayland = true -- Force native Wayland (not XWayland)
+      config.window_decorations = "RESIZE" -- No title bar, thin borders only
 
       -- Tab bar
       config.window_close_confirmation = "NeverPrompt"
