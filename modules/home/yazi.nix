@@ -5,7 +5,7 @@
     enableFishIntegration = true;
 
     keymap = {
-      manager.prepend_keymap = [
+      mgr.prepend_keymap = [
         {
           on = [ "<C-n>" ];
           run = ''shell 'ripdrag "$@" -x 2>/dev/null &' --confirm'';
@@ -60,6 +60,14 @@
         sort_sensitive = false;
       };
 
+      preview = {
+        # Enable image preview
+        image_filter = "lanczos3";
+        image_quality = 90;
+        max_width = 600;
+        max_height = 900;
+      };
+
       plugins = {
         mediainfo = "${inputs.yazi-plugins}/mediainfo.yazi";
       };
@@ -68,7 +76,7 @@
       plugin = {
         prepend_preloaders = [
           {
-            mime = "{audio,video,image}/*";
+            mime = "{audio,video}/*";  # Removed 'image' - let yazi handle image preview natively
             run = "mediainfo";
           }
           {
@@ -82,7 +90,7 @@
         ];
         prepend_previewers = [
           {
-            mime = "{audio,video,image}/*";
+            mime = "{audio,video}/*";  # Removed 'image' - let yazi handle image preview natively
             run = "mediainfo";
           }
           {

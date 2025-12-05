@@ -19,6 +19,13 @@
     WLR_RENDERER = "vulkan";
     # Disable shader cache issues
     MESA_SHADER_CACHE_DISABLE = "false";
+
+    # Gaming optimizations for multi-monitor XWayland
+    # Prevent games from locking to low FPS on monitor switches
+    __GL_SYNC_DISPLAY_DEVICE = "DP-2"; # Prefer main monitor for OpenGL vsync
+    DXVK_FRAME_RATE = "0"; # Disable DXVK frame limiting (let game/driver handle it)
+    # AMD-specific performance variables
+    RADV_PERFTEST = "nggc"; # Enable NGG culling for better performance
   };
 
   environment.sessionVariables = {
@@ -85,6 +92,7 @@
     options = [
       "defaults"
       "nofail"
+      "x-systemd.device-timeout=5"  # Wait only 5 seconds instead of 90
     ];
   };
 

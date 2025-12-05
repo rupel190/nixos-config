@@ -7,6 +7,7 @@
 
     # Alternative: Use stable version from nixpkgs (slower updates)
     # pkgs.claude-code
+    pkgs.claude-monitor
   ];
 
   # Optional: Set up Cachix for pre-built binaries

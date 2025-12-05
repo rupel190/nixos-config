@@ -18,6 +18,7 @@
     XCURSOR_THEME = "catppuccin-macchiato-teal-cursors";
 
     TERMINAL = "wezterm";
+    BROWSER = "zen";
 
     # Force dark theme for Electron apps (Signal, Slack, Discord, etc.)
     GTK_THEME = "Adwaita:dark";

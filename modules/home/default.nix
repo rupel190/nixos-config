@@ -10,6 +10,7 @@
     ./fzf.nix # fuzzy finder
     ./yazi.nix # terminal file manager
     ./cava/cava.nix # audio visualizer
+    ./aria2.nix # download manager
     ./btop # resouces monitor
     ./bat.nix # better cat command
     ./fastfetch.nix # fetch tool
