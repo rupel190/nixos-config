@@ -266,26 +266,26 @@
       windowrulev2 = [
         # Force all games to DP-2 (main 240Hz monitor)
         # Steam games
-        "monitor DP-2, class:^(steam_app_).*"
-        "workspace 5, class:^(steam_app_).*"
+        # "monitor DP-2, class:^(steam_app_).*"
+        # "workspace 5, class:^(steam_app_).*"
 
         # Common game engines and launchers
-        "monitor DP-2, class:^(gamescope).*"
-        "monitor DP-2, title:^(.*Unity.*)$"
-        "monitor DP-2, title:^(.*Unreal.*)$"
+        # "monitor DP-2, class:^(gamescope).*"
+        # "monitor DP-2, title:^(.*Unity.*)$"
+        # "monitor DP-2, title:^(.*Unreal.*)$"
 
         # Enable tearing for better FPS in games
-        "immediate, class:^(steam_app_).*"
-        "immediate, class:^(gamescope).*"
+        # "immediate, class:^(steam_app_).*"
+        # "immediate, class:^(gamescope).*"
 
         # Disable blur and animations for games (performance)
-        "noblur, class:^(steam_app_).*"
-        "noblur, class:^(gamescope).*"
-        "noshadow, class:^(steam_app_).*"
+        # "noblur, class:^(steam_app_).*"
+        # "noblur, class:^(gamescope).*"
+        # "noshadow, class:^(steam_app_).*"
 
         # Prevent idle when gaming
-        "idleinhibit focus, class:^(steam_app_).*"
-        "idleinhibit focus, class:^(gamescope).*"
+        # "idleinhibit focus, class:^(steam_app_).*"
+        # "idleinhibit focus, class:^(gamescope).*"
 
         # Specific game rules (add your games here)
         # Example: "monitor DP-2, title:^(Abiotic Factor).*"

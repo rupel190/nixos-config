@@ -68,42 +68,6 @@
         max_height = 900;
       };
 
-      plugins = {
-        mediainfo = "${inputs.yazi-plugins}/mediainfo.yazi";
-      };
-
-      # from original yazi.toml plugin settings
-      plugin = {
-        prepend_preloaders = [
-          {
-            mime = "{audio,video}/*";  # Removed 'image' - let yazi handle image preview natively
-            run = "mediainfo";
-          }
-          {
-            mime = "application/subrip";
-            run = "mediainfo";
-          }
-          {
-            mime = "application/postscript";
-            run = "mediainfo";
-          }
-        ];
-        prepend_previewers = [
-          {
-            mime = "{audio,video}/*";  # Removed 'image' - let yazi handle image preview natively
-            run = "mediainfo";
-          }
-          {
-            mime = "application/subrip";
-            run = "mediainfo";
-          }
-          {
-            mime = "application/postscript";
-            run = "mediainfo";
-          }
-        ];
-      };
-
       tasks = {
         # Preview for large image files
         image_alloc = 1073741824; # 1GB for large images

@@ -79,7 +79,7 @@
       obs-studio
       winetricks
       wineWowPackages.wayland
-      gamescope # Gaming compositor
+      # gamescope # Gaming compositor
 
       # Communication
       signal-desktop

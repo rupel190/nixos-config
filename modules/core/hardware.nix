@@ -47,12 +47,6 @@
     ACTION=="add", SUBSYSTEM=="usb", TEST=="power/autosuspend_delay_ms", ATTR{power/autosuspend_delay_ms}="-1"
   '';
 
-  # systemd tmpfiles rule as backup - runs after boot
-  systemd.tmpfiles.rules = [
-    "w /sys/module/usbcore/parameters/autosuspend - - - - -1"
-    "w /sys/bus/usb/devices/*/power/control - - - - on"
-  ];
-
   # Bluetooth
   hardware.bluetooth = {
     enable = true;

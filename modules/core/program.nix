@@ -9,6 +9,10 @@
   programs.yazi.enable = true;
   programs.fish.enable = true;
 
+  # Enable AppImage
+  programs.appimage.enable = true;
+  programs.appimage.binfmt = true;
+
   # NOTE: nix-ld allows apps to use system libraries (e.g., Mason nvim plugin)
   # Currently using Nix packages instead, so this is disabled
   # programs.nix-ld.enable = true;

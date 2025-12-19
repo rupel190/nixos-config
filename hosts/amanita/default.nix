@@ -86,14 +86,16 @@
     ];
   };
 
-  fileSystems."/mnt/bak-external" = {
-    device = "/dev/disk/by-uuid/1787c6c5-6ad8-4051-8d45-f61609e8c732";
-    fsType = "ext4";
-    options = [
-      "defaults"
-      "nofail"
-      "x-systemd.device-timeout=5"  # Wait only 5 seconds instead of 90
-    ];
-  };
+  # Temporarily commented out due to systemd unit generation issue
+  # fileSystems."/mnt/bak-external" = {
+  #   device = "/dev/disk/by-uuid/1787c6c5-6ad8-4051-8d45-f61609e8c732";
+  #   fsType = "ext4";
+  #   options = [
+  #     "defaults"
+  #     "nofail"
+  #     "x-systemd.automount"  # Use automount instead of regular mount
+  #     "x-systemd.device-timeout=5"  # Wait only 5 seconds instead of 90
+  #   ];
+  # };
 
 }

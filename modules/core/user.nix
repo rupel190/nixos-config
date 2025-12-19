@@ -20,6 +20,9 @@
     extraGroups = [
       "networkmanager"
       "wheel"
+      "input"       # Required for mouse/keyboard in Wayland
+      "video"       # Required for display management
+      "seat"        # Required for seat management
     ];
     shell = pkgs.fish;
   };

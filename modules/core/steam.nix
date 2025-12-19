@@ -8,7 +8,7 @@
       dedicatedServer.openFirewall = false;
       localNetworkGameTransfers.openFirewall = true;
 
-      gamescopeSession.enable = true;
+      # gamescopeSession.enable = true;
 
       # TODO: Explicit definition required?
       extraCompatPackages = [ pkgs.proton-ge-bin ];
@@ -34,30 +34,30 @@
       };
     };
 
-    # Gamescope: Gaming compositor/microcompositor
+    # Gamescope: Gaming compositor/microcompositor - DISABLED
     # Use with: gamescope [options] -- %command% in Steam launch options
     # Or: gamescope -W 2560 -H 1440 -r 240 -- game-binary
-    gamescope = {
-      enable = true;
-      capSysNice = true; # Allow real-time scheduling for better performance
-      args = [
-        "--rt" # Enable real-time scheduling
-        "--expose-wayland" # Expose Wayland socket to games
-      ];
-    };
+    # gamescope = {
+    #   enable = true;
+    #   capSysNice = true; # Allow real-time scheduling for better performance
+    #   args = [
+    #     "--rt" # Enable real-time scheduling
+    #     "--expose-wayland" # Expose Wayland socket to games
+    #   ];
+    # };
 
     # Enable gamemode for automatic CPU governor switching
-    gamemode = {
-      enable = true;
-      settings = {
-        general = {
-          renice = 10;
-        };
-        custom = {
-          start = "${pkgs.libnotify}/bin/notify-send 'GameMode started'";
-          end = "${pkgs.libnotify}/bin/notify-send 'GameMode ended'";
-        };
-      };
-    };
+    # gamemode = {
+    #   enable = true;
+    #   settings = {
+    #     general = {
+    #       renice = 10;
+    #     };
+    #     custom = {
+    #       start = "${pkgs.libnotify}/bin/notify-send 'GameMode started'";
+    #       end = "${pkgs.libnotify}/bin/notify-send 'GameMode ended'";
+    #     };
+    #   };
+    # };
   };
 }

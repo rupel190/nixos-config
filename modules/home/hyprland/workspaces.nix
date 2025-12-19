@@ -16,10 +16,14 @@ in
     # Desktop monitor configuration (amanita)
     # Laptop monitor config is in hosts/cordyceps/default.nix
     monitor = [
-      "DP-1, 3840x2160@120.00000, -2560x0, 1.5"
+      # "DP-1, 3840x2160@120.00000, -2560x0, 1.5"
+
+      "DP-1, 2560x1440@120.00000, -2560x0, 1"
       "DP-2, 2560x1440@239.972000, 0x0, 1"
       "HDMI-A-2, preferred, 2560x0, 1, transform, 3"
-      # "HDMI-A-1, 3840x2160@60.00000, -3840x0, 3, vrr, 0" # AVR
+      # "HDMI-A-1, 3840x2160@60.00000, -3840x0, 1" # AVR place left of 4k
+      # "HDMI-A-1, 3840x2160@60.00000, -2560, 1" # AVR placed left of 2560p
+
       # "HDMI-A-1, disabled"
       # "DP-1, disabled"
     ];
