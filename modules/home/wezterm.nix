@@ -15,7 +15,7 @@
       config.scrollback_lines = 200000
       config.window_background_opacity = 0.9
       config.enable_wayland = true -- Force native Wayland (not XWayland)
-      config.window_decorations = "RESIZE" -- No title bar, thin borders only
+      -- Note: window_decorations set after tabline.apply_to_config() at bottom
 
       -- Tab bar
       config.window_close_confirmation = "NeverPrompt"
@@ -62,10 +62,14 @@
           tabline_c = { " " },
           tabline_x = {},
           tabline_y = {},
-          tabline_z = { "cpu", "ram", "battery" },
+          tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
         },
       })
       tabline.apply_to_config(config)
+
+      -- Override tabline's decoration settings (must be AFTER apply_to_config)
+      config.window_decorations = "NONE"
+      config.integrated_title_buttons = {}
 
       return config
     '';
