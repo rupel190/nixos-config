@@ -2,6 +2,9 @@
 {
   wayland.windowManager.hyprland = {
     settings = {
+      # Main modifier key - must be at top level, not in general block
+      "$mainMod" = "SUPER";
+
       # autostart
       exec-once = [
         # "nm-applet &"
@@ -27,7 +30,7 @@
         # which to choose?
         "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         # exec-once = hyprpaper			# Wallpaper
-        "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
+        # "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
         "hypridle" # Needs env vars to find its own config
         #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
         #ianny					# Reminder utility for taking screen breaks
@@ -37,12 +40,15 @@
           [
             # Workspace-specific application launches for amanita
             "[workspace 1 silent] obsidian"
+            "[workspace 2 silent] discord"
+
             "[workspace 4] zen" # Native Zen from flake
+
             "[workspace 7 silent] slack"
             "[workspace 7 silent] proton-mail"
             "[workspace 7 silent] keepassxc"
-            "[workspace 7 silent] ticktick"
-            "[workspace 8 silent] signal-messenger"
+            # "[workspace 7 silent] ticktick"
+            "[workspace 8 silent] signal-desktop"
             "[workspace 9 silent] spotify"
             "[workspace 9 silent] wezterm start pulsemixer"
           ]
@@ -75,8 +81,6 @@
       };
 
       general = {
-        "$mainMod" = "SUPER";
-
         gaps_in = 5;
         gaps_out = [
           5
@@ -86,7 +90,7 @@
         ];
         # gaps_out = if host == "cordyceps" then [ 1 1 0 1 ] else [ 5 15 15 15 ];
 
-        border_size = 2;
+        border_size = 3;
         layout = "dwindle";
 
         # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors

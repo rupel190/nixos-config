@@ -63,12 +63,14 @@
 
         # Buffer submap (prefix key) - DISABLED for now, causing number key conflicts
         # "$mainMod, B, submap, buffer"
-      ] ++ [
+      ]
+      ++ [
         # Submap buffer - commented out to fix number key issue
         # When enabled, this allows Super+B then number to switch workspace
         # But the syntax was causing ALL number keys to switch workspaces
         # TODO: Fix submap syntax properly if you want this feature
-      ] ++ [
+      ]
+      ++ [
         # Switch workspaces with mainMod + [0-9]
         "$mainMod, 1, workspace, 1"
         "$mainMod, 2, workspace, 2"
@@ -95,6 +97,13 @@
       ];
 
       # Note: Laptop-specific keybinds (brightness, audio) are in laptop-only.nix
+
+      # Audio control keybinds (repeat when held)
+      bindel = [
+        ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 2%+"
+        ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"
+        ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+      ];
 
       # Mouse bindings
       bindm = [

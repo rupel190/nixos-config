@@ -8,6 +8,10 @@
   # Host-specific configuration
   networking.hostName = "amanita";
 
+  # Headset - Razer Blacksomething v3 Pro
+  hardware.openrazer.enable = true;
+  hardware.openrazer.users = [ "rupel" ];
+
   # AMD + Wayland environment variables
   environment.variables = {
     EDITOR = "nvim";

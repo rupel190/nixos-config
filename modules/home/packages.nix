@@ -74,7 +74,8 @@
       ## GUI Apps
       fuzzel # launcher
       gimp
-      oculante # image viewer
+      # TODO: temp removal to fix build
+      # oculante # image viewer
       onlyoffice-desktopeditors
       obs-studio
       winetricks
@@ -85,7 +86,7 @@
       signal-desktop
       slack
       teams-for-linux
-      teamspeak3
+      teamspeak6-client # Upgraded from teamspeak3 to avoid qtwebengine build issues
 
       # Utilities
       protonvpn-gui
@@ -93,6 +94,7 @@
       chromium
       pureref # Reference image viewer
       bluez # Bluetooth stack
+      protontricks
 
       # AMD GPU tools
       radeontop # AMD GPU monitor
@@ -120,14 +122,15 @@
       python312Packages.ipython
 
       # LSPs (Language Servers)
+      pyright # Python type checker LSP
+      vscode-langservers-extracted # json, html, css, etc
+      marksman # Markdown LSP
+      taplo # TOML LSP
       lua-language-server
       bash-language-server
-      vscode-langservers-extracted # json, html, css, etc
       nodePackages.typescript-language-server
       nodePackages.svelte-language-server
       yaml-language-server
-      marksman # Markdown LSP
-      taplo # TOML LSP
       dockerfile-language-server
 
       # Formatters

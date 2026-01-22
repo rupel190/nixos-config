@@ -18,6 +18,9 @@
     virtio-win
     win-spice
     adwaita-icon-theme
+    # Wine
+    wineWowPackages.stable
+    winetricks
   ];
 
   # Manage the virtualisation services
