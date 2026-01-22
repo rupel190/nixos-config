@@ -29,9 +29,9 @@
       config.keys = {
         { key = "UpArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) },
         { key = "DownArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) },
-        -- Scroll without shift
-        { key = "PageUp", mods = "", action = wezterm.action.ScrollByPage(-0.9) },
-        { key = "PageDown", mods = "", action = wezterm.action.ScrollByPage(0.9) },
+        -- Scroll with Ctrl+Alt (frees up PageUp/PageDown for nvim)
+        { key = "PageUp", mods = "CTRL|ALT", action = wezterm.action.ScrollByPage(-0.9) },
+        { key = "PageDown", mods = "CTRL|ALT", action = wezterm.action.ScrollByPage(0.9) },
         { key = "h", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
         { key = "l", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(1) },
         { key = "{", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
@@ -43,11 +43,11 @@
         { key = "|", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
         { key = "_", mods = "CTRL|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
 
-        -- Vim-style pane navigation
-        { key = "h", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Left" },
-        { key = "j", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Down" },
-        { key = "k", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Up" },
-        { key = "l", mods = "ALT", action = wezterm.action.ActivatePaneDirection "Right" },
+        -- Vim-style pane navigation (Ctrl+Alt to avoid conflicts with nvim)
+        { key = "h", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Left" },
+        { key = "j", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Down" },
+        { key = "k", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Up" },
+        { key = "l", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Right" },
       }
 
       -- Tabline plugin
