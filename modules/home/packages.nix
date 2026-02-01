@@ -74,8 +74,7 @@
       ## GUI Apps
       fuzzel # launcher
       gimp
-      # TODO: temp removal to fix build
-      # oculante # image viewer
+      oculante # image viewer
       onlyoffice-desktopeditors
       obs-studio
       winetricks
@@ -84,6 +83,7 @@
 
       # Communication
       signal-desktop
+      element-desktop
       slack
       teams-for-linux
       teamspeak6-client # Upgraded from teamspeak3 to avoid qtwebengine build issues
@@ -110,6 +110,7 @@
       hyprpicker # Color picker
       hyprcursor # Cursor manager
       hyprsunset # Blue light filter
+      hyprnotify # Notification daemon using hyprctl notify
       catppuccin-cursors.macchiatoYellow
 
       # C / C++

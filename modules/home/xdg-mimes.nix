@@ -7,10 +7,10 @@ let
     image = [ "oculante.desktop" ];
     audio = [ "mpv.desktop" ];
     video = [ "mpv.desktop" ];
-    # directory = [ "yazi.desktop" ]; # Using yazi from terminal
+    directory = [ "yazi-wezterm.desktop" ]; # Opens yazi in wezterm for "open in explorer" actions
     office = [ "onlyoffice.desktop" ];
     pdf = [ "org.gnome.Evince.desktop" ];
-    terminal = [ "wezterm.desktop" ];
+    terminal = [ "org.wezfurlong.wezterm.desktop" ];
     # archive - using terminal tools
     discord = [ "discord.desktop" ];
   };
@@ -47,7 +47,7 @@ let
       "video/x-matroska"
       "video/x-msvideo"
     ];
-    # directory = [ "inode/directory" ]; # Using terminal file manager
+    directory = [ "inode/directory" "x-scheme-handler/file" ]; # For "open in explorer" buttons
     browser = [
       "text/html"
       "x-scheme-handler/about"
@@ -68,7 +68,7 @@ let
       "application/rtf"
     ];
     pdf = [ "application/pdf" ];
-    terminal = [ "terminal" ];
+    terminal = [ "x-scheme-handler/terminal" ];
     # archive = [ # Using terminal tools
     #   "application/zip"
     #   "application/rar"
@@ -97,5 +97,22 @@ in
   home.sessionVariables = {
     # prevent wine from creating file associations
     WINEDLLOVERRIDES = "winemenubuilder.exe=d";
+    # Set default browser for apps that don't use xdg-open (like Discord/Electron)
+    BROWSER = "zen";
+    DEFAULT_BROWSER = "zen";
+  };
+
+  # Create yazi-wezterm.desktop for opening directories in yazi via wezterm
+  # This is used by apps like Steam when clicking "Browse local files"
+  xdg.desktopEntries.yazi-wezterm = {
+    name = "Yazi (File Manager)";
+    genericName = "File Manager";
+    icon = "yazi";
+    comment = "Terminal file manager in WezTerm";
+    exec = "wezterm start -- yazi %u";
+    terminal = false;
+    type = "Application";
+    categories = [ "Utility" "Core" "System" "FileTools" "FileManager" ];
+    mimeType = [ "inode/directory" "x-scheme-handler/file" ];
   };
 }

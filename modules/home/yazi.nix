@@ -48,7 +48,6 @@
       ];
     };
 
-    # TODO: Check which to keep
     settings = {
       mgr = {
         linemode = "size";
@@ -61,7 +60,6 @@
       };
 
       preview = {
-        # Enable image preview
         image_filter = "lanczos3";
         image_quality = 90;
         max_width = 600;
@@ -69,8 +67,41 @@
       };
 
       tasks = {
-        # Preview for large image files
-        image_alloc = 1073741824; # 1GB for large images
+        image_alloc = 1073741824;
+      };
+
+      # Define openers - call apps directly (bypasses broken xdg-open portal)
+      opener = {
+        image = [
+          { run = ''oculante "$@"''; orphan = true; desc = "Open in Oculante"; }
+        ];
+        video = [
+          { run = ''mpv "$@"''; orphan = true; desc = "Play in mpv"; }
+        ];
+        audio = [
+          { run = ''mpv "$@"''; orphan = true; desc = "Play in mpv"; }
+        ];
+        pdf = [
+          { run = ''evince "$@"''; orphan = true; desc = "Open in Evince"; }
+        ];
+        browser = [
+          { run = ''zen "$@"''; orphan = true; desc = "Open in Zen"; }
+        ];
+        edit = [
+          { run = ''$EDITOR "$@"''; block = true; desc = "Edit in $EDITOR"; }
+        ];
+      };
+
+      # Map MIME types to openers
+      open = {
+        prepend_rules = [
+          { mime = "image/*"; use = "image"; }
+          { mime = "video/*"; use = "video"; }
+          { mime = "audio/*"; use = "audio"; }
+          { mime = "application/pdf"; use = "pdf"; }
+          { mime = "text/html"; use = "browser"; }
+          { mime = "text/*"; use = "edit"; }
+        ];
       };
     };
   };

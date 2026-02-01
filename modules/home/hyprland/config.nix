@@ -11,7 +11,7 @@
         # "poweralertd &"
         # "wl-clip-persist --clipboard both &"
         # "wl-paste --watch cliphist store &"
-        "swaync &"
+        "hyprnotify -s" # Notification daemon using hyprctl notify
         "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
 
         # TODO: Add AGS startup here
