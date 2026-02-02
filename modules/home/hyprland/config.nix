@@ -38,19 +38,17 @@
       ++ (
         if host == "amanita" then
           [
-            # Workspace-specific application launches for amanita
-            "[workspace 1 silent] obsidian"
-            "[workspace 2 silent] discord"
-
-            "[workspace 4] zen" # Native Zen from flake
-
-            "[workspace 7 silent] slack"
-            "[workspace 7 silent] proton-mail"
-            "[workspace 7 silent] keepassxc"
-            # "[workspace 7 silent] ticktick"
-            "[workspace 8 silent] signal-desktop"
-            "[workspace 9 silent] spotify"
-            "[workspace 9 silent] wezterm start pulsemixer"
+            # Application launches for amanita (workspace assignment via windowrulev2)
+            "obsidian"
+            "discord"
+            "zen"
+            "slack"
+            "proton-mail"
+            "keepassxc"
+            # "ticktick"
+            "signal-desktop"
+            "spotify"
+            "wezterm start pulsemixer"
           ]
         else
           [ ]
@@ -239,60 +237,74 @@
       };
 
       windowrule = [
-        # See https://wiki.hyprland.org/Configuring/Window-Rules/
-        # See https://wiki.hyprland.org/Configuring/Workspace-Rules/
+        # See https://wiki.hypr.land/Configuring/Window-Rules/
 
         # Fix some dragging issues with XWayland
         # TODO: doesn't work, fix? -> all 3 lines
-        # "nofocus,class:^$,title:^$,xwayland:1,floating:1,fullscreen:0,pinned:0"
+        # "nofocus on, match:class ^()$, match:title ^()$, match:xwayland true, match:floating true, match:fullscreen false, match:pinned false"
 
         # Ignore maximize requests from apps. TODO: Good idea?
-        # "suppressevent maximize, class:.*"
+        # "suppressevent maximize on, match:class .*"
 
         # CS2 tweak, https://wiki.hypr.land/Configuring/Tearing/#enabling-tearing
-        # "immediate, class:^(cs2)$"
-        # "float,Viewnior"
-        # "float,imv"
-        # "float,mpv"
-        # "tile,Aseprite"
-        # "float,audacious"
-        # "tile, neovide"
-        # "idleinhibit focus,mpv"
-        # "float,udiskie"
-        # "float,title:^(Transmission)$"
-        # "float,title:^(Volume Control)$"
-        # "float,title:^(Firefox — Sharing Indicator)$"
-        # "move 0 0,title:^(Firefox — Sharing Indicator)$"
-        # "size 700 450,title:^(Volume Control)$"
-        # "move 40 55%,title:^(Volume Control)$"
-      ];
+        # "immediate on, match:class ^(cs2)$"
+        # "float on, match:class ^(Viewnior)$"
+        # "float on, match:class ^(imv)$"
+        # "float on, match:class ^(mpv)$"
+        # "tile on, match:class ^(Aseprite)$"
+        # "float on, match:class ^(audacious)$"
+        # "tile on, match:class ^(neovide)$"
+        # "idleinhibit focus on, match:class ^(mpv)$"
+        # "float on, match:class ^(udiskie)$"
+        # "float on, match:title ^(Transmission)$"
+        # "float on, match:title ^(Volume Control)$"
+        # "float on, match:title ^(Firefox — Sharing Indicator)$"
+        # "move 0 0 on, match:title ^(Firefox — Sharing Indicator)$"
+        # "size 700 450 on, match:title ^(Volume Control)$"
+        # "move 40 55% on, match:title ^(Volume Control)$"
 
-      windowrulev2 = [
+        #
+        # Workspace assignments for amanita
+        # DP-1 (left 4K monitor): Workspaces 1-3
+        "match:class ^(obsidian)$, workspace 1 silent"
+        "match:class ^(discord)$, workspace 2 silent"
+
+        # DP-2 (center 240Hz monitor): Workspaces 4-6
+        "match:class ^(zen)$, workspace 4"
+
+        # HDMI-A-2 (right vertical monitor): Workspaces 7-9
+        "match:class ^(Slack)$, workspace 7 silent"
+        "match:class ^(proton-mail)$, workspace 7 silent"
+        "match:class ^(org.keepassxc.KeePassXC)$, workspace 7 silent"
+        "match:class ^(signal)$, workspace 8 silent"
+        "match:class ^(spotify)$, workspace 9 silent"
+        "match:class ^(org.wezfurlong.wezterm)$, match:title ^(pulsemixer)$, workspace 9 silent"
+
         # Force all games to DP-2 (main 240Hz monitor)
         # Steam games
-        # "monitor DP-2, class:^(steam_app_).*"
-        # "workspace 5, class:^(steam_app_).*"
+        # "match:class ^(steam_app_).*, monitor DP-2"
+        # "match:class ^(steam_app_).*, workspace 5"
 
         # Common game engines and launchers
-        # "monitor DP-2, class:^(gamescope).*"
-        # "monitor DP-2, title:^(.*Unity.*)$"
-        # "monitor DP-2, title:^(.*Unreal.*)$"
+        # "match:class ^(gamescope).*, monitor DP-2"
+        # "match:title ^(.*Unity.*)$, monitor DP-2"
+        # "match:title ^(.*Unreal.*)$, monitor DP-2"
 
         # Enable tearing for better FPS in games
-        # "immediate, class:^(steam_app_).*"
-        # "immediate, class:^(gamescope).*"
+        # "match:class ^(steam_app_).*, immediate on"
+        # "match:class ^(gamescope).*, immediate on"
 
         # Disable blur and animations for games (performance)
-        # "noblur, class:^(steam_app_).*"
-        # "noblur, class:^(gamescope).*"
-        # "noshadow, class:^(steam_app_).*"
+        # "match:class ^(steam_app_).*, noblur on"
+        # "match:class ^(gamescope).*, noblur on"
+        # "match:class ^(steam_app_).*, noshadow on"
 
         # Prevent idle when gaming
-        # "idleinhibit focus, class:^(steam_app_).*"
-        # "idleinhibit focus, class:^(gamescope).*"
+        # "match:class ^(steam_app_).*, idleinhibit focus"
+        # "match:class ^(gamescope).*, idleinhibit focus"
 
         # Specific game rules (add your games here)
-        # Example: "monitor DP-2, title:^(Abiotic Factor).*"
+        # Example: "match:title ^(Abiotic Factor).*, monitor DP-2"
       ];
       #
       # windowrulev2 = [

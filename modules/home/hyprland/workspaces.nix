@@ -11,6 +11,7 @@ in
   wayland.windowManager.hyprland.settings = {
     cursor = {
       default_monitor = "DP-2";
+      no_hardware_cursors = true;
     };
 
     # Desktop monitor configuration (amanita)
