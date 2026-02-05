@@ -53,17 +53,18 @@
         ];
       };
 
-      # Laptop (uncomment when you set it up)
-      # nixosConfigurations.cordyceps = nixpkgs.lib.nixosSystem {
-      #   system = "x86_64-linux";
-      #   specialArgs = {
-      #     inherit inputs self;
-      #     username = "rupel";
-      #     host = "cordyceps";
-      #   };
-      #   modules = [
-      #     ./hosts/cordyceps
-      #   ];
-      # };
+      # Laptop
+      nixosConfigurations.cordyceps = nixpkgs.lib.nixosSystem {
+         system = "x86_64-linux";
+         specialArgs = {
+           inherit inputs self;
+           username = "rupel";
+           host = "cordyceps";
+         };
+         modules = [
+           ./hosts/cordyceps
+         ];
+       };
     };
 }
+
