@@ -72,7 +72,7 @@
         # float_switch_override_focus = 0;
 
         # Desktop input settings (laptop settings are in laptop-only.nix)
-        sensitivity = 0; # -1.0 - 1.0, 0 means no modification
+        sensitivity = 1; # -1.0 - 1.0, 0 means no modification
         accel_profile = "flat"; # Flat for desktop mouse
         scroll_factor = 1.0;
         natural_scroll = false;
