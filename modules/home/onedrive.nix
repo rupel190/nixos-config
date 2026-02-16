@@ -1,8 +1,23 @@
 { pkgs, ... }:
 {
   # OneDrive sync service (abraunegg/onedrive)
-  services.onedrive = {
-    enable = true;
-    package = pkgs.onedrive;
+  home.packages = [ pkgs.onedrive ];
+
+  # Systemd user service running in monitor mode
+  systemd.user.services.onedrive = {
+    Unit = {
+      Description = "OneDrive sync service";
+      After = [ "network-online.target" ];
+      Wants = [ "network-online.target" ];
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.onedrive}/bin/onedrive --monitor";
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+    Install = {
+      WantedBy = [ "default.target" ];
+    };
   };
 }

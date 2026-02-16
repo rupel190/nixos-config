@@ -26,7 +26,7 @@
     ./browser.nix # zen browser
     ./gtk.nix # gtk theme
     ./xdg-mimes.nix # file associations
-    # ./onedrive.nix # onedrive sync service - TODO: needs proper systemd service setup
+    ./onedrive.nix # onedrive sync service (monitor mode)
 
     # Ready to enable when needed:
     # ./ags - Simple bar widget (migrated from chezmoi)
