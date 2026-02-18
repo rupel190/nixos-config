@@ -112,7 +112,7 @@
       owner = "catppuccin";
       repo = "yazi";
       rev = "main";
-      sha256 = "sha256-zkL46h1+U9ThD4xXkv1uuddrlQviEQD3wNZFRgv7M8Y=";
+      sha256 = "sha256-Og33IGS9pTim6LEH33CO102wpGnPomiperFbqfgrJjw=";
     };
   };
 

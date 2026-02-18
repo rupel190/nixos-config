@@ -9,11 +9,11 @@
   networking.hostName = "cordyceps";
 
   # Laptop-specific settings
-  services.logind.extraConfig = ''
-    # Don't shutdown when power button is short-pressed (useful for laptops)
-    HandlePowerKey=ignore
-  '';
-
+  # services.logind.extraConfig = ''
+  #   # Don't shutdown when power button is short-pressed (useful for laptops)
+  #   HandlePowerKey=ignore
+  # '';
+  #
   # Laptop power management
   services.tlp = {
     enable = true;
