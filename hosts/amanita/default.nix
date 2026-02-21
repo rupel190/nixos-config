@@ -12,6 +12,9 @@
   hardware.openrazer.enable = true;
   hardware.openrazer.users = [ "rupel" ];
 
+  # Logitech G29 - install oversteer udev rules for wheel control
+  services.udev.packages = [ pkgs.oversteer ];
+
   # AMD + Wayland environment variables
   environment.variables = {
     EDITOR = "nvim";

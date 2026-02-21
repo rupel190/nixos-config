@@ -4,7 +4,7 @@
     enable = true;
 
     settings = {
-      color_theme = "catppuccin-macchiato";
+      color_theme = "catppuccin_macchiato";
       rounded_corners = true;
       theme_background = true;
       graph_symbol = "braille";

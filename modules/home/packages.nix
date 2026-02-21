@@ -78,7 +78,9 @@
       onlyoffice-desktopeditors
       obs-studio
       winetricks
-      wineWowPackages.wayland
+      wineWowPackages.staging
+      bambu-studio
+      oversteer
       # gamescope # Gaming compositor
 
       # Communication

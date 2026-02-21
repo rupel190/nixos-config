@@ -8,6 +8,21 @@
     extraConfig = ''
       -- Configuration
       local config = wezterm.config_builder()
+      local mux = wezterm.mux
+
+      -- When launched with pulsemixer, also open a btop tab
+      wezterm.on("gui-startup", function(cmd)
+        local tab, pane, window = mux.spawn_window(cmd or {})
+        if cmd and cmd.args then
+          for _, arg in ipairs(cmd.args) do
+            if arg == "pulsemixer" then
+              window:spawn_tab({ args = { "btop" } })
+              tab:activate()
+              break
+            end
+          end
+        end
+      end)
 
       -- Window settings
       config.adjust_window_size_when_changing_font_size = false
@@ -19,7 +34,7 @@
 
       -- Tab bar
       config.window_close_confirmation = "NeverPrompt"
-      config.hide_tab_bar_if_only_one_tab = true
+      config.hide_tab_bar_if_only_one_tab = false
       config.show_new_tab_button_in_tab_bar = false
 
       -- Catppuccin Macchiato theme
