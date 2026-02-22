@@ -1,5 +1,6 @@
 {
   inputs,
+  lib,
   username,
   host,
   ...
@@ -43,5 +44,7 @@
     # - viewnior.nix (image viewer)
     # - waypaper.nix (not using wallpaper management)
     # - scripts/ (removed - using AGS instead)
+  ] ++ lib.optionals (host == "amanita") [
+    ./pi-backup.nix # weekly pull of RPi backups to silo + OneDrive (amanita only)
   ];
 }
