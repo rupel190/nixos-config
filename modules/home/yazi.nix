@@ -51,7 +51,7 @@
     settings = {
       mgr = {
         linemode = "size";
-        show_hidden = true;
+        show_hidden = false;
         show_symlink = true;
         sort_by = "natural";
         sort_dir_first = true;
@@ -73,34 +73,76 @@
       # Define openers - call apps directly (bypasses broken xdg-open portal)
       opener = {
         image = [
-          { run = ''oculante "$@"''; orphan = true; desc = "Open in Oculante"; }
+          {
+            run = ''oculante "$@"'';
+            orphan = true;
+            desc = "Open in Oculante";
+          }
         ];
         video = [
-          { run = ''mpv "$@"''; orphan = true; desc = "Play in mpv"; }
+          {
+            run = ''mpv "$@"'';
+            orphan = true;
+            desc = "Play in mpv";
+          }
         ];
         audio = [
-          { run = ''mpv "$@"''; orphan = true; desc = "Play in mpv"; }
+          {
+            run = ''mpv "$@"'';
+            orphan = true;
+            desc = "Play in mpv";
+          }
         ];
         pdf = [
-          { run = ''evince "$@"''; orphan = true; desc = "Open in Evince"; }
+          {
+            run = ''evince "$@"'';
+            orphan = true;
+            desc = "Open in Evince";
+          }
         ];
         browser = [
-          { run = ''zen "$@"''; orphan = true; desc = "Open in Zen"; }
+          {
+            run = ''zen "$@"'';
+            orphan = true;
+            desc = "Open in Zen";
+          }
         ];
         edit = [
-          { run = ''$EDITOR "$@"''; block = true; desc = "Edit in $EDITOR"; }
+          {
+            run = ''$EDITOR "$@"'';
+            block = true;
+            desc = "Edit in $EDITOR";
+          }
         ];
       };
 
       # Map MIME types to openers
       open = {
         prepend_rules = [
-          { mime = "image/*"; use = "image"; }
-          { mime = "video/*"; use = "video"; }
-          { mime = "audio/*"; use = "audio"; }
-          { mime = "application/pdf"; use = "pdf"; }
-          { mime = "text/html"; use = "browser"; }
-          { mime = "text/*"; use = "edit"; }
+          {
+            mime = "image/*";
+            use = "image";
+          }
+          {
+            mime = "video/*";
+            use = "video";
+          }
+          {
+            mime = "audio/*";
+            use = "audio";
+          }
+          {
+            mime = "application/pdf";
+            use = "pdf";
+          }
+          {
+            mime = "text/html";
+            use = "browser";
+          }
+          {
+            mime = "text/*";
+            use = "edit";
+          }
         ];
       };
     };
