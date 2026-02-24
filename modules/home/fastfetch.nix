@@ -128,21 +128,6 @@
           "keyColor": "33"
         },
         {
-          "type": "theme",
-          "key": "├─󰉼 ",
-          "keyColor": "33"
-        },
-        {
-          "type": "icons",
-          "key": "├─ ",
-          "keyColor": "33"
-        },
-        {
-          "type": "cursor",
-          "key": "├─󰳽 ",
-          "keyColor": "33"
-        },
-        {
           "type": "font",
           "key": "├─ ",
           "format": "{2}",
