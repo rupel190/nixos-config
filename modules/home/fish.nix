@@ -114,6 +114,7 @@
       se = "sudoedit";
       vault = "cd /home/rupel/.local/share/Cryptomator/mnt/Vault";
       hyprconf = "nvim /home/rupel/.config/hypr";
+      mac-trichoderma = "e0:d5:5e:4f:29:42";
     };
 
     functions = {

@@ -48,7 +48,7 @@
             # "ticktick"
             "signal-desktop"
             "spotify"
-            "wezterm start pulsemixer"
+            "wezterm start --workspace system"
           ]
         else
           [ ]

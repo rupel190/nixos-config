@@ -3,6 +3,60 @@
   home.packages = (
     with pkgs;
     [
+      ## GUI Apps
+      fuzzel # launcher
+      gimp
+      oculante # image viewer
+      onlyoffice-desktopeditors # office alternative
+      obs-studio # streaming
+      oversteer # racing wheel
+      orca-slicer # 3D print
+      bambu-studio # 3D print
+      digikam # photo organizer
+      bitwig-studio # audio daw
+      keepassxc
+      obsidian
+      evince # (gnome) pdf reader
+
+      # Communication
+      signal-desktop
+      element-desktop
+      slack
+      teams-for-linux
+      teamspeak6-client # Upgraded from teamspeak3 to avoid qtwebengine build issues
+
+      # Utility
+      protonvpn-gui
+      cryptomator
+      chromium
+      pureref # Reference image viewer
+      bluez # Bluetooth stack
+      wineWowPackages.staging # prebuilt wine
+      protontricks
+      winetricks
+      wakeonlan
+      # gamescope # Gaming compositor
+
+      # Tweaks
+      betterdiscordctl
+
+      # Android MTP
+      gvfs # Virtual filesystem
+      glib # GLib library
+      simple-mtpfs # MTP filesystem
+
+      # AMD GPU util
+      radeontop # AMD GPU monitor
+      vulkan-tools # Vulkan utilities
+      mesa-demos # OpenGL demos
+
+      # Wayland/Hyprland theming
+      hyprpicker # Color picker
+      hyprcursor # Cursor manager
+      hyprsunset # Blue light filter
+      hyprnotify # Notification daemon using hyprctl notify
+      catppuccin-cursors.macchiatoYellow
+
       ## CLI utility
       eza # ls replacement
       fd # find replacement
@@ -46,6 +100,14 @@
       swappy # snapshot editing tool
       wl-screenrec # Screen recorder
 
+      ## CLI
+      kitty # fallback
+      cbonsai # terminal screensaver
+      cmatrix
+      pipes # terminal screensaver
+      pulsemixer
+      tty-clock # cli clock
+
       openssl
       ripgrep # grep replacement
       shfmt # bash formatter
@@ -60,61 +122,6 @@
       wl-clipboard # clipboard utils for wayland (wl-copy, wl-paste)
       wget
       xdg-utils
-
-      # Gnome
-      evince # pdf reader
-
-      ## CLI
-      kitty # fallback
-      cbonsai # terminal screensaver
-      cmatrix
-      pipes # terminal screensaver
-      pulsemixer
-      tty-clock # cli clock
-
-      ## GUI Apps
-      fuzzel # launcher
-      gimp
-      oculante # image viewer
-      onlyoffice-desktopeditors
-      obs-studio
-      winetricks
-      wineWowPackages.staging
-      bambu-studio
-      oversteer
-      # gamescope # Gaming compositor
-
-      # Communication
-      signal-desktop
-      element-desktop
-      slack
-      teams-for-linux
-      teamspeak6-client # Upgraded from teamspeak3 to avoid qtwebengine build issues
-
-      # Utilities
-      protonvpn-gui
-      cryptomator
-      chromium
-      pureref # Reference image viewer
-      bluez # Bluetooth stack
-      protontricks
-
-      # AMD GPU tools
-      radeontop # AMD GPU monitor
-      vulkan-tools # Vulkan utilities
-      mesa-demos # OpenGL demos
-
-      # Android MTP
-      gvfs # Virtual filesystem
-      glib # GLib library
-      simple-mtpfs # MTP filesystem
-
-      # Wayland/Hyprland theming
-      hyprpicker # Color picker
-      hyprcursor # Cursor manager
-      hyprsunset # Blue light filter
-      hyprnotify # Notification daemon using hyprctl notify
-      catppuccin-cursors.macchiatoYellow
 
       # C / C++
       gcc
@@ -144,13 +151,6 @@
       ruff # Python linter + formatter
       nodePackages.prettier # Multi-language formatter
       nodePackages.mermaid-cli # Mermaid diagrams
-
-      # Additional user packages
-      digikam
-      bitwig-studio
-      betterdiscordctl
-      keepassxc
-      obsidian
     ]
   );
 

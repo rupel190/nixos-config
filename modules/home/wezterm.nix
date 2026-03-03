@@ -7,121 +7,152 @@
 
     extraConfig = # lua
       ''
-        -- Configuration
-        local config = wezterm.config_builder()
-        local mux = wezterm.mux
+         -- Configuration
+         local config = wezterm.config_builder()
+         local mux = wezterm.mux
 
 
-        -- Define workspaces
-        wezterm.on('gui-startup', function(cmd)
-          -- autostart
-          local tab, startup_pane, window = mux.spawn_window {
-            workspace = 'autostart',
-            args = { 'pulsemixer' },
-          }
-          startup_pane:split {
-            args = { 'btop' },
-            direction = 'Bottom',
-            size = 0.7,
-          }
+         -- Define workspaces
+         wezterm.on('gui-startup', function(cmd)
+           local tab, default_pane, window = mux.spawn_window {
+             workspace = 'default',
+           }
 
-          local tab, remote_pane, window = mux.spawn_window {
-            workspace = 'recustomize',
-            args = { 'ssh', 'trichoderma' },
-            cwd = '/home/rupel/projects/recustomize',
-          }
-          local bottom_pane = remote_pane:split {
-            direction = 'Bottom',
-            size = 0.2,
-          }
-          bottom_pane:split {
-            direction = 'Right',
-            size = 0.5,
-          }
-
-          local tab, beamng_pane, window = mux.spawn_window {
-            workspace = 'beamng',
-            args = { 'yazi' },
-            cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
-          }
-          beamng_pane:split {
-            direction = 'Bottom',
-            size = 0.25,
-          }
-          beamng_pane:split {
-            direction = 'Left',
-            args = { 'claude' },
-            size = 0.5,
-          }
-          
-
-          mux.set_active_workspace 'autostart'
-        end)
+           local tab, startup_pane, window = mux.spawn_window {
+             workspace = 'system',
+             args = { 'pulsemixer' },
+           }
+           startup_pane:split {
+             args = { 'btop' },
+             direction = 'Bottom',
+             size = 0.45,
+           }
 
 
-        -- Window settings
-        config.adjust_window_size_when_changing_font_size = false
-        config.enable_scroll_bar = true
-        config.scrollback_lines = 200000
-        config.window_background_opacity = 0.9
-        config.enable_wayland = true -- Force native Wayland (not XWayland)
-        -- Note: window_decorations set after tabline.apply_to_config() at bottom
+           local tab, remote_pane, window = mux.spawn_window {
+             workspace = 'recustomize',
+             args = { 'ssh', 'trichoderma' },
+             cwd = '/home/rupel/projects/recustomize',
+           }
+           local bottom_pane = remote_pane:split {
+             direction = 'Bottom',
+             size = 0.05,
+           }
+           bottom_pane:split {
+             direction = 'Right',
+             size = 0.5,
+           }
+           local second_tab, second_pane, _ = window:spawn_tab {
+             cwd = '/home/rupel/projects/recustomize',
+           }
 
-        -- Tab bar
-        config.window_close_confirmation = "NeverPrompt"
-        config.hide_tab_bar_if_only_one_tab = false
-        config.show_new_tab_button_in_tab_bar = false
 
-        -- Catppuccin Macchiato theme
-        config.color_scheme = "Catppuccin Macchiato"
+           local tab, remote_pane, window = mux.spawn_window {
+             workspace = 'riedercc',
+             cwd = '/home/rupel/projects/rieder/rieder-site/ui',
+           }
+           local bottom_pane = remote_pane:split {
+             direction = 'Bottom',
+             size = 0.05,
+           }
+           bottom_pane:split {
+             direction = 'Right',
+             size = 0.5,
+           }
 
-        -- Custom keybindings
-        config.keys = {
-          { key = "UpArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) },
-          { key = "DownArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) },
-          -- Scroll with Ctrl+Alt (frees up PageUp/PageDown for nvim)
-          { key = "PageUp", mods = "CTRL|ALT", action = wezterm.action.ScrollByPage(-0.9) },
-          { key = "PageDown", mods = "CTRL|ALT", action = wezterm.action.ScrollByPage(0.9) },
-          { key = "h", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
-          { key = "l", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(1) },
-          { key = "{", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
-          { key = "}", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(1) },
-          -- Disable close tab confirmation
-          { key = "w", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentTab { confirm = false } },
 
-          -- Simpler splits
-          { key = "|", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
-          { key = "_", mods = "CTRL|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
+           local tab, beamng_pane, window = mux.spawn_window {
+             workspace = 'beamng',
+             cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
+             args = { 'claude' },
+           }
+            beamng_pane:split {
+             direction = 'Right',
+             size = 0.5,
+             args = { 'yazi' },
+             cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
+           }
 
-          -- Vim-style pane navigation (Ctrl+Alt to avoid conflicts with nvim)
-          { key = "h", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Left" },
-          { key = "j", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Down" },
-          { key = "k", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Up" },
-          { key = "l", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Right" },
+           -- mux.set_active_workspace(cmd.workspace or 'default')
+           mux.set_active_workspace('default')
+         end)
+
+
+         -- Window settings
+         config.adjust_window_size_when_changing_font_size = false
+         config.enable_scroll_bar = true
+         config.scrollback_lines = 200000
+         config.window_background_opacity = 0.9
+         config.enable_wayland = true -- Force native Wayland (not XWayland)
+         -- Note: window_decorations set after tabline.apply_to_config() at bottom
+
+         -- Tab bar
+         config.window_close_confirmation = "NeverPrompt"
+         config.hide_tab_bar_if_only_one_tab = false
+         config.show_new_tab_button_in_tab_bar = false
+
+         -- Catppuccin Macchiato theme
+         config.color_scheme = "Catppuccin Macchiato"
+
+         -- Custom keybindings
+         config.keys = {
+           { key = "UpArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) },
+           { key = "DownArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) },
+           -- Scroll with CTRL+SHIFT (frees up PageUp/PageDown for nvim)
+           { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(-1.0) },
+           { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(1.0) },
+           { key = "h", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
+           { key = "l", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(1) },
+           { key = "{", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
+           { key = "}", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(1) },
+           -- Switch workspaces
+           { key = 'i', mods = "CTRL|SHIFT", action = wezterm.action.SwitchWorkspaceRelative(-1) },
+           { key = 'o', mods = "CTRL|SHIFT", action = wezterm.action.SwitchWorkspaceRelative(1) },
+
+           -- Disable close tab confirmation
+           { key = "w", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentTab { confirm = false } },
+
+           -- Simpler splits
+           { key = "|", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
+           { key = "_", mods = "CTRL|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
+
+           -- Vim-style pane navigation (Ctrl+Alt to avoid conflicts with nvim)
+           { key = "h", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Left" },
+           { key = "j", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Down" },
+           { key = "k", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Up" },
+           { key = "l", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Right" },
+           { key = "DownArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Down" , 2 } },
+           { key = "UpArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Up", 2 } },
+           { key = "LeftArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Left", 2 } },
+           { key = "RightArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Right", 2 } },
         }
 
-        -- Tabline plugin
-        local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
-        tabline.setup({
-          options = {
-            theme = config.color_scheme or "default",
-          },
-          sections = {
-            tabline_a = {},
-            tabline_b = {},
-            tabline_c = { " " },
-            tabline_x = {},
-            tabline_y = {},
-            tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
-          },
-        })
-        tabline.apply_to_config(config)
+         -- Tabline plugin
+         local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+         tabline.setup({
+           options = {
+             theme = config.color_scheme or "default",
+           },
+           sections = {
+             tabline_a = { "workspace" },
+             tabline_b = {},
+             tabline_c = { " " },
+             tabline_x = {},
+             tabline_y = {},
+             tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
+           },
+           tabs = {
+             tab_active = { { 'process', padding = { left = 0, right = 1 } } },
+             tab_inactive = { { 'process', padding = { left = 0, right = 1 } }, 'output' },
+           },
+         })
+         tabline.apply_to_config(config)
 
-        -- Override tabline's decoration settings (must be AFTER apply_to_config)
-        config.window_decorations = "NONE"
-        config.integrated_title_buttons = {}
+         -- Override tabline's decoration settings (must be AFTER apply_to_config)
+         config.window_decorations = "NONE"
+         config.integrated_title_buttons = {}
 
-        return config
+         return config
       '';
   };
 }
