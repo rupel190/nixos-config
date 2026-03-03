@@ -32,6 +32,9 @@
     # Ready to enable when needed:
     # ./ags - Simple bar widget (migrated from chezmoi)
 
+    # Unmanaged app configs (deployed as-is)
+    ./dotfiles
+
     # Window manager - fully migrated!
     ./hyprland
 

@@ -1,0 +1,2 @@
+# Secrets — never commit auth tokens
+modules/home/dotfiles/gh/hosts.yml
