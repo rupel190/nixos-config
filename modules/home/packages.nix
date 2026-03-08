@@ -35,6 +35,7 @@
       protontricks
       winetricks
       wakeonlan
+      zerotierone # virtual ethernet for external access
       # gamescope # Gaming compositor
 
       # Tweaks
