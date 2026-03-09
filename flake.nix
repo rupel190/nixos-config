@@ -29,6 +29,11 @@
     nix-flatpak.url = "github:gmodena/nix-flatpak";
 
     claude-code.url = "github:sadjow/claude-code-nix";
+
+    ragenix = {
+      url = "github:yaxitech/ragenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -50,21 +55,22 @@
         };
         modules = [
           ./hosts/amanita
+          inputs.ragenix.nixosModules.default
         ];
       };
 
       # Laptop
       nixosConfigurations.cordyceps = nixpkgs.lib.nixosSystem {
-         system = "x86_64-linux";
-         specialArgs = {
-           inherit inputs self;
-           username = "rupel";
-           host = "cordyceps";
-         };
-         modules = [
-           ./hosts/cordyceps
-         ];
-       };
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs self;
+          username = "rupel";
+          host = "cordyceps";
+        };
+        modules = [
+          ./hosts/cordyceps
+          inputs.ragenix.nixosModules.default
+        ];
+      };
     };
 }
-

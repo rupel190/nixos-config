@@ -12,6 +12,19 @@
 
     # SSD TRIM service (weekly optimization)
     fstrim.enable = true;
+
+    # ZeroTier
+    zerotierone = {
+      enable = true;
+    };
+
+    # SSH server
+    openssh = {
+      enable = true;
+      openFirewall = false;
+      settings.PasswordAuthentication = false;
+      settings.PermitRootLogin = "no";
+    };
   };
 
   # NOTE: Uncomment for laptop - prevents shutdown on power button short-press
