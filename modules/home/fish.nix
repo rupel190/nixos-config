@@ -199,6 +199,9 @@
       # Godot launcher shortcut
       godot = "command godot --rendering-driver opengl3 $argv";
 
+      # Flatpak apps
+      bambu-studio = "flatpak run com.bambulab.BambuStudio $argv";
+
       # Terminal image display
       imgcat = "wezterm imgcat $argv";
     };

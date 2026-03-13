@@ -11,12 +11,12 @@
       obs-studio # streaming
       oversteer # racing wheel
       orca-slicer # 3D print
-      bambu-studio # 3D print
       digikam # photo organizer
       bitwig-studio # audio daw
       keepassxc
       obsidian
       evince # (gnome) pdf reader
+      freecad # cad
 
       # Communication
       signal-desktop

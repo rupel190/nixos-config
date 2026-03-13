@@ -1,8 +1,15 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 {
   imports = [
     ./hardware-configuration.nix
     ./../../modules/core
+    inputs.nix-flatpak.nixosModules.nix-flatpak
+  ];
+
+  # Flatpak
+  services.flatpak.enable = true;
+  services.flatpak.packages = [
+    "com.bambulab.BambuStudio"
   ];
 
   # Host-specific configuration
