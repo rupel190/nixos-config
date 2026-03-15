@@ -10,13 +10,13 @@
       onlyoffice-desktopeditors # office alternative
       obs-studio # streaming
       oversteer # racing wheel
-      orca-slicer # 3D print
       digikam # photo organizer
       bitwig-studio # audio daw
       keepassxc
       obsidian
       evince # (gnome) pdf reader
       freecad # cad
+      openscad # 3D parametric CAD modeling
 
       # Communication
       signal-desktop
@@ -144,6 +144,7 @@
       nodePackages.svelte-language-server
       yaml-language-server
       dockerfile-language-server
+      openscad-lsp # OpenSCAD parametric 3D modeling
 
       # Formatters
       stylua # Lua formatter
