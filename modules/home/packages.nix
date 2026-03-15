@@ -15,8 +15,9 @@
       keepassxc
       obsidian
       evince # (gnome) pdf reader
-      freecad # cad
-      openscad # 3D parametric CAD modeling
+      blockbench # low-poly 3D modeling and animation
+      freecad # CAD
+      openscad # parametric CAD
 
       # Communication
       signal-desktop
