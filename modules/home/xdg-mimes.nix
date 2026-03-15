@@ -13,6 +13,7 @@ let
     terminal = [ "org.wezfurlong.wezterm.desktop" ];
     # archive - using terminal tools
     discord = [ "discord.desktop" ];
+    bambustudio = [ "com.bambulab.BambuStudio.desktop" ];
   };
 
   mimeMap = {
@@ -76,6 +77,7 @@ let
     #   "application/*tar"
     # ];
     discord = [ "x-scheme-handler/discord" ];
+    bambustudio = [ "x-scheme-handler/bambustudio" ];
   };
 
   associations =
