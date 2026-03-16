@@ -12,22 +12,24 @@
          local mux = wezterm.mux
 
 
-         -- Define workspaces
-         wezterm.on('gui-startup', function(cmd)
+         -- Unix domain for mux server/client architecture
+         -- Allows GUI windows to be closed independently while workspaces persist
+         config.unix_domains = { { name = "unix" } }
+         config.default_gui_startup_args = { "connect", "unix" }
+
+         -- Define workspaces (runs on the mux server, not the GUI client)
+         wezterm.on('mux-startup', function()
            local tab, default_pane, window = mux.spawn_window {
              workspace = 'default',
            }
 
-           local tab, startup_pane, window = mux.spawn_window {
+           local tab, pulsemixer_pane, window = mux.spawn_window {
              workspace = 'system',
              args = { 'pulsemixer' },
            }
-           startup_pane:split {
+           window:spawn_tab {
              args = { 'btop' },
-             direction = 'Bottom',
-             size = 0.45,
            }
-
 
            local tab, remote_pane, window = mux.spawn_window {
              workspace = 'recustomize',
@@ -42,10 +44,9 @@
              direction = 'Right',
              size = 0.5,
            }
-           local second_tab, second_pane, _ = window:spawn_tab {
+           window:spawn_tab {
              cwd = '/home/rupel/projects/recustomize',
            }
-
 
            local tab, remote_pane, window = mux.spawn_window {
              workspace = 'riedercc',
@@ -60,21 +61,15 @@
              size = 0.5,
            }
 
-
            local tab, beamng_pane, window = mux.spawn_window {
              workspace = 'beamng',
              cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
+             args = { 'yazi' },
+           }
+           window:spawn_tab {
+             cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
              args = { 'claude' },
            }
-            beamng_pane:split {
-             direction = 'Right',
-             size = 0.5,
-             args = { 'yazi' },
-             cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
-           }
-
-           -- mux.set_active_workspace(cmd.workspace or 'default')
-           mux.set_active_workspace('default')
          end)
 
 

@@ -6,7 +6,7 @@
 
       bind = [
         # Apps
-        "$mainMod, T, exec, wezterm start --always-new-process"
+        "$mainMod, T, exec, wezterm connect unix"
         "$mainMod, RETURN, exec, fuzzel"
         "$mainMod, E, exec, wezterm start --always-new-process yazi"
         "$mainMod, C, killactive,"

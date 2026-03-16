@@ -49,7 +49,7 @@
             # "ticktick"
             "signal-desktop"
             "spotify"
-            "wezterm start --workspace system"
+            "wezterm connect unix"
           ]
         else
           [ ]
