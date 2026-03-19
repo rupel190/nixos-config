@@ -18,6 +18,7 @@
       blockbench # low-poly 3D modeling and animation
       freecad # CAD
       openscad # parametric CAD
+      plasticity # CAD for artists
 
       # Communication
       signal-desktop

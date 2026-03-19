@@ -120,6 +120,28 @@
            { key = "UpArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Up", 2 } },
            { key = "LeftArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Left", 2 } },
            { key = "RightArrow", mods = "CTRL|SHIFT", action = wezterm.action.AdjustPaneSize {"Right", 2 } },
+
+           -- Copy last command + output to clipboard (uses semantic zones from shell integration)
+           { key = "c", mods = "CTRL|SHIFT", action = wezterm.action_callback(function(window, pane)
+             local zones = pane:get_semantic_zones()
+             local output_text, input_text
+             for i = #zones, 1, -1 do
+               local zone = zones[i]
+               if not output_text and zone.semantic_type == "Output" then
+                 output_text = pane:get_text_from_semantic_zone(zone):gsub("%s+$", "")
+               elseif output_text and zone.semantic_type == "Input" then
+                 input_text = pane:get_text_from_semantic_zone(zone):gsub("%s+$", "")
+                 break
+               end
+             end
+             if output_text then
+               local result = (input_text and ("$ " .. input_text .. "\n") or "") .. output_text
+               window:copy_to_clipboard(result, "Clipboard")
+               window:toast_notification("wezterm", "Copied command + output", nil, 2000)
+             else
+               window:toast_notification("wezterm", "No command output found", nil, 2000)
+             end
+           end) },
         }
 
          -- Tabline plugin

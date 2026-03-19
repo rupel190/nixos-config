@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   home.sessionVariables = {
 
@@ -19,6 +19,11 @@
 
     TERMINAL = "wezterm";
     BROWSER = "zen";
+
+    # Override Hyprland flake's home-manager module which sets this to the per-user
+    # profile path (only has hyprland.portal). The system path has both gtk.portal
+    # and hyprland.portal, which is needed for FileChooser, Settings, OpenURI, etc.
+    NIX_XDG_DESKTOP_PORTAL_DIR = lib.mkForce "/run/current-system/sw/share/xdg-desktop-portal/portals";
 
     # Force dark theme for Electron apps (Signal, Slack, Discord, etc.)
     GTK_THEME = "Adwaita:dark";
