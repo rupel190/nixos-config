@@ -54,4 +54,10 @@
     # CLUTTER_BACKEND = "wayland";
     # GTK_THEME = "Colloid-Green-Dark-Gruvbox";
   };
+
+  # Also override for systemd user services (portals run under systemd --user,
+  # which doesn't read home.sessionVariables)
+  systemd.user.sessionVariables = {
+    NIX_XDG_DESKTOP_PORTAL_DIR = lib.mkForce "/run/current-system/sw/share/xdg-desktop-portal/portals";
+  };
 }

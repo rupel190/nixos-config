@@ -106,6 +106,18 @@ in
 
   # Create yazi-wezterm.desktop for opening directories in yazi via wezterm
   # This is used by apps like Steam when clicking "Browse local files"
+  # Plasticity via Wine — Linux version has broken UI on non-Ubuntu distros
+  xdg.desktopEntries.plasticity = {
+    name = "Plasticity";
+    genericName = "CAD for Artists";
+    icon = "Plasticity";
+    comment = "3D CAD modeling (Wine)";
+    exec = ''wine "C:/Program Files/Plasticity/Plasticity.exe" %u'';
+    terminal = false;
+    type = "Application";
+    categories = [ "Graphics" "3DGraphics" ];
+  };
+
   xdg.desktopEntries.yazi-wezterm = {
     name = "Yazi (File Manager)";
     genericName = "File Manager";

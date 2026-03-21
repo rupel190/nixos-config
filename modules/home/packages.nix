@@ -18,7 +18,13 @@
       blockbench # low-poly 3D modeling and animation
       freecad # CAD
       openscad # parametric CAD
-      plasticity # CAD for artists
+      (inkscape-with-extensions.override {
+        inkscapeExtensions = [ inkscape-extensions.inkstitch ];
+      })
+      orca-slicer
+      # Plasticity: Linux version has broken UI (unit picker, preferences, dropdowns)
+      # on non-Ubuntu distros — https://github.com/NixOS/nixpkgs/issues/403992
+      # Using Windows version via Wine instead (installed at ~/.wine/drive_c/Program Files/Plasticity/)
 
       # Communication
       signal-desktop
