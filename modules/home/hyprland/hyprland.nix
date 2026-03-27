@@ -8,7 +8,11 @@ in
     package = inputs.hyprpaper.packages.${pkgs.system}.hyprpaper;
     settings = {
       preload = [ wallpaper ];
-      wallpaper = [ ",${wallpaper}" ]; # empty monitor prefix = all monitors
+      wallpaper = [
+        "DP-1,${wallpaper}"
+        "HDMI-A-1,${wallpaper}"
+        "HDMI-A-2,${wallpaper}"
+      ];
     };
   };
   home.packages = with pkgs; [

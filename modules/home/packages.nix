@@ -6,7 +6,7 @@
       ## GUI Apps
       fuzzel # launcher
       gimp
-      # oculante # image viewer -- broken nixpkgs patch (libaom-sys), re-enable when fixed
+      imv # image viewer
       onlyoffice-desktopeditors # office alternative
       obs-studio # streaming
       oversteer # racing wheel
@@ -163,6 +163,18 @@
       nodePackages.mermaid-cli # Mermaid diagrams
     ]
   );
+
+  xdg.configFile."imv/config".text = ''
+    [binds]
+    j = next_image
+    k = prev_image
+    h = prev_image
+    l = next_image
+    <left> = pan -10 0
+    <right> = pan 10 0
+    <up> = pan 0 -10
+    <down> = pan 0 10
+  '';
 
   # Virt-manager dconf settings
   dconf.settings = {

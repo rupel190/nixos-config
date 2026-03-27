@@ -4,7 +4,7 @@ let
   defaultApps = {
     browser = [ "zen.desktop" ];
     # text = [ "nvim.desktop" ]; # Using nvim from terminal
-    # image = [ "oculante.desktop" ]; # oculante disabled, re-enable when nixpkgs fixes libaom-sys patch
+    image = [ "imv.desktop" ];
     audio = [ "mpv.desktop" ];
     video = [ "mpv.desktop" ];
     directory = [ "yazi-wezterm.desktop" ]; # Opens yazi in wezterm for "open in explorer" actions
@@ -18,17 +18,17 @@ let
 
   mimeMap = {
     # text = [ "text/plain" ]; # Using terminal editor
-    # image = [ # oculante disabled -- re-enable when nixpkgs fixes libaom-sys patch
-    #   "image/bmp"
-    #   "image/gif"
-    #   "image/jpeg"
-    #   "image/jpg"
-    #   "image/png"
-    #   "image/svg+xml"
-    #   "image/tiff"
-    #   "image/vnd.microsoft.icon"
-    #   "image/webp"
-    # ];
+    image = [
+      "image/bmp"
+      "image/gif"
+      "image/jpeg"
+      "image/jpg"
+      "image/png"
+      "image/svg+xml"
+      "image/tiff"
+      "image/vnd.microsoft.icon"
+      "image/webp"
+    ];
     audio = [
       "audio/aac"
       "audio/mpeg"
