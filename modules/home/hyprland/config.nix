@@ -30,7 +30,7 @@
         # which to choose?
         "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
         "systemctl --user start xdg-desktop-portal-gtk"
-        # exec-once = hyprpaper			# Wallpaper
+
         # "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
         "hypridle" # Needs env vars to find its own config
         #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
@@ -81,12 +81,7 @@
 
       general = {
         gaps_in = 5;
-        gaps_out = [
-          5
-          15
-          15
-          15
-        ];
+        gaps_out = 5;
         # gaps_out = if host == "cordyceps" then [ 1 1 0 1 ] else [ 5 15 15 15 ];
 
         border_size = 3;
@@ -108,6 +103,7 @@
       misc = {
         force_default_wallpaper = 0; # Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo = true;
+        disable_splash_rendering = true;
 
         # disable_autoreload = true;
         # always_follow_on_dnd = true;

@@ -1,5 +1,16 @@
 { inputs, pkgs, ... }:
+let
+  wallpaper = "/home/rupel/Pictures/wallpaper/20251204024944_1.jpg";
+in
 {
+  services.hyprpaper = {
+    enable = true;
+    package = inputs.hyprpaper.packages.${pkgs.system}.hyprpaper;
+    settings = {
+      preload = [ wallpaper ];
+      wallpaper = [ ",${wallpaper}" ]; # empty monitor prefix = all monitors
+    };
+  };
   home.packages = with pkgs; [
     # swww
     # inputs.hypr-contrib.packages.${pkgs.system}.grimblast

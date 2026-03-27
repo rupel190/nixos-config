@@ -7,6 +7,7 @@
     settings = {
       enable-rpc = true;
       max-concurrent-downloads = 20;
+      dir = "/home/rupel/Downloads";
       input-file = "/home/rupel/.config/aria2/session.txt";
       save-session = "/home/rupel/.config/aria2/session.txt";
       save-session-interval = 30;
