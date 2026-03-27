@@ -48,8 +48,8 @@ A modular, flake-based NixOS configuration featuring Hyprland, Home Manager, and
         ├── gtk.nix        # GTK theming
         ├── lazygit.nix    # Git TUI
         ├── mpv.nix        # Media player
+├── spicetify.nix  # Spotify theming
         ├── packages.nix   # Additional packages
-        ├── spicetify.nix  # Spotify theming
         ├── swaync/        # Notification daemon
         ├── wezterm.nix    # Terminal emulator
         ├── xdg-mimes.nix  # File associations
@@ -59,23 +59,27 @@ A modular, flake-based NixOS configuration featuring Hyprland, Home Manager, and
 ## Hosts
 
 ### amanita (Desktop)
+
 - AMD GPU (RX 9070 XT) with Vulkan/RADV
 - Multiple filesystem mounts for storage and backups
 - Full Wayland setup with Hyprland
 
 ### cordyceps (Laptop)
+
 - Currently in development (configuration exists but commented out)
 - Will include laptop-specific modules (battery management, brightness controls)
 
 ## Key Software
 
 ### Window Manager & Desktop
+
 - **Hyprland** - Tiling Wayland compositor
 - **AGS** - Widget system for bars and overlays
 - **swaync** - Notification daemon
 - **Waypaper** - Wallpaper management
 
 ### Terminal & CLI Tools
+
 - **WezTerm** - Terminal emulator
 - **Fish** - Shell
 - **Yazi** - File manager
@@ -85,12 +89,14 @@ A modular, flake-based NixOS configuration featuring Hyprland, Home Manager, and
 - **fzf** - Fuzzy finder
 
 ### Development
+
 - **Claude Code** - AI coding assistant
 - **Git** with custom configuration
 - **Lazygit** - Git TUI
 - **Neovim** (using Lazyvim)
 
 ### Applications
+
 - **Zen Browser** - Privacy-focused browser
 - **Discord** - Communication (themed)
 - **Spotify** - Music (via Spicetify)
@@ -98,6 +104,7 @@ A modular, flake-based NixOS configuration featuring Hyprland, Home Manager, and
 - **Steam** - Gaming platform
 
 ### System Features
+
 - **PipeWire** - Audio server
 - **Virtualization** - KVM/QEMU support
 - **Steam** - Gaming with Proton
@@ -121,17 +128,20 @@ A modular, flake-based NixOS configuration featuring Hyprland, Home Manager, and
 ### First-time Setup
 
 1. Clone this repository:
+
 ```bash
 git clone https://github.com/yourusername/nixos-config.git /etc/nixos
 cd /etc/nixos
 ```
 
 2. Update hardware configuration:
+
 ```bash
 nixos-generate-config --show-hardware-config > hosts/amanita/hardware-configuration.nix
 ```
 
 3. Build and switch:
+
 ```bash
 sudo nixos-rebuild switch --flake .#amanita
 ```
@@ -163,11 +173,13 @@ nh clean all
 ### Adding a New Host
 
 1. Create a new directory under `hosts/`:
+
 ```bash
 mkdir -p hosts/newhostname
 ```
 
 2. Create `hosts/newhostname/default.nix`:
+
 ```nix
 { pkgs, ... }:
 {
@@ -181,6 +193,7 @@ mkdir -p hosts/newhostname
 ```
 
 3. Add the host to `flake.nix`:
+
 ```nix
 nixosConfigurations.newhostname = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";

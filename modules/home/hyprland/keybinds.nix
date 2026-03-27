@@ -6,6 +6,7 @@
 
       bind = [
         # Apps
+        "$mainMod, F5, exec, hyprctl reload"
         "$mainMod, T, exec, wezterm connect unix"
         "$mainMod, RETURN, exec, fuzzel"
         "$mainMod, E, exec, wezterm start --always-new-process yazi"
@@ -13,7 +14,7 @@
         # "$mainMod, M, exit,"
         "$mainMod, F, togglefloating,"
         "$mainMod, P, pseudo," # dwindle
-        "$mainMod, V, togglesplit," # dwindle
+        "$mainMod, V, layoutmsg, togglesplit" # dwindle
 
         # Screenshots
         "$mainMod, S, exec, slurp | grim -g - - | wl-copy"

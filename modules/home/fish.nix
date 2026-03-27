@@ -111,7 +111,6 @@
       cme = "chezmoi edit ~/.config/";
       dot = "nvim /home/rupel/.local/share/chezmoi/dot_config/";
 
-      y = "yy";
       se = "sudoedit";
       vault = "cd /home/rupel/.local/share/Cryptomator/mnt/Vault";
       hyprconf = "nvim /home/rupel/.config/hypr";

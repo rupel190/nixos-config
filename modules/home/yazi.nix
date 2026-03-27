@@ -72,13 +72,13 @@
 
       # Define openers - call apps directly (bypasses broken xdg-open portal)
       opener = {
-        image = [
-          {
-            run = ''oculante "$@"'';
-            orphan = true;
-            desc = "Open in Oculante";
-          }
-        ];
+        # image = [ # oculante disabled -- broken nixpkgs patch (libaom-sys), re-enable when fixed
+        #   {
+        #     run = ''oculante "$@"'';
+        #     orphan = true;
+        #     desc = "Open in Oculante";
+        #   }
+        # ];
         video = [
           {
             run = ''mpv "$@"'';

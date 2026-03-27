@@ -27,7 +27,7 @@
   environment.systemPackages = with pkgs; [
     wget
     git
-    inputs.ragenix.packages.${pkgs.system}.default
+    pkgs.ragenix
   ];
 
   time.timeZone = "Europe/Berlin";

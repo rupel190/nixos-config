@@ -6,7 +6,7 @@
       ## GUI Apps
       fuzzel # launcher
       gimp
-      oculante # image viewer
+      # oculante # image viewer -- broken nixpkgs patch (libaom-sys), re-enable when fixed
       onlyoffice-desktopeditors # office alternative
       obs-studio # streaming
       oversteer # racing wheel

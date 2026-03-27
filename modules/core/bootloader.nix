@@ -13,7 +13,6 @@
     # "drm.debug=0x02" # Enable DRM driver debug
     "amdgpu.halt_if_hws_hang=0"
 
-    # "pcie_aspm=off"
     # Attempt to enhance GPU stability and fix coredumps through better recovery and power management
     # "amdgpu.noretry=0"
     # "amdgpu.halt_if_hws_hang=0"
@@ -24,9 +23,9 @@
     # Power Management (try passive for better stability)
     "amd_pstate=passive"
 
-    # PCIe Stability
-    # "pcie_aspm=off"
-    # "pci=noaer"  # Disable PCIe Advanced Error Reporting that can cause hangs
+    # PCIe Stability — both igc NIC and amdgpu fell off PCIe bus (device lost from bus, GPU recovery failed)
+    "pcie_aspm=off" # igc I226-V and RDNA4 both drop from bus with aggressive ASPM
+    "pci=noaer"  # suppress PCIe AER errors cascading after a device dropout
 
     # RDNA 4 stability
     "amdgpu.ppfeaturemask=0xfffd7fff" # Default features minus overdrive (bit 14)
