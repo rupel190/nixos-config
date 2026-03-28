@@ -30,6 +30,8 @@
     # RDNA 4 stability
     "amdgpu.ppfeaturemask=0xfffd7fff" # Default features minus overdrive (bit 14)
     "amdgpu.gfxoff=0" # Disable GfxOff - was failing during PCIe bus dropout crashes
+    "amdgpu.runpm=0"  # Disable runtime power management - GPU drops PCIe on display sleep/DPMS
+    "amdgpu.mes=0"    # Disable Micro Engine Scheduler - MES fails to respond on ring reset, causing device lost from bus
 
     # Watchdog to force reboot on hard freeze
     "nmi_watchdog=1"

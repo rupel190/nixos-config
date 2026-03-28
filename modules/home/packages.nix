@@ -174,6 +174,8 @@
     <right> = pan 10 0
     <up> = pan 0 -10
     <down> = pan 0 10
+    , = rotate -90
+    . = rotate 90
   '';
 
   # Virt-manager dconf settings

@@ -32,8 +32,7 @@
         "systemctl --user start xdg-desktop-portal-gtk"
 
         # "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
-        "hypridle" # Needs env vars to find its own config
-        #hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
+#hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
         #ianny					# Reminder utility for taking screen breaks
       ]
       ++ (
