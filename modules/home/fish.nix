@@ -98,22 +98,21 @@
 
       # Disable FZF's alt-c command (we use zoxide)
       set -e FZF_ALT_C_COMMAND
+
+      # gtrash completions
+      gtrash completion fish | source
     '';
 
     shellAbbrs = {
+      rm = "gtrash put";
+
       sc = "sudo systemctl";
       scu = "systemctl --user";
       scus = "systemctl --user status";
       scur = "systemctl --user restart";
 
-      cm = "chezmoi cd";
-      cma = "chezmoi apply";
-      cme = "chezmoi edit ~/.config/";
-      dot = "nvim /home/rupel/.local/share/chezmoi/dot_config/";
-
       se = "sudoedit";
       vault = "cd /home/rupel/.local/share/Cryptomator/mnt/Vault";
-      hyprconf = "nvim /home/rupel/.config/hypr";
       mac-trichoderma = "e0:d5:5e:4f:29:42";
     };
 
@@ -200,7 +199,7 @@
       godot = "command godot --rendering-driver opengl3 $argv";
 
       # Flatpak apps
-      bambu-studio = "flatpak run com.bambulab.BambuStudio $argv";
+      bambu-studio = "flatpak run --env=VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json com.bambulab.BambuStudio $argv";
 
       # Terminal image display
       imgcat = "wezterm imgcat $argv";

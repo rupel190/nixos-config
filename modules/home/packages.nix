@@ -22,9 +22,22 @@
         inkscapeExtensions = [ inkscape-extensions.inkstitch ];
       })
       orca-slicer
-      # Plasticity: Linux version has broken UI (unit picker, preferences, dropdowns)
-      # on non-Ubuntu distros — https://github.com/NixOS/nixpkgs/issues/403992
-      # Using Windows version via Wine instead (installed at ~/.wine/drive_c/Program Files/Plasticity/)
+      # Native Plasticity: fix GPU accel (RDNA 4 doesn't support EGL passthrough) and
+      # click coordinate offset from mixed-scale monitors (DP-1 at 1.5x, others at 1.0x)
+      (pkgs.plasticity.overrideAttrs (_: {
+        preFixup = ''
+          gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=opengl --force-device-scale-factor=1")
+          gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
+        '';
+      }))
+      # Plasticity via wine-ge (proton-plasticity-nix)
+      (inputs.proton-plasticity.packages.x86_64-linux.protonPlasticity.overrideAttrs (_: {
+        version = "25.3.10";
+        src = builtins.fetchurl {
+          url = "https://github.com/nkallen/plasticity/releases/download/v25.3.10/Plasticity.msi";
+          sha256 = "097piz2p2cdjzfz3dqjfp8acm9wwdb1papr4a4sjipl6jam8mgs5";
+        };
+      }))
 
       # Communication
       signal-desktop
@@ -39,9 +52,7 @@
       chromium
       pureref # Reference image viewer
       bluez # Bluetooth stack
-      wineWowPackages.staging # prebuilt wine
       protontricks
-      winetricks
       wakeonlan
       zerotierone # virtual ethernet for external access
       # gamescope # Gaming compositor
@@ -140,6 +151,7 @@
       # Python
       python3
       python312Packages.ipython
+      uv # Python package manager / tool runner
 
       # LSPs (Language Servers)
       pyright # Python type checker LSP

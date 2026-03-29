@@ -34,6 +34,8 @@
 
     claude-code.url = "github:sadjow/claude-code-nix";
 
+    proton-plasticity.url = "github:crabdancing/proton-plasticity-nix";
+
     ragenix = {
       url = "github:yaxitech/ragenix";
       inputs.nixpkgs.follows = "nixpkgs";

@@ -13,7 +13,7 @@ let
     terminal = [ "org.wezfurlong.wezterm.desktop" ];
     # archive - using terminal tools
     discord = [ "discord.desktop" ];
-    bambustudio = [ "com.bambulab.BambuStudio.desktop" ];
+    bambustudio = [ "bambu-studio.desktop" ];
   };
 
   mimeMap = {
@@ -106,17 +106,19 @@ in
 
   # Create yazi-wezterm.desktop for opening directories in yazi via wezterm
   # This is used by apps like Steam when clicking "Browse local files"
-  # Plasticity via Wine — Linux version has broken UI on non-Ubuntu distros
-  xdg.desktopEntries.plasticity = {
-    name = "Plasticity";
-    genericName = "CAD for Artists";
-    icon = "Plasticity";
-    comment = "3D CAD modeling (Wine)";
-    exec = ''wine "C:/Program Files/Plasticity/Plasticity.exe" %u'';
+  # Bambu Studio via Flatpak with RDNA 4 Vulkan ICD fix
+  xdg.desktopEntries.bambu-studio = {
+    name = "Bambu Studio";
+    genericName = "3D Printer Slicer";
+    icon = "com.bambulab.BambuStudio";
+    comment = "Bambu Lab slicer";
+    exec = "flatpak run --env=VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json com.bambulab.BambuStudio %u";
     terminal = false;
     type = "Application";
     categories = [ "Graphics" "3DGraphics" ];
+    mimeType = [ "x-scheme-handler/bambustudio" "model/3mf" ];
   };
+
 
   xdg.desktopEntries.yazi-wezterm = {
     name = "Yazi (File Manager)";
