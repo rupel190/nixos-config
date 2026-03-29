@@ -26,7 +26,8 @@
   environment.variables = {
     EDITOR = "nvim";
     # Force discrete GPU (RX 9070 XT) -> Abiotic Factor would use iGPU otherwise
-    DRI_PRIME = "1";
+    # iGPU disabled in BIOS — DRI_PRIME=1 is invalid with only one GPU
+    # DRI_PRIME = "1";
     # Use RADV (Mesa) driver for Vulkan
     AMD_VULKAN_ICD = "RADV";
     # Wayland specific
