@@ -104,6 +104,12 @@ in
     DEFAULT_BROWSER = "zen";
   };
 
+  # Hide Flatpak's auto-generated desktop entry so only our custom one shows
+  home.file.".local/share/applications/com.bambulab.BambuStudio.desktop".text = ''
+    [Desktop Entry]
+    NoDisplay=true
+  '';
+
   # Create yazi-wezterm.desktop for opening directories in yazi via wezterm
   # This is used by apps like Steam when clicking "Browse local files"
   # Bambu Studio via Flatpak with RDNA 4 Vulkan ICD fix
