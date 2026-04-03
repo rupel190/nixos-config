@@ -14,6 +14,7 @@
       bitwig-studio # audio daw
       keepassxc
       obsidian
+      ticktick
       evince # (gnome) pdf reader
       blockbench # low-poly 3D modeling and animation
       freecad # CAD
@@ -26,7 +27,7 @@
       # click coordinate offset from mixed-scale monitors (DP-1 at 1.5x, others at 1.0x)
       (pkgs.plasticity.overrideAttrs (_: {
         preFixup = ''
-          gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=opengl")
+          gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan --enable-gpu-rasterization --enable-zero-copy")
           gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
         '';
       }))
