@@ -38,7 +38,7 @@
            }
            local bottom_pane = remote_pane:split {
              direction = 'Bottom',
-             size = 0.05,
+             size = { Cells = 2 },
            }
            bottom_pane:split {
              direction = 'Right',
@@ -54,7 +54,7 @@
            }
            local bottom_pane = remote_pane:split {
              direction = 'Bottom',
-             size = 0.05,
+             size = { Cells = 2 },
            }
            bottom_pane:split {
              direction = 'Right',
