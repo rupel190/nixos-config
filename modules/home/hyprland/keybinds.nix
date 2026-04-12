@@ -21,8 +21,8 @@
         "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | tee /tmp/screenshot.png | wl-copy && swappy -f /tmp/screenshot.png -o ~/Pictures/swappy/$(date +%F_%H-%M-%S).png"
 
         # Screen recording
-        "$mainMod ALT, S, exec, wl-screenrec -g \"$(slurp)\" --audio --filename ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4 &; notify-send \"Screenrec started\""
-        "$mainMod ALT SHIFT, S, exec, pkill wl-screenrec && notify-send \"Screenrec saved to ~/Videos/screenrec/\""
+        "$mainMod ALT, S, exec, wf-recorder -g \"$(slurp)\" -a -f ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4 & notify-send \"Recording started\""
+        "$mainMod ALT SHIFT, S, exec, pkill wf-recorder && notify-send \"Recording saved to ~/Videos/screenrec/\""
 
         # Move focus
         "$mainMod, J, movefocus, d"

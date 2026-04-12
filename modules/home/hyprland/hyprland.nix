@@ -1,18 +1,14 @@
 { inputs, pkgs, ... }:
 let
   wallpaper = "/home/rupel/Pictures/wallpaper/20251204024944_1.jpg";
+  mkWallpaper = monitor: { inherit monitor; path = wallpaper; };
 in
 {
   services.hyprpaper = {
     enable = true;
     package = inputs.hyprpaper.packages.${pkgs.system}.hyprpaper;
     settings = {
-      preload = [ wallpaper ];
-      wallpaper = [
-        "DP-1,${wallpaper}"
-        "HDMI-A-1,${wallpaper}"
-        "HDMI-A-2,${wallpaper}"
-      ];
+      wallpaper = map mkWallpaper [ "DP-1" "DP-2" "HDMI-A-1" "HDMI-A-2" ];
     };
   };
   home.packages = with pkgs; [
