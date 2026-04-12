@@ -68,6 +68,7 @@
     options = [
       "noatime"
       "nodiratime"
+      "nofail"
       "discard"
     ]; # SSD
   };
