@@ -14,6 +14,7 @@ let
     # archive - using terminal tools
     discord = [ "discord.desktop" ];
     bambustudio = [ "bambu-studio.desktop" ];
+    plasticity = [ "Plasticity.desktop" ];
   };
 
   mimeMap = {
@@ -77,7 +78,8 @@ let
     #   "application/*tar"
     # ];
     discord = [ "x-scheme-handler/discord" ];
-    bambustudio = [ "x-scheme-handler/bambustudio" ];
+    bambustudio = [ "x-scheme-handler/bambustudio" "model/3mf" "application/vnd.ms-3mfdocument" ];
+    plasticity = [ "model/step" "application/x-step" ];
   };
 
   associations =
@@ -91,6 +93,27 @@ let
     );
 in
 {
+  # Register model/step MIME type — not in freedesktop shared-mime-info, so .step files
+  # are detected as text/plain without this. Globs take priority over magic detection.
+  xdg.dataFile."mime/packages/model-step.xml".text = ''
+    <?xml version="1.0" encoding="UTF-8"?>
+    <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+      <mime-type type="model/step">
+        <comment>STEP 3D model</comment>
+        <glob pattern="*.step"/>
+        <glob pattern="*.stp"/>
+        <magic priority="50">
+          <match type="string" offset="0" value="ISO-10303-21;"/>
+        </magic>
+      </mime-type>
+    </mime-info>
+  '';
+
+  home.activation.updateMimeDatabase = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    run ${pkgs.shared-mime-info}/bin/update-mime-database \
+      "$HOME/.local/share/mime"
+  '';
+
   xdg.configFile."mimeapps.list".force = true;
   xdg.mimeApps.enable = true;
   xdg.mimeApps.associations.added = associations;
@@ -106,6 +129,12 @@ in
 
   # Hide Flatpak's auto-generated desktop entry so only our custom one shows
   home.file.".local/share/applications/com.bambulab.BambuStudio.desktop".text = ''
+    [Desktop Entry]
+    NoDisplay=true
+  '';
+
+  # Hide umpv — single-instance mpv wrapper, redundant alongside mpv.desktop
+  home.file.".local/share/applications/umpv.desktop".text = ''
     [Desktop Entry]
     NoDisplay=true
   '';

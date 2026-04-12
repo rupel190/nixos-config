@@ -114,11 +114,39 @@
             desc = "Edit in $EDITOR";
           }
         ];
+        bambu-studio = [
+          {
+            run = ''flatpak run --env=VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json com.bambulab.BambuStudio "$@"'';
+            orphan = true;
+            desc = "Open in Bambu Studio";
+          }
+        ];
+        plasticity = [
+          {
+            run = ''Plasticity "$@"'';
+            orphan = true;
+            desc = "Open in Plasticity";
+          }
+        ];
       };
 
       # Map MIME types to openers
       open = {
         prepend_rules = [
+          # Name-based rules take priority — catches .step (detected as text/plain) and
+          # .3mf (ZIP-based, yazi would otherwise try to browse it as an archive)
+          {
+            name = "*.3mf";
+            use = "bambu-studio";
+          }
+          {
+            name = "*.step";
+            use = "plasticity";
+          }
+          {
+            name = "*.stp";
+            use = "plasticity";
+          }
           {
             mime = "image/*";
             use = "image";
