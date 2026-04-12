@@ -6,6 +6,15 @@
 }:
 let
   spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.system};
+  visualizer = {
+    src = pkgs.fetchFromGitHub {
+      owner = "Konsl";
+      repo = "spicetify-visualizer";
+      rev = "dist";
+      hash = "sha256-lEXu3IySLoqy1W3UXhCh3Ho9rwpFHGYgJDnSyVYaoe0=";
+    };
+    name = "index.js";
+  };
 in
 {
   # Note: Spotify unfree package is allowed via system-wide nixpkgs.config.allowUnfree in modules/core/system.nix
@@ -16,6 +25,7 @@ in
     enable = true;
 
     enabledExtensions = with spicePkgs.extensions; [
+      visualizer
       adblock
       hidePodcasts
       shuffle # shuffle+ True shuffle using the Fisher-Yates algorithm (zero bias).
