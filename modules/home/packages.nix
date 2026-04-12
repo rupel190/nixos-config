@@ -48,7 +48,7 @@
       teamspeak6-client # Upgraded from teamspeak3 to avoid qtwebengine build issues
 
       # Utility
-      protonvpn-gui
+      proton-vpn
       cryptomator
       chromium
       pureref # Reference image viewer
@@ -90,7 +90,7 @@
 
       # Nix tools
       nixd # nix lsp
-      nixfmt-rfc-style # nix formatter
+      nixfmt # nix formatter
       deadnix # find unused nix code
       statix # nix linter
 
@@ -119,7 +119,6 @@
       grim # Screenshot tool
       slurp # Region selector
       swappy # snapshot editing tool
-      wl-screenrec # Screen recorder
 
       ## CLI
       kitty # fallback
