@@ -19,6 +19,7 @@
   # Improve stability
   hardware.enableRedistributableFirmware = true;
 
+
   # Fix USB devices (mouse/keyboard) going to sleep - AGGRESSIVE FIX
   # Multiple layers of USB power management disabling
   boot.kernelParams = [

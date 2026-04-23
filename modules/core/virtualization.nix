@@ -5,8 +5,11 @@
   ...
 }:
 {
-  # Add user to libvirtd group
-  users.users.${username}.extraGroups = [ "libvirtd" ];
+  # Add user to libvirtd and docker groups
+  users.users.${username}.extraGroups = [
+    "libvirtd"
+    "docker"
+  ];
 
   # Install necessary packages
   environment.systemPackages = with pkgs; [
@@ -30,7 +33,7 @@
       };
     };
     spiceUSBRedirection.enable = true;
-
+    docker.enable = true;
   };
   services.spice-vdagentd.enable = true;
 }

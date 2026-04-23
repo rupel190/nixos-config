@@ -24,6 +24,7 @@
       "input"       # Required for mouse/keyboard in Wayland
       "video"       # Required for display management
       "seat"        # Required for seat management
+      "plugdev"     # Required for Logitech HID++ device access (solaar)
     ];
     shell = pkgs.fish;
   };

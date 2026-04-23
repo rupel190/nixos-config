@@ -75,6 +75,7 @@
 
          -- Window settings
          config.adjust_window_size_when_changing_font_size = false
+         config.tiling_desktop_environments = { "Hyprland" }
          config.enable_scroll_bar = true
          config.scrollback_lines = 200000
          config.window_background_opacity = 0.9
