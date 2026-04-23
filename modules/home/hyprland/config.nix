@@ -259,6 +259,15 @@
         # "size 700 450 on, match:title ^(Volume Control)$"
         # "move 40 55% on, match:title ^(Volume Control)$"
 
+        # Wine/Proton popups (color pickers, dialogs) under XWayland have empty class and title.
+        # Without this, Hyprland tiles them at 0,0 behind the main window while they hold focus,
+        # causing the "invisible popup / UI unresponsive" symptom seen in Plasticity.
+        "float on, match:class ^()$, match:title ^()$, match:xwayland true"
+        # Plasticity material popup (XWayland child window, empty title)
+        "float on, match:class ^(steam_app_0)$, match:title ^()$"
+        "no_initial_focus on, match:class ^(steam_app_0)$, match:title ^()$"
+        "no_follow_mouse on, match:class ^(steam_app_0)$, match:title ^()$"
+
         #
         # Workspace assignments for amanita
         # DP-1 (left 4K monitor): Workspaces 1-3

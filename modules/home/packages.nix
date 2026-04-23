@@ -23,22 +23,41 @@
         inkscapeExtensions = [ inkscape-extensions.inkstitch ];
       })
       orca-slicer
-      # Native Plasticity: use ANGLE/Vulkan (RDNA 4 lacks EGL passthrough; avoid native Vulkan
-      # compositor + zero-copy combo which causes GL↔Vulkan mailbox mismatch → black screen)
-      (pkgs.plasticity.overrideAttrs (_: {
-        preFixup = ''
-          gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan --enable-gpu-rasterization")
-          gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
+      # Native Plasticity: wrapped in gamescope to gate 1000Hz mouse events to frame rate —
+      # Plasticity's snapping (possiblyModifyPickedPoint) runs per-event and floods the NURBS
+      # kernel at 1000Hz, causing "Dropping job because of latency" on every mouse move.
+      # Gamescope dispatches input to the child at its own frame clock (~240Hz), keeping jobs
+      # within budget. ANGLE/Vulkan flags fix RDNA 4 EGL passthrough.
+      (pkgs.symlinkJoin {
+        name = "plasticity";
+        paths = [(pkgs.plasticity.overrideAttrs (_: {
+          preFixup = ''
+            gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan --enable-gpu-rasterization")
+            gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
+          '';
+        }))];
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+        postBuild = ''
+          makeWrapper ${pkgs.gamescope}/bin/gamescope $out/bin/plasticity \
+            --add-flags "-w 1920 -h 1080 -W 2560 -H 1440 --nested-refresh 240 --nested-unfocused-refresh 240 -- $out/bin/Plasticity"
         '';
-      }))
-      # Plasticity via wine-ge (proton-plasticity-nix)
-      (inputs.proton-plasticity.packages.x86_64-linux.protonPlasticity.overrideAttrs (_: {
-        version = "25.3.10";
-        src = builtins.fetchurl {
-          url = "https://github.com/nkallen/plasticity/releases/download/v25.3.10/Plasticity.msi";
-          sha256 = "097piz2p2cdjzfz3dqjfp8acm9wwdb1papr4a4sjipl6jam8mgs5";
-        };
-      }))
+      })
+      # Plasticity via wine-ge (proton-plasticity-nix) — using Setup.exe (not MSI, which installs wrong version)
+      (inputs.proton-plasticity.packages.x86_64-linux.protonPlasticity.overrideAttrs (prev:
+        let
+          newSrc = builtins.fetchurl {
+            url = "https://github.com/nkallen/plasticity/releases/download/v26.1.1/Plasticity-26.1.1.Setup.exe";
+            sha256 = "0virliklazra7fgcllynx3z2mp4if6b3f5m87875mp2zya22jga0";
+          };
+        in {
+          version = "26.1.1";
+          src = newSrc;
+          winAppInstall = builtins.replaceStrings
+            [ "msiexec /i ${prev.src} /qb!" ]
+            [ "${newSrc} /S" ]
+            prev.winAppInstall;
+        }
+      ))
 
       # Communication
       signal-desktop
@@ -56,7 +75,7 @@
       protontricks
       wakeonlan
       zerotierone # virtual ethernet for external access
-      # gamescope # Gaming compositor
+      gamescope # Gaming compositor (also used to gate Plasticity input to frame rate)
 
       # Tweaks
       betterdiscordctl
@@ -119,6 +138,7 @@
       grim # Screenshot tool
       slurp # Region selector
       swappy # snapshot editing tool
+      gpu-screen-recorder # Portal-aware GPU-accelerated screen recorder
 
       ## CLI
       kitty # fallback
