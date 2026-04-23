@@ -36,6 +36,9 @@
 
     proton-plasticity.url = "github:crabdancing/proton-plasticity-nix";
 
+    # Steam Homebrew
+    millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
+
     ragenix = {
       url = "github:yaxitech/ragenix";
       inputs.nixpkgs.follows = "nixpkgs";

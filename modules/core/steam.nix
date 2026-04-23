@@ -13,7 +13,7 @@
       # TODO: Explicit definition required?
       extraCompatPackages = [ pkgs.proton-ge-bin ];
 
-      package = pkgs.steam.override {
+      package = pkgs.millennium-steam.override {
         # ! Disable AVX-512 CPU instructions to avoid Steam SIGILL issues
         extraProfile = ''
           export GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX512F

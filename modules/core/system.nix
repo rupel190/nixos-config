@@ -6,6 +6,8 @@
   ...
 }:
 {
+  nixpkgs.overlays = [ inputs.millennium.overlays.default ];
+
   # imports = [ inputs.nix-gaming.nixosModules.default ];
   nix = {
     settings = {
@@ -24,8 +26,6 @@
       ];
     };
   };
-
-  # nixpkgs.overlays = [ ]; # Add overlays here if needed
 
   environment.systemPackages = with pkgs; [
     wget
