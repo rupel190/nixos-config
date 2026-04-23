@@ -20,9 +20,9 @@
         "$mainMod, S, exec, slurp | grim -g - - | wl-copy"
         "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | tee /tmp/screenshot.png | wl-copy && swappy -f /tmp/screenshot.png -o ~/Pictures/swappy/$(date +%F_%H-%M-%S).png"
 
-        # Screen recording
-        "$mainMod ALT, S, exec, wf-recorder -g \"$(slurp)\" -a -f ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4 & notify-send \"Recording started\""
-        "$mainMod ALT SHIFT, S, exec, pkill wf-recorder && notify-send \"Recording saved to ~/Videos/screenrec/\""
+        # Screen recording (portal picker: choose monitor/window/region like Discord screenshare)
+        "$mainMod ALT, S, exec, gpu-screen-recorder -w portal -a default_output -f 60 -o ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4"
+        "$mainMod ALT SHIFT, S, exec, pkill -SIGINT -f gpu-screen-recorder && hyprctl notify 1 2000 \"rgb(a6da95)\" \"Recording saved to ~/Videos/screenrec/\""
 
         # Move focus
         "$mainMod, J, movefocus, d"
