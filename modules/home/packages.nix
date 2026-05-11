@@ -14,7 +14,16 @@
       bitwig-studio # audio daw
       keepassxc
       obsidian
-      ticktick
+      # TickTick: two RDNA 4 / NixOS rendering issues:
+      # 1. libGL.so.1 unavailable → bypass EGL with ANGLE-over-Vulkan
+      # 2. System RADV driver segfaults standalone (works in gamescope like Plasticity, not standalone)
+      #    → use TickTick's own bundled SwiftShader Vulkan ICD instead of the system driver
+      (ticktick.overrideAttrs (_: {
+        preFixup = ''
+          gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan")
+          gappsWrapperArgs+=(--set VK_ICD_FILENAMES "$out/opt/ticktick/vk_swiftshader_icd.json")
+        '';
+      }))
       evince # (gnome) pdf reader
       blockbench # low-poly 3D modeling and animation
       freecad # CAD
@@ -42,23 +51,6 @@
             --add-flags "-w 1920 -h 1080 -W 2560 -H 1440 --nested-refresh 240 --nested-unfocused-refresh 240 -- $out/bin/Plasticity"
         '';
       })
-      # Plasticity via wine-ge (proton-plasticity-nix) — using Setup.exe (not MSI, which installs wrong version)
-      (inputs.proton-plasticity.packages.x86_64-linux.protonPlasticity.overrideAttrs (prev:
-        let
-          newSrc = builtins.fetchurl {
-            url = "https://github.com/nkallen/plasticity/releases/download/v26.1.1/Plasticity-26.1.1.Setup.exe";
-            sha256 = "0virliklazra7fgcllynx3z2mp4if6b3f5m87875mp2zya22jga0";
-          };
-        in {
-          version = "26.1.1";
-          src = newSrc;
-          winAppInstall = builtins.replaceStrings
-            [ "msiexec /i ${prev.src} /qb!" ]
-            [ "${newSrc} /S" ]
-            prev.winAppInstall;
-        }
-      ))
-
       # Communication
       signal-desktop
       element-desktop
@@ -162,6 +154,10 @@
       wl-clipboard # clipboard utils for wayland (wl-copy, wl-paste)
       wget
       xdg-utils
+
+      # Arduino
+      arduino-cli # compile + flash without Arduino IDE
+      minicom     # serial monitor (Ctrl-A X to exit)
 
       # C / C++
       gcc

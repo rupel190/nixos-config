@@ -17,6 +17,7 @@
 
   users.users.${username} = {
     isNormalUser = true;
+    homeMode = "711"; # Allow service users (e.g. photoprism) to traverse home dir
     description = "${username}";
     extraGroups = [
       "networkmanager"
@@ -25,6 +26,7 @@
       "video"       # Required for display management
       "seat"        # Required for seat management
       "plugdev"     # Required for Logitech HID++ device access (solaar)
+      "dialout"     # Required for serial port access (Arduino, USB-serial)
     ];
     shell = pkgs.fish;
   };

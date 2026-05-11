@@ -40,9 +40,7 @@
     ];
   };
 
-  swapDevices = [
-    { device = "/dev/disk/by-uuid/ffe12e58-06a2-48a7-91f0-08c2868be4b8"; }
-  ];
+  swapDevices = [ ]; # Disabled: 64GB RAM is sufficient, swap caused CS2 microstutters
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's

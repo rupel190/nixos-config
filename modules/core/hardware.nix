@@ -48,6 +48,9 @@
     ACTION=="add", SUBSYSTEM=="usb", TEST=="power/autosuspend_delay_ms", ATTR{power/autosuspend_delay_ms}="-1"
   '';
 
+  # Keep swappiness low — prefer RAM over swap to avoid microstutters in games
+  boot.kernel.sysctl."vm.swappiness" = 10;
+
   # Bluetooth
   hardware.bluetooth = {
     enable = true;

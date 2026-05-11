@@ -27,7 +27,7 @@
     ./browser.nix # zen browser
     ./gtk.nix # gtk theme
     ./xdg-mimes.nix # file associations
-    ./onedrive.nix # onedrive sync service (monitor mode)
+    ./clouddrives.nix # cloud drive sync services (OneDrive + Proton Drive)
 
     # Ready to enable when needed:
     # ./ags - Simple bar widget (migrated from chezmoi)

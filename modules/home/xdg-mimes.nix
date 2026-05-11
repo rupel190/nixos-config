@@ -166,29 +166,4 @@ in
     categories = [ "Utility" "Core" "System" "FileTools" "FileManager" ];
     mimeType = [ "inode/directory" "x-scheme-handler/file" ];
   };
-
-  # Plasticity (Steam) — launch the Steam-managed Proton install without opening Steam UI.
-  # rungameid is the 64-bit Steam shortcut ID: (appid32 << 32) | 0x02000000
-  # appid32 = 4252882459 (from compatdata directory name for this non-Steam shortcut)
-  xdg.desktopEntries.plasticity-steam = {
-    name = "Plasticity (Steam)";
-    genericName = "3D CAD";
-    icon = "Plasticity"; # from native plasticity package's share/pixmaps/
-    comment = "Plasticity CAD via Steam Proton";
-    exec = "steam steam://rungameid/18265991075170615296";
-    terminal = false;
-    type = "Application";
-    categories = [ "Graphics" "3DGraphics" ];
-  };
-
-  # Add a Home symlink to the Favorites folder in Plasticity's Steam Proton prefix.
-  # The Proton prefix (appid 4252882459) uses "steamuser" as the Windows username.
-  # Note: Wine may need .lnk files instead of symlinks — if "Home" doesn't appear
-  # in the file picker's Favorites panel, see the .lnk approach in the wiki.
-  home.activation.plasticity-steam-favorites = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    favdir="$HOME/.local/share/Steam/steamapps/compatdata/4252882459/pfx/drive_c/users/steamuser/Favorites"
-    if [ -d "$favdir" ] && [ ! -e "$favdir/Home" ]; then
-      run ln -sf "$HOME" "$favdir/Home"
-    fi
-  '';
 }

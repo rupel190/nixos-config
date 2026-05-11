@@ -22,6 +22,11 @@
   # Logitech G29 - install oversteer udev rules for wheel control
   services.udev.packages = [ pkgs.oversteer ];
 
+  # Arduino handbrake - expose as joystick to SDL/BeamNG
+  services.udev.extraRules = ''
+    SUBSYSTEM=="input", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8037", ENV{ID_INPUT_JOYSTICK}="1"
+  '';
+
   # AMD + Wayland environment variables
   environment.variables = {
     EDITOR = "nvim";

@@ -47,6 +47,7 @@
     loginShellInit = ''
       if status is-interactive
         fastfetch
+        tldr-tip
       end
     '';
 
@@ -193,6 +194,30 @@
           catppuccinifier --flavor $flavor --hald $level hald$level.png -d /tmp/
           ffmpeg -hide_banner -y -i "$in" -i "$hald" \
             -filter_complex "[0:v][1:v]haldclut" -c:a copy "$out"
+        '';
+      };
+
+      tldr-ignore = {
+        description = "Add a command to ~/.config/tldr-ignore";
+        body = ''
+          if test (count $argv) -eq 0
+            echo "Usage: tldr-ignore <command>"
+            return 1
+          end
+          echo $argv[1] >> ~/.config/tldr-ignore
+          echo "Ignored '$argv[1]'"
+        '';
+      };
+
+      tldr-tip = {
+        description = "Show a random tldr command tip from all pages, skipping ~/.config/tldr-ignore";
+        body = ''
+          set -l ignore_file ~/.config/tldr-ignore
+          touch $ignore_file
+          set -l cmd (tldr --list 2>/dev/null | grep -vFxf $ignore_file | shuf -n 1 | string trim)
+          test -z "$cmd"; and return
+          set -l desc (tldr $cmd 2>/dev/null | string match -rv '^\s*$' | head -2 | tail -1 | string replace -r '\.\s+.+' '.' | string trim)
+          echo "✦ $cmd — $desc"
         '';
       };
 

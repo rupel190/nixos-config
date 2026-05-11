@@ -34,13 +34,21 @@
 
     claude-code.url = "github:sadjow/claude-code-nix";
 
-    proton-plasticity.url = "github:crabdancing/proton-plasticity-nix";
+    claude-desktop = {
+      url = "github:k3d3/claude-desktop-linux-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Steam Homebrew
     millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
 
     ragenix = {
       url = "github:yaxitech/ragenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    proton-drive-sync = {
+      url = "github:DamianB-BitFlipper/proton-drive-sync";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

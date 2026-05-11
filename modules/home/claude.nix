@@ -8,6 +8,10 @@
     # Alternative: Use stable version from nixpkgs (slower updates)
     # pkgs.claude-code
     pkgs.claude-monitor
+
+    # Claude Desktop app — required for Plugins (not available in CLI)
+    # Use -with-fhs variant for MCP server compatibility (npx, uvx, etc.)
+    inputs.claude-desktop.packages.${pkgs.system}.claude-desktop-with-fhs
   ];
 
   # Optional: Set up Cachix for pre-built binaries

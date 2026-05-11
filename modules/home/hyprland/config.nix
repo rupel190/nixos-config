@@ -235,22 +235,26 @@
       windowrule = [
         # See https://wiki.hypr.land/Configuring/Window-Rules/
 
-        # Fix some dragging issues with XWayland
-        # TODO: doesn't work, fix? -> all 3 lines
-        # "nofocus on, match:class ^()$, match:title ^()$, match:xwayland true, match:floating true, match:fullscreen false, match:pinned false"
+        # Fix invisible XWayland helper windows (Steam, Wine/Proton) stealing focus mid-game
+        # Symptom without this: clicks don't register in CS2 / sticky keys
+        # Rule is "no_focus" (with underscore) in 0.54, not "nofocus"
+        "no_focus on, match:class ^()$, match:title ^()$, match:xwayland true"
+
+        # Keep CS2 focused — prevent any window from stealing focus away from the game
+        "stay_focused on, match:class ^(cs2)$"
 
         # Ignore maximize requests from apps. TODO: Good idea?
         # "suppressevent maximize on, match:class .*"
 
-        # CS2 tweak, https://wiki.hypr.land/Configuring/Tearing/#enabling-tearing
-        # "immediate on, match:class ^(cs2)$"
+        # CS2: enable tearing for lower input latency, https://wiki.hypr.land/Configuring/Tearing/#enabling-tearing
+        "immediate on, match:class ^(cs2)$"
         # "float on, match:class ^(Viewnior)$"
         # "float on, match:class ^(imv)$"
         # "float on, match:class ^(mpv)$"
         # "tile on, match:class ^(Aseprite)$"
         # "float on, match:class ^(audacious)$"
         # "tile on, match:class ^(neovide)$"
-        # "idleinhibit focus on, match:class ^(mpv)$"
+        "idleinhibit focus on, match:class ^(mpv)$"
         # "float on, match:class ^(udiskie)$"
         # "float on, match:title ^(Transmission)$"
         # "float on, match:title ^(Volume Control)$"
@@ -286,12 +290,11 @@
         "match:class ^(org.wezfurlong.wezterm)$, match:title ^(pulsemixer)$, workspace 9 silent"
 
         # Force all games to DP-2 (main 240Hz monitor)
-        # Steam games
-        # "match:class ^(steam_app_).*, monitor DP-2"
-        # "match:class ^(steam_app_).*, workspace 5"
+        # Steam games: class is steam_app_APPID (e.g. steam_app_730 for CS2)
+        "monitor DP-2, match:class ^steam_app_"
 
-        # Common game engines and launchers
-        # "match:class ^(gamescope).*, monitor DP-2"
+        # Gamescope-wrapped games
+        "monitor DP-2, match:class ^gamescope"
         # "match:title ^(.*Unity.*)$, monitor DP-2"
         # "match:title ^(.*Unreal.*)$, monitor DP-2"
 
