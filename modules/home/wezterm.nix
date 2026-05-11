@@ -5,8 +5,6 @@
     package = pkgs.wezterm; # Stable from nixpkgs (better OpenGL integration)
     # package = inputs.wezterm.packages.${pkgs.system}.default; # Nightly (has OpenGL issues)
 
-    enableFishIntegration = true;
-
     extraConfig = # lua
       ''
          -- Configuration

@@ -16,6 +16,20 @@ in
     enable = true;
 
     interactiveShellInit = ''
+      # WezTerm shell integration — emits OSC 133 semantic zone marks so that
+      # ScrollToPrompt (shift+up/down) and copy-last-output (ctrl+shift+c) work reliably
+      if set -q WEZTERM_PANE
+        function __wezterm_prompt_start --on-event fish_prompt
+          printf "\e]133;A\e\\"
+        end
+        function __wezterm_command_start --on-event fish_preexec
+          printf "\e]133;C\e\\"
+        end
+        function __wezterm_command_end --on-event fish_postexec
+          printf "\e]133;D;%s\e\\" $status
+        end
+      end
+
       fish_vi_key_bindings
 
       # Fish shell colors (Catppuccin Macchiato)
