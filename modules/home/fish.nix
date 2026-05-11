@@ -4,7 +4,12 @@
   lib,
   ...
 }:
+let
+  getProgramName = pkg: pkg.meta.mainProgram or pkg.pname or (lib.getName pkg);
+  allowedCmds = lib.concatStringsSep "\n" (map getProgramName config.home.packages);
+in
 {
+  xdg.configFile."tldr-allowlist".text = allowedCmds;
 
   # TODO: replace theming
   programs.fish = {
@@ -215,6 +220,18 @@
           set -l ignore_file ~/.config/tldr-ignore
           touch $ignore_file
           set -l cmd (tldr --list 2>/dev/null | grep -vFxf $ignore_file | shuf -n 1 | string trim)
+          test -z "$cmd"; and return
+          set -l desc (tldr $cmd 2>/dev/null | string match -rv '^\s*$' | head -2 | tail -1 | string replace -r '\.\s+.+' '.' | string trim)
+          echo "✦ $cmd — $desc"
+        '';
+      };
+
+      tldr-installed = {
+        description = "Show a random tldr tip for an installed package, skipping ~/.config/tldr-ignore";
+        body = ''
+          set -l ignore_file ~/.config/tldr-ignore
+          touch $ignore_file
+          set -l cmd (tldr --list 2>/dev/null | grep -xFf ~/.config/tldr-allowlist | grep -vFxf $ignore_file | shuf -n 1 | string trim)
           test -z "$cmd"; and return
           set -l desc (tldr $cmd 2>/dev/null | string match -rv '^\s*$' | head -2 | tail -1 | string replace -r '\.\s+.+' '.' | string trim)
           echo "✦ $cmd — $desc"
