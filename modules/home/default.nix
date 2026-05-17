@@ -11,7 +11,8 @@
     ./fzf.nix # fuzzy finder
     ./yazi.nix # terminal file manager
     ./cava/cava.nix # audio visualizer
-    ./aria2.nix # download manager
+    ./surge.nix # download manager
+    ./darya.nix # disk usage visualizer
     ./btop # resouces monitor
     ./bat.nix # better cat command
     ./fastfetch.nix # fetch tool
@@ -27,7 +28,7 @@
     ./browser.nix # zen browser
     ./gtk.nix # gtk theme
     ./xdg-mimes.nix # file associations
-    ./clouddrives.nix # cloud drive sync services (OneDrive + Proton Drive)
+    ./clouddrives.nix # cloud drive sync services (OneDrive)
 
     # Ready to enable when needed:
     # ./ags - Simple bar widget (migrated from chezmoi)

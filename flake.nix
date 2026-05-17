@@ -47,8 +47,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    proton-drive-sync = {
-      url = "github:DamianB-BitFlipper/proton-drive-sync";
+    surge = {
+      url = "github:SurgeDM/Surge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
