@@ -8,6 +8,5 @@
     "tridactyl" = { source = ./tridactyl; recursive = true; };
     "keepassxc" = { source = ./keepassxc; recursive = true; };
     "Blockbench" = { source = ./Blockbench; recursive = true; };
-    "Cryptomator" = { source = ./Cryptomator; recursive = true; };
   };
 }
