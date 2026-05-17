@@ -235,10 +235,12 @@
       windowrule = [
         # See https://wiki.hypr.land/Configuring/Window-Rules/
 
-        # Fix invisible XWayland helper windows (Steam, Wine/Proton) stealing focus mid-game
-        # Symptom without this: clicks don't register in CS2 / sticky keys
-        # Rule is "no_focus" (with underscore) in 0.54, not "nofocus"
-        "no_focus on, match:class ^()$, match:title ^()$, match:xwayland true"
+        # Prevent invisible XWayland helper windows (Steam, Wine/Proton) from stealing focus on spawn.
+        # Symptom without this: clicks don't register in CS2 / sticky keys.
+        # Use no_initial_focus (not no_focus): no_focus breaks interactive popups (color pickers,
+        # dialogs) that share this same empty-class/title pattern — they'd float but be unclickable.
+        # CS2 focus is further hardened by stay_focused below.
+        "no_initial_focus on, match:class ^()$, match:title ^()$, match:xwayland true"
 
         # Keep CS2 focused — prevent any window from stealing focus away from the game
         "stay_focused on, match:class ^(cs2)$"
@@ -254,7 +256,7 @@
         # "tile on, match:class ^(Aseprite)$"
         # "float on, match:class ^(audacious)$"
         # "tile on, match:class ^(neovide)$"
-        "idleinhibit focus on, match:class ^(mpv)$"
+        # "idleinhibit focus on, match:class ^(mpv)$" # removed: not a valid field in Hyprland config v2; mpv inhibits idle natively via Wayland protocol
         # "float on, match:class ^(udiskie)$"
         # "float on, match:title ^(Transmission)$"
         # "float on, match:title ^(Volume Control)$"
