@@ -10,10 +10,12 @@
       onlyoffice-desktopeditors # office alternative
       obs-studio # streaming
       oversteer # racing wheel
+      wootility # Wooting keyboard configuration
       digikam # photo organizer
       bitwig-studio # audio daw
       keepassxc
       obsidian
+      exodus
       # TickTick: two RDNA 4 / NixOS rendering issues:
       # 1. libGL.so.1 unavailable → bypass EGL with ANGLE-over-Vulkan
       # 2. System RADV driver segfaults standalone (works in gamescope like Plasticity, not standalone)
@@ -39,12 +41,14 @@
       # within budget. ANGLE/Vulkan flags fix RDNA 4 EGL passthrough.
       (pkgs.symlinkJoin {
         name = "plasticity";
-        paths = [(pkgs.plasticity.overrideAttrs (_: {
-          preFixup = ''
-            gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan --enable-gpu-rasterization")
-            gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
-          '';
-        }))];
+        paths = [
+          (pkgs.plasticity.overrideAttrs (_: {
+            preFixup = ''
+              gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan --enable-gpu-rasterization")
+              gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
+            '';
+          }))
+        ];
         nativeBuildInputs = [ pkgs.makeWrapper ];
         postBuild = ''
           makeWrapper ${pkgs.gamescope}/bin/gamescope $out/bin/plasticity \
@@ -90,6 +94,7 @@
       catppuccin-cursors.macchiatoYellow
 
       ## CLI utility
+      duf # disk usage/free utility
       eza # ls replacement
       fd # find replacement
       ffmpeg
@@ -125,6 +130,7 @@
       chezmoi # Dotfile manager
       ripdrag # Drag-and-drop from CLI
       mediainfo # Media file info for yazi
+      evtest # check input events
 
       # Screenshot & recording
       grim # Screenshot tool
@@ -135,7 +141,6 @@
       ## CLI
       kitty # fallback
       cbonsai # terminal screensaver
-      cmatrix
       pipes # terminal screensaver
       pulsemixer
       tty-clock # cli clock
@@ -150,6 +155,7 @@
       ttyper # cli typing test
       zip
       unzip
+      unrar
       valgrind # c memory analyzer
       wl-clipboard # clipboard utils for wayland (wl-copy, wl-paste)
       wget
@@ -157,7 +163,7 @@
 
       # Arduino
       arduino-cli # compile + flash without Arduino IDE
-      minicom     # serial monitor (Ctrl-A X to exit)
+      minicom # serial monitor (Ctrl-A X to exit)
 
       # C / C++
       gcc
