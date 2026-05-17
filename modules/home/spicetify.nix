@@ -24,6 +24,25 @@ in
   programs.spicetify = {
     enable = true;
 
+    # RDNA 4 rendering fix:
+    # - Native Wayland mode (NIXOS_OZONE_WL=1 default) hits a CEF/Chromium 143 assertion
+    #   in wp_color_manager_v1 handling on Hyprland 0.54 (SIGTRAP crash).
+    # - X11/XWayland mode without ANGLE: RADV/GFX1201 reports non-conformant Vulkan →
+    #   Chromium kills GPU process → blank window.
+    # Fix: force X11 (wayland=false overrides NIXOS_OZONE_WL) + ANGLE-over-Vulkan
+    # (same approach as TickTick/Plasticity in packages.nix).
+    wayland = false;
+    spotifyPackage = pkgs.spotify.overrideAttrs (old: {
+      preFixup = (old.preFixup or "") + ''
+        gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
+        gappsWrapperArgs+=(--add-flags "--use-gl=angle")
+        gappsWrapperArgs+=(--add-flags "--use-angle=vulkan")
+        gappsWrapperArgs+=(--add-flags "--enable-features=VulkanFromANGLE,DefaultANGLEVulkan")
+        gappsWrapperArgs+=(--add-flags "--enable-gpu-rasterization")
+        gappsWrapperArgs+=(--add-flags "--ignore-gpu-blocklist")
+      '';
+    });
+
     enabledExtensions = with spicePkgs.extensions; [
       visualizer
       adblock
