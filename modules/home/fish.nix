@@ -66,7 +66,7 @@ in
     loginShellInit = ''
       if status is-interactive
         fastfetch
-        tldr-tip
+        tldr-installed
       end
     '';
 
