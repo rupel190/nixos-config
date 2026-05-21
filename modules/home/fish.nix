@@ -158,6 +158,9 @@ in
                 $USER (prompt_hostname) (set_color $fish_color_cwd) $PWD $pipestatus_string \
                 (set_color normal)
           end
+          if set -q WEZTERM_PANE
+            printf "\e]133;B\e\\"
+          end
         '';
       };
 

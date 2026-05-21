@@ -11,6 +11,7 @@
       obs-studio # streaming
       oversteer # racing wheel
       wootility # Wooting keyboard configuration
+      songrec # shazam-like music recognition
       digikam # photo organizer
       bitwig-studio # audio daw
       keepassxc
