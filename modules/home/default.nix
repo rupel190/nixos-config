@@ -24,6 +24,7 @@
     ./claude.nix # AI coding assistant
     ./spicetify.nix # spotify client
     ./mpv.nix # media player
+    ./grayjay.nix # media aggregator
     ./packages.nix # additional packages
     ./browser.nix # zen browser
     ./gtk.nix # gtk theme
