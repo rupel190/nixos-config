@@ -199,6 +199,11 @@
     ]
   );
 
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
+
   xdg.configFile."imv/config".text = ''
     [binds]
     j = next_image
