@@ -155,15 +155,6 @@ in
   };
 
 
-  xdg.desktopEntries."org.gnome.Evince" = {
-    name = "Evince";
-    exec = "evince %U";
-    icon = "org.gnome.Evince";
-    comment = "PDF viewer";
-    categories = [ "GNOME" "GTK" "Office" "Viewer" ];
-    mimeType = [ "application/pdf" ];
-  };
-
   xdg.desktopEntries.yazi-wezterm = {
     name = "Yazi (File Manager)";
     genericName = "File Manager";
