@@ -1298,6 +1298,26 @@
         "type": "github"
       }
     },
+    "plasticityAppImage": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1777357935,
+        "narHash": "sha256-jW8ivOuvs1aN7unxpUcRF1OQFg0MOarp5JpUlDMV56c=",
+        "owner": "EntropyWorks",
+        "repo": "plasticityAppImage",
+        "rev": "baf5b25fc37d4737fcbe38f8ece4959fee1a0c63",
+        "type": "github"
+      },
+      "original": {
+        "owner": "EntropyWorks",
+        "repo": "plasticityAppImage",
+        "type": "github"
+      }
+    },
     "pre-commit-hooks": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -1373,6 +1393,7 @@
         "millennium": "millennium",
         "nix-flatpak": "nix-flatpak",
         "nixpkgs": "nixpkgs_4",
+        "plasticityAppImage": "plasticityAppImage",
         "ragenix": "ragenix",
         "spicetify-nix": "spicetify-nix",
         "surge": "surge",

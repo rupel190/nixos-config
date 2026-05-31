@@ -128,9 +128,10 @@
              local output_text, input_text
              for i = #zones, 1, -1 do
                local zone = zones[i]
-               if not output_text and zone.semantic_type == "Output" then
-                 output_text = pane:get_text_from_semantic_zone(zone):gsub("%s+$", "")
-               elseif output_text and zone.semantic_type == "Input" then
+               if zone.semantic_type == "Output" and not output_text then
+                 local text = pane:get_text_from_semantic_zone(zone):gsub("%s+$", "")
+                 if text ~= "" then output_text = text end
+               elseif zone.semantic_type == "Input" and output_text then
                  input_text = pane:get_text_from_semantic_zone(zone):gsub("%s+$", "")
                  break
                end

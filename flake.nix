@@ -51,6 +51,11 @@
       url = "github:SurgeDM/Surge";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    plasticityAppImage = {
+      url = "github:EntropyWorks/plasticityAppImage";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =

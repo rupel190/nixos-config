@@ -25,6 +25,7 @@
     ./spicetify.nix # spotify client
     ./mpv.nix # media player
     ./grayjay.nix # media aggregator
+    ./plasticity.nix # plasticity CAD (AppImage)
     ./packages.nix # additional packages
     ./browser.nix # zen browser
     ./gtk.nix # gtk theme

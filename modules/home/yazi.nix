@@ -124,7 +124,7 @@
         ];
         plasticity = [
           {
-            run = ''Plasticity "$@"'';
+            run = ''plasticity "$@"'';
             orphan = true;
             desc = "Open in Plasticity";
           }

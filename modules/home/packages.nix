@@ -35,27 +35,6 @@
         inkscapeExtensions = [ inkscape-extensions.inkstitch ];
       })
       orca-slicer
-      # Native Plasticity: wrapped in gamescope to gate 1000Hz mouse events to frame rate —
-      # Plasticity's snapping (possiblyModifyPickedPoint) runs per-event and floods the NURBS
-      # kernel at 1000Hz, causing "Dropping job because of latency" on every mouse move.
-      # Gamescope dispatches input to the child at its own frame clock (~240Hz), keeping jobs
-      # within budget. ANGLE/Vulkan flags fix RDNA 4 EGL passthrough.
-      (pkgs.symlinkJoin {
-        name = "plasticity";
-        paths = [
-          (pkgs.plasticity.overrideAttrs (_: {
-            preFixup = ''
-              gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan --enable-gpu-rasterization")
-              gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
-            '';
-          }))
-        ];
-        nativeBuildInputs = [ pkgs.makeWrapper ];
-        postBuild = ''
-          makeWrapper ${pkgs.gamescope}/bin/gamescope $out/bin/plasticity \
-            --add-flags "-w 1920 -h 1080 -W 2560 -H 1440 --nested-refresh 240 --nested-unfocused-refresh 240 -- $out/bin/Plasticity"
-        '';
-      })
       # Communication
       signal-desktop
       element-desktop
@@ -72,7 +51,7 @@
       protontricks
       wakeonlan
       zerotierone # virtual ethernet for external access
-      gamescope # Gaming compositor (also used to gate Plasticity input to frame rate)
+      gamescope # Gaming compositor
 
       # Tweaks
       betterdiscordctl
