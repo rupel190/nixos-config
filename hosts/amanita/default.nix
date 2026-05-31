@@ -23,8 +23,18 @@
   services.udev.packages = [ pkgs.oversteer ];
 
   # Arduino handbrake - expose as joystick to SDL/BeamNG
+  # Wooting keyboard - grant user access without sudo
   services.udev.extraRules = ''
     SUBSYSTEM=="input", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8037", ENV{ID_INPUT_JOYSTICK}="1"
+
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff01", TAG+="uaccess"
+    SUBSYSTEM=="usb",    ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff01", TAG+="uaccess"
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2402", TAG+="uaccess"
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff02", TAG+="uaccess"
+    SUBSYSTEM=="usb",    ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff02", TAG+="uaccess"
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2403", TAG+="uaccess"
+    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="31e3", TAG+="uaccess"
+    SUBSYSTEM=="usb",    ATTRS{idVendor}=="31e3", TAG+="uaccess"
   '';
 
   # AMD + Wayland environment variables
