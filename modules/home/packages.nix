@@ -19,8 +19,7 @@
       exodus
       # TickTick: two RDNA 4 / NixOS rendering issues:
       # 1. libGL.so.1 unavailable → bypass EGL with ANGLE-over-Vulkan
-      # 2. System RADV driver segfaults standalone (works in gamescope like Plasticity, not standalone)
-      #    → use TickTick's own bundled SwiftShader Vulkan ICD instead of the system driver
+      # 2. System RADV driver segfaults standalone → use TickTick's bundled SwiftShader Vulkan ICD
       (ticktick.overrideAttrs (_: {
         preFixup = ''
           gappsWrapperArgs+=(--add-flags "--use-gl=angle --use-angle=vulkan --enable-features=VulkanFromANGLE,DefaultANGLEVulkan")
@@ -71,7 +70,6 @@
       hyprcursor # Cursor manager
       hyprsunset # Blue light filter
       hyprnotify # Notification daemon using hyprctl notify
-      catppuccin-cursors.macchiatoYellow
 
       ## CLI utility
       duf # disk usage/free utility
