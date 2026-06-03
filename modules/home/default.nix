@@ -24,6 +24,7 @@
     ./claude.nix # AI coding assistant
     ./spicetify.nix # spotify client
     ./mpv.nix # media player
+    ./tera.nix # terminal radio player
     ./plasticity.nix # plasticity CAD (AppImage)
     ./packages.nix # additional packages
     ./browser.nix # zen browser
