@@ -264,6 +264,43 @@ in
 
       # Terminal image display
       imgcat = "wezterm imgcat $argv";
+
+      # One-shot song recognition from active audio output — prints and copies result to clipboard
+      shazam = {
+        description = "Identify currently playing song from active audio output (one-shot)";
+        body = ''
+          set -l sink (pactl get-default-sink)
+          set -l result (songrec recognize --audio-device "$sink.monitor" --json 2>/dev/null | jq -r 'if .track then "\(.track.subtitle) – \(.track.title)" else empty end')
+          if test -n "$result"
+            echo $result
+            echo $result | wl-copy
+          else
+            echo "No match found" >&2
+            return 1
+          end
+        '';
+      };
+
+      # Continuous song logging — deduplicates adjacent matches, appends to TSV history
+      shazam-auto = {
+        description = "Continuously log recognized songs to ~/.local/share/shazam-history.tsv";
+        body = ''
+          set -l logfile $HOME/.local/share/shazam-history.tsv
+          set -l sink (pactl get-default-sink)
+          echo "Listening on $sink.monitor — logging to $logfile (Ctrl-C to stop)"
+          set -l prev ""
+          songrec listen --audio-device "$sink.monitor" --json 2>/dev/null \
+            | jq --unbuffered -r 'if .track then "\(.track.subtitle)\t\(.track.title)" else empty end' \
+            | while read -l entry
+              if test "$entry" != "$prev"
+                set prev $entry
+                set -l line (date "+%Y-%m-%d %H:%M")(printf '\t')$entry
+                echo $line
+                echo $line >> $logfile
+              end
+            end
+        '';
+      };
     };
 
   };
