@@ -11,7 +11,6 @@
         # "poweralertd &"
         # "wl-clip-persist --clipboard both &"
         # "wl-paste --watch cliphist store &"
-        "hyprnotify -s" # Notification daemon using hyprctl notify
         "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
 
         # TODO: Add AGS startup here
@@ -23,6 +22,8 @@
         # Set primary monitor (Wayland-native way)
         # "hyprctl dispatch focusmonitor DP-2"
         # Auth daemon for GUI apps requesting privilege elevation
+        "vicinae server"
+        "systemctl --user restart hyprpaper"
         "systemctl --user start hyprpolkitagent"
         # which to choose?
         "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
@@ -297,6 +298,7 @@
 
         # Gamescope-wrapped games
         "monitor DP-2, match:class ^gamescope"
+
         # "match:title ^(.*Unity.*)$, monitor DP-2"
         # "match:title ^(.*Unreal.*)$, monitor DP-2"
 

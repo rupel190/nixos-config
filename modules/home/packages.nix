@@ -69,9 +69,10 @@
       hyprpicker # Color picker
       hyprcursor # Cursor manager
       hyprsunset # Blue light filter
-      hyprnotify # Notification daemon using hyprctl notify
 
       ## CLI utility
+      fend # calculator + unit converter REPL
+      vicinae # everything launcher (Raycast-style)
       duf # disk usage/free utility
       eza # ls replacement
       fd # find replacement
@@ -175,6 +176,8 @@
       nodePackages.mermaid-cli # Mermaid diagrams
     ]
   );
+
+  services.swaync.enable = true;
 
   programs.direnv = {
     enable = true;

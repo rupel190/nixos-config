@@ -8,6 +8,8 @@
         # Apps
         "$mainMod, F5, exec, hyprctl reload"
         "$mainMod, T, exec, wezterm connect unix"
+        "$mainMod, backslash, exec, vicinae toggle"
+        "$mainMod, D, exec, vicinae toggle"
         "$mainMod, RETURN, exec, fuzzel"
         "$mainMod, R, exec, fuzzel"
         "$mainMod, E, exec, wezterm start --always-new-process yazi"
@@ -16,6 +18,9 @@
         "$mainMod, F, togglefloating,"
         "$mainMod, P, pseudo," # dwindle
         "$mainMod, V, layoutmsg, togglesplit" # dwindle
+
+        # Notifications
+        "$mainMod, N, exec, swaync-client -t"
 
         # Screenshots
         "$mainMod, S, exec, slurp | grim -g - - | wl-copy"

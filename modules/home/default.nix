@@ -16,7 +16,7 @@
     ./btop # resouces monitor
     ./bat.nix # better cat command
     ./fastfetch.nix # fetch tool
-    # hyprnotify is used for notifications (configured in hyprland/config.nix)
+    # swaync notification center (service enabled in packages.nix)
     ./wezterm.nix # terminal
     ./discord/discord.nix # discord with gruvbox
     ./git.nix # version control
