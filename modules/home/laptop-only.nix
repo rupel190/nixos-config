@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   # Laptop-specific home-manager config
   # Import this ONLY in hosts/cordyceps home config
@@ -10,19 +10,22 @@
 
   # Laptop-specific Hyprland settings
   wayland.windowManager.hyprland.settings = {
-    # Touchpad-friendly input settings
+    # Touchpad-friendly mouse settings
     input = {
-      sensitivity = 0.2; # Higher sensitivity for touchpad
-      accel_profile = "adaptive"; # Better for touchpad
-      scroll_factor = 0.2; # Slower scroll for touchpad
-      natural_scroll = true; # Natural scrolling for touchpad
+      sensitivity = lib.mkForce 0.2; # Higher sensitivity for touchpad
+      accel_profile = lib.mkForce "adaptive"; # Better for touchpad
+      touchpad = {
+          scroll_factor = 0.2;
+          natural_scroll = true;
+        };
     };
 
-    # Touchpad gestures (when gesture syntax is fixed in newer Hyprland)
-    # gestures = {
-    #   workspace_swipe = true;
-    #   workspace_swipe_fingers = 3;
-    # };
+    # 3-finger horizontal swipe to change workspaces (Hyprland 0.51+ syntax)
+    gestures = {
+      workspace_swipe_invert = false;
+      workspace_swipe_distance = 700;
+      gesture = "3, horizontal, workspace";
+    };
 
     # Brightness control keybinds
     bind = [

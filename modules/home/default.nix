@@ -52,5 +52,7 @@
     # - scripts/ (removed - using AGS instead)
   ] ++ lib.optionals (host == "amanita") [
     ./pi-backup.nix # weekly pull of RPi backups to silo + OneDrive (amanita only)
+  ] ++ lib.optionals (host == "cordyceps") [
+    ./laptop-only.nix # brightness, battery, touchpad settings
   ];
 }
