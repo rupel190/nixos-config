@@ -4,7 +4,6 @@
     with pkgs;
     [
       ## GUI Apps
-      fuzzel # launcher
       gimp
       imv # image viewer
       onlyoffice-desktopeditors # office alternative
@@ -16,7 +15,7 @@
       bitwig-studio # audio daw
       keepassxc
       obsidian
-      exodus
+      # exodus — blocked: nixpkgs 26.1.5 can't be auto-downloaded; install manually or via Flatpak
       # TickTick: two RDNA 4 / NixOS rendering issues:
       # 1. libGL.so.1 unavailable → bypass EGL with ANGLE-over-Vulkan
       # 2. System RADV driver segfaults standalone → use TickTick's bundled SwiftShader Vulkan ICD
@@ -29,7 +28,7 @@
       evince # (gnome) pdf reader
       blockbench # low-poly 3D modeling and animation
       freecad # CAD
-      openscad # parametric CAD
+      openscad-unstable # parametric CAD (2026 master; 2021.01 fails GLEW link)
       (inkscape-with-extensions.override {
         inkscapeExtensions = [ inkscape-extensions.inkstitch ];
       })
@@ -71,7 +70,6 @@
       hyprsunset # Blue light filter
 
       ## CLI utility
-      fend # calculator + unit converter REPL
       vicinae # everything launcher (Raycast-style)
       duf # disk usage/free utility
       eza # ls replacement
@@ -161,8 +159,8 @@
       taplo # TOML LSP
       lua-language-server
       bash-language-server
-      nodePackages.typescript-language-server
-      nodePackages.svelte-language-server
+      typescript-language-server
+      svelte-language-server
       yaml-language-server
       dockerfile-language-server
       openscad-lsp # OpenSCAD parametric 3D modeling
@@ -172,8 +170,8 @@
       sqlfluff # SQL linter + formatter
       clang-tools # clang-format for C/C++
       ruff # Python linter + formatter
-      nodePackages.prettier # Multi-language formatter
-      nodePackages.mermaid-cli # Mermaid diagrams
+      prettier # Multi-language formatter
+      mermaid-cli # Mermaid diagrams
     ]
   );
 

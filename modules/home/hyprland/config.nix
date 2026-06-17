@@ -80,16 +80,18 @@
       };
 
       general = {
-        gaps_in = 5;
-        gaps_out = 5;
+        gaps_in = 10;
+        gaps_out = 10;
         # gaps_out = if host == "cordyceps" then [ 1 1 0 1 ] else [ 5 15 15 15 ];
 
         border_size = 3;
         layout = "dwindle";
 
         # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-        # Catppuccin Macchiato: Red (#ed8796) -> Pink (#f5bde6)
-        "col.active_border" = "rgba(ed8796ee) rgba(f5bde6ee) 45deg";
+        # Catppuccin yellow active border — matches the glow + shadow accent.
+        # Previous Macchiato Red (#ed8796) -> Pink (#f5bde6) gradient:
+        # "col.active_border" = "rgba(ed8796ee) rgba(f5bde6ee) 45deg";
+        "col.active_border" = "rgba(f9e2afff)"; # Catppuccin yellow
         "col.inactive_border" = "rgba(5b6078aa)"; # Catppuccin surface1
 
         # Set to true enable resizing windows by clicking and dragging on borders and gaps
@@ -115,7 +117,7 @@
       };
 
       dwindle = {
-        pseudotile = true; # Master switch for pseudotiling. Enabling is bound to mainMod + P in the keybinds section below
+        # pseudotile option removed in Hyprland 0.55; the `pseudo` dispatcher (mainMod + P) works without a master switch now
         preserve_split = true;
 
         # no_gaps_when_only = false;
@@ -161,12 +163,21 @@
 
         shadow = {
           enabled = true;
-          range = 4;
-          # range = 20;
-          render_power = 3;
-          color = "rgba(1a1a1aee)";
+          range = 5;         # modest; well within the 10px gap
+          render_power = 4;  # fast falloff
+          color = "rgba(f9e2afff)";          # yellow on the active window (2nd focus cue)
+          color_inactive = "rgba(11111baa)"; # Catppuccin crust on inactive windows
           # offset = "0 2";
           # ignore_window = true;
+        };
+
+        # New in Hyprland 0.55: inner glow on windows (reuses the shadow decoration engine)
+        glow = {
+          enabled = true;
+          range = 8;        # tight inner rim
+          render_power = 3;
+          color = "rgba(f9e2afff)";          # Catppuccin yellow (active window only)
+          color_inactive = "rgba(f9e2af00)"; # transparent → no glow when unfocused
         };
       };
 
