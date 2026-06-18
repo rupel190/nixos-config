@@ -1,6 +1,16 @@
 { inputs, pkgs, ... }:
+let
+  # Upstream vendorHash is stale; pass a fixed buildGoModule to patch it
+  surge = pkgs.callPackage "${inputs.surge}/package.nix" {
+    src = inputs.surge;
+    version = "0.8.5";
+    buildGoModule = args: pkgs.buildGoModule (args // {
+      vendorHash = "sha256-5z4qZnbYEYhJ8mm/kBxhMDaVLxWfo/UKiXhtdoJTSZM=";
+    });
+  };
+in
 {
-  home.packages = [ inputs.surge.packages.${pkgs.system}.default ];
+  home.packages = [ surge ];
 
   systemd.user.services.surge = {
     Unit = {
@@ -8,7 +18,7 @@
       After = [ "network.target" ];
     };
     Service = {
-      ExecStart = "${inputs.surge.packages.${pkgs.system}.default}/bin/surge service __run";
+      ExecStart = "${surge}/bin/surge service __run";
       Restart = "on-failure";
     };
     Install = {
