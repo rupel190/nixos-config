@@ -134,18 +134,20 @@
       # Map MIME types to openers
       open = {
         prepend_rules = [
-          # Name-based rules take priority — catches .step (detected as text/plain) and
-          # .3mf (ZIP-based, yazi would otherwise try to browse it as an archive)
+          # url-glob rules take priority — catches .step (detected as text/plain) and
+          # .3mf (ZIP-based, yazi would otherwise try to browse it as an archive).
+          # NOTE: yazi renamed the glob key `name` -> `url`; using `name` now errors with
+          # "at least one of `url` or `mime` must be specified".
           {
-            name = "*.3mf";
+            url = "*.3mf";
             use = "bambu-studio";
           }
           {
-            name = "*.step";
+            url = "*.step";
             use = "plasticity";
           }
           {
-            name = "*.stp";
+            url = "*.stp";
             use = "plasticity";
           }
           {
