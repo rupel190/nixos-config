@@ -2,6 +2,7 @@
   pkgs,
   lib,
   username,
+  host,
   ...
 }:
 {
@@ -52,10 +53,11 @@
       enable = true;
     };
 
-    # SSH server
+    # SSH server. Firewall opened on amanita only (desktop reachable on the LAN);
+    # cordyceps keeps the port closed — sshd still runs, just not exposed.
     openssh = {
       enable = true;
-      openFirewall = true;
+      openFirewall = host == "amanita";
       settings.PasswordAuthentication = false;
       settings.PermitRootLogin = "no";
     };
