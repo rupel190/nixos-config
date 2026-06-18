@@ -22,13 +22,17 @@
     extraGroups = [
       "networkmanager"
       "wheel"
-      "input"       # Required for mouse/keyboard in Wayland
-      "video"       # Required for display management
-      "seat"        # Required for seat management
-      "plugdev"     # Required for Logitech HID++ device access (solaar)
-      "dialout"     # Required for serial port access (Arduino, USB-serial)
+      "input" # Required for mouse/keyboard in Wayland
+      "video" # Required for display management
+      "seat" # Required for seat management
+      "plugdev" # Required for Logitech HID++ device access (solaar)
+      "dialout" # Required for serial port access (Arduino, USB-serial)
     ];
     shell = pkgs.fish;
+    openssh.authorizedKeys.keys = [
+      # cordyceps host
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA9X3TOZAnn2UkKhDD0sKMpFBhDCc5T+mq3ARQh+LefK rupel@cordyceps"
+    ];
   };
   nix.settings.allowed-users = [ "${username}" ];
 }

@@ -1,4 +1,9 @@
-{ pkgs, lib, username, ... }:
+{
+  pkgs,
+  lib,
+  username,
+  ...
+}:
 {
   services = {
     # PhotoPrism photo management
@@ -6,10 +11,14 @@
       enable = true;
       package = pkgs.mariadb;
       ensureDatabases = [ "photoprism" ];
-      ensureUsers = [{
-        name = "photoprism";
-        ensurePermissions = { "photoprism.*" = "ALL PRIVILEGES"; };
-      }];
+      ensureUsers = [
+        {
+          name = "photoprism";
+          ensurePermissions = {
+            "photoprism.*" = "ALL PRIVILEGES";
+          };
+        }
+      ];
     };
 
     photoprism = {
@@ -27,8 +36,8 @@
     udev = {
       enable = true;
       packages = [
-        pkgs.libmtp   # Android MTP connection
-        pkgs.arduino  # Arduino udev rules (covers SparkFun Pro Micro VIDs)
+        pkgs.libmtp # Android MTP connection
+        pkgs.arduino # Arduino udev rules (covers SparkFun Pro Micro VIDs)
       ];
     };
     dbus.enable = true;
@@ -46,7 +55,7 @@
     # SSH server
     openssh = {
       enable = true;
-      openFirewall = false;
+      openFirewall = true;
       settings.PasswordAuthentication = false;
       settings.PermitRootLogin = "no";
     };
