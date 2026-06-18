@@ -8,10 +8,8 @@
         # Apps
         "$mainMod, F5, exec, hyprctl reload"
         "$mainMod, T, exec, wezterm connect unix"
-        "$mainMod, backslash, exec, vicinae toggle"
-        "$mainMod, D, exec, vicinae toggle"
-        "$mainMod, RETURN, exec, fuzzel"
-        "$mainMod, R, exec, fuzzel"
+        "$mainMod, RETURN, exec, vicinae toggle"
+        "$mainMod, R, exec, vicinae toggle"
         "$mainMod, E, exec, wezterm start --always-new-process yazi"
         "$mainMod, C, killactive,"
         # "$mainMod, M, exit,"
@@ -67,6 +65,20 @@
         "$mainMod, right, resizeactive, 50 0"
         "$mainMod, up, resizeactive, 0 -50"
         "$mainMod, down, resizeactive, 0 50"
+
+        # Scrolling layout (workspaces 7-9) — layoutmsg is layout-scoped, so these
+        # are no-ops on dwindle workspaces. mouse_up/down = scroll wheel (free: the
+        # existing mouse workspace binds use the side buttons mouse:275/276).
+        "$mainMod, mouse_down, layoutmsg, move +col" # wheel: scroll tape toward next window
+        "$mainMod, mouse_up, layoutmsg, move -col" # wheel: scroll tape toward previous window
+        "$mainMod ALT, mouse_down, layoutmsg, swapcol r" # Super+Alt+wheel: move focused window down the tape
+        "$mainMod ALT, mouse_up, layoutmsg, swapcol l" # Super+Alt+wheel: move focused window up the tape
+        "$mainMod, comma, layoutmsg, colresize -conf" # cycle column width down
+        "$mainMod, period, layoutmsg, colresize +conf" # cycle column width up
+        # NOTE: 'fit expand' removed — on the vertical (direction:down) tape it computed a
+        # negative window height and made the window vanish. Use a real fullscreen toggle instead if wanted.
+        "$mainMod, bracketleft, layoutmsg, consume_or_expel prev" # merge active window into previous column
+        "$mainMod, bracketright, layoutmsg, consume_or_expel next" # split active window out to next column
 
         # Buffer submap (prefix key) - DISABLED for now, causing number key conflicts
         # "$mainMod, B, submap, buffer"

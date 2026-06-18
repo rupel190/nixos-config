@@ -20,6 +20,10 @@ in
       "DP-2, 2560x1440@239.972000, 0x0, 1"
       "DP-1, 3840x2160@120.00000, -2560x0, 1.5"
       "HDMI-A-2, preferred, 2560x0, 1, transform, 3"
+      # Mirror DP-1 onto the AVR/HDMI-A-1 (dormant while unplugged).
+      # Note: mirroring copies DP-1's framebuffer as-is (no re-render); differing
+      # aspect ratios will stretch/squish. mirror is the 5th positional field.
+      "HDMI-A-1, preferred, auto, 1, mirror, DP-1"
       # "DP-1, 3840x2160@120.00000, -3840x0, 1"
       # "HDMI-A-1, 3840x2160@60.00000, -3840x0, 1" # AVR place left of 4k
       # "HDMI-A-1, 3840x2160@60.00000, -2560, 1" # AVR placed left of 2560p
@@ -40,10 +44,10 @@ in
           "5, monitor:DP-2, persistent:true"
           "6, monitor:DP-2, persistent:true"
 
-          # HDMI-A-2 (Right vertical monitor)
-          "7, monitor:HDMI-A-2, persistent:true, default:true, layoutopt:orientation:top"
-          "8, monitor:HDMI-A-2, persistent:true, layoutopt:orientation:top"
-          "9, monitor:HDMI-A-2, persistent:true"
+          # HDMI-A-2 (Right vertical monitor) — scrolling tape, grows downward
+          "7, monitor:HDMI-A-2, persistent:true, default:true, layout:scrolling"
+          "8, monitor:HDMI-A-2, persistent:true, layout:scrolling"
+          "9, monitor:HDMI-A-2, persistent:true, layout:scrolling"
         ]
       else
         [

@@ -136,6 +136,18 @@
         # no_gaps_when_only = false;
       };
 
+      # Scrolling layout — used on workspaces 7-9 (portrait HDMI-A-2).
+      # https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
+      scrolling = {
+        direction = "down"; # vertical tape; new windows grow downward
+        follow_focus = true; # auto-scroll the focused window into view (default)
+        fullscreen_on_one_column = true; # a lone window still fills the screen
+        # Peek: focused window is centered (0) and sized to <1.0 of the scroll axis,
+        # so the neighbours above/below bleed into the top/bottom edges.
+        focus_fit_method = 0; # 0 = center (both neighbours peek); 1 = fit (default)
+        column_width = 0.8; # leave a 20% margin for the peek; raise toward 1.0 for less
+      };
+
       decoration = {
         rounding = 10;
         rounding_power = 2;
