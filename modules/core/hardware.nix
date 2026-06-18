@@ -46,6 +46,11 @@
     # Disable runtime PM for all USB devices
     ACTION=="add", SUBSYSTEM=="usb", TEST=="power/autosuspend", ATTR{power/autosuspend}="-1"
     ACTION=="add", SUBSYSTEM=="usb", TEST=="power/autosuspend_delay_ms", ATTR{power/autosuspend_delay_ms}="-1"
+
+    # Arduino Micro handbrake (VID 2341, PID 8037) — tag as joystick + calibrate ABS_Z
+    # EVDEV_ABS_02 format: min:max:resolution:fuzz:flat  (calibrated 2026-06-09: rest=2471, pull=63175)
+    SUBSYSTEM=="input", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8037", ENV{ID_INPUT_JOYSTICK}="1"
+    SUBSYSTEM=="input", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8037", ENV{EVDEV_ABS_02}="2471:63175:0:303:1821"
   '';
 
   # Keep swappiness low — prefer RAM over swap to avoid microstutters in games
