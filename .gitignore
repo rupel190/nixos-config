@@ -1,2 +1,6 @@
 # Secrets — never commit auth tokens
 modules/home/dotfiles/gh/hosts.yml
+
+# Nix build output symlinks (nixos-rebuild build / nix build [-o])
+/result
+result-*
