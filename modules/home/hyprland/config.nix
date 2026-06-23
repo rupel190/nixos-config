@@ -315,6 +315,12 @@
         "match:class ^(spotify)$, workspace 9 silent"
         "match:class ^(org.wezfurlong.wezterm)$, match:title ^(pulsemixer)$, workspace 9 silent"
 
+        # Disable resize animation for wezterm only. Hyprland's window-resize animation
+        # emits a configure event per frame; TUIs (claude, btop) repaint the whole screen
+        # each frame through the mux round-trip and fall behind, causing oscillation and
+        # leftover gaps while resizing. no_anim collapses the resize to a single event.
+        "no_anim on, match:class ^(org.wezfurlong.wezterm)$"
+
         # Force all games to DP-2 (main 240Hz monitor)
         # Steam games: class is steam_app_APPID (e.g. steam_app_730 for CS2)
         "monitor DP-2, match:class ^steam_app_"
