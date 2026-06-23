@@ -7,6 +7,44 @@
 let
   getProgramName = pkg: pkg.meta.mainProgram or pkg.pname or (lib.getName pkg);
   allowedCmds = lib.concatStringsSep "\n" (map getProgramName config.home.packages);
+
+  # Background weather refresh: fetch wttr.in JSON and render the labeled panel
+  # (header + one row per period: now/morning/noon/evening/night) into the cache
+  # that loginShellInit prints beneath fastfetch. Tool paths are pinned so the
+  # systemd timer works regardless of PATH. ic() buckets WWO weather codes into
+  # emoji (kept last so their double-width can't break column alignment). hourly
+  # is in 3-hour steps, so indices 3/4/6/7 = 09:00/12:00/18:00/21:00. Swap "Wien"
+  # to retarget. The atomic .tmp -> mv keeps the last good copy when offline.
+  weatherUpdate = pkgs.writeShellScript "weather-update" ''
+    cache="$HOME/.cache/wttr-forecast"
+    ${pkgs.curl}/bin/curl -fsS --max-time 8 'https://wttr.in/Wien?format=j1' 2>/dev/null \
+      | ${pkgs.jq}/bin/jq -r '
+          def ic($code; $night):
+            ($code|tonumber) as $c
+            | if   $c == 113 then (if $night then "🌙" else "☀️" end)
+              elif $c == 116 then "⛅"
+              elif ($c == 119 or $c == 122) then "☁️"
+              elif ($c == 143 or $c == 248 or $c == 260) then "🌫️"
+              elif ($c >= 386 or $c == 200) then "⛈️"
+              elif (($c >= 317 and $c <= 377) or $c == 227 or $c == 230) then "🌨️"
+              elif ($c >= 293) then "🌧️"
+              else "🌦️" end;
+          def rpad($n): . as $s | $s + (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end);
+          def lpad($n): . as $s | (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end) + $s;
+          .current_condition[0] as $cur | .weather[0].hourly as $h
+          | def row($l; $t; $mid; $code; $night):
+              "  " + ($l|rpad(8)) + ($t|tostring|lpad(2)) + " °C   " + ($mid|rpad(12)) + ic($code; $night);
+            "Wien · rest of today",
+            row("now";     $cur.temp_C; "feels " + $cur.FeelsLikeC + " °C"; $cur.weatherCode; false),
+            row("morning"; $h[3].tempC; "rain " + ($h[3].chanceofrain|lpad(3)) + " %"; $h[3].weatherCode; false),
+            row("noon";    $h[4].tempC; "rain " + ($h[4].chanceofrain|lpad(3)) + " %"; $h[4].weatherCode; false),
+            row("evening"; $h[6].tempC; "rain " + ($h[6].chanceofrain|lpad(3)) + " %"; $h[6].weatherCode; false),
+            row("night";   $h[7].tempC; "rain " + ($h[7].chanceofrain|lpad(3)) + " %"; $h[7].weatherCode; true)
+        ' > "$cache.tmp" 2>/dev/null \
+      && test -s "$cache.tmp" \
+      && mv "$cache.tmp" "$cache" \
+      || rm -f "$cache.tmp"
+  '';
 in
 {
   xdg.configFile."tldr-allowlist".text = allowedCmds;
@@ -67,7 +105,10 @@ in
       if status is-interactive
         fastfetch
         tldr-installed
-        weather
+        if test -f $HOME/.cache/wttr-forecast
+          echo
+          cat $HOME/.cache/wttr-forecast
+        end
       end
     '';
 
@@ -257,50 +298,14 @@ in
         '';
       };
 
-      # Custom weather panel built from wttr.in JSON (?format=j1) with jq.
-      # We render our own layout: current temp + feels-like, then the rest of
-      # today (morning/noon/evening/night) with rain %, day/night icons — no
-      # wind or visibility clutter. The hourly array is in 3-hour steps, so
-      # indices 3/4/6/7 = 09:00 / 12:00 / 18:00 / 21:00. ic() buckets WWO
-      # weather codes (113 clear, 116 partly, 200/386 thunder, …) into emoji,
-      # kept last in each row so their double-width can't break alignment.
-      # Cached ~15 min so it never delays an interactive shell and keeps the
-      # last good copy offline. Swap "Wien" to retarget; run `weather` to refresh.
+      # Manual weather: force a refresh, then show the panel. Startup does NOT use
+      # this — loginShellInit prints the timer-warmed cache directly, so it never
+      # waits on the network. Run `weather` any time you want it fresh right now.
       weather = {
-        description = "Cached weather panel (current + rest of today, rain %) from wttr.in JSON";
+        description = "Refresh and show the weather panel (current + rest of today, with rain %)";
         body = ''
-          set -l cache $HOME/.cache/wttr-forecast
-          if not test -f $cache; or test (find $cache -mmin +15 2>/dev/null | count) -gt 0
-            if curl -fsS --max-time 4 'https://wttr.in/Wien?format=j1' 2>/dev/null | jq -r '
-                def ic($code; $night):
-                  ($code|tonumber) as $c
-                  | if   $c == 113 then (if $night then "🌙" else "☀️" end)
-                    elif $c == 116 then "⛅"
-                    elif ($c == 119 or $c == 122) then "☁️"
-                    elif ($c == 143 or $c == 248 or $c == 260) then "🌫️"
-                    elif ($c >= 386 or $c == 200) then "⛈️"
-                    elif (($c >= 317 and $c <= 377) or $c == 227 or $c == 230) then "🌨️"
-                    elif ($c >= 293) then "🌧️"
-                    else "🌦️" end;
-                def rpad($n): . as $s | $s + (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end);
-                def lpad($n): . as $s | (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end) + $s;
-                .current_condition[0] as $cur
-                | .weather[0].hourly as $h
-                | def row($l; $t; $mid; $code; $night):
-                    "  " + ($l|rpad(8)) + ($t|tostring|lpad(2)) + " °C   " + ($mid|rpad(12)) + ic($code; $night);
-                  "Wien · rest of today",
-                  row("now";     $cur.temp_C;  ("feels " + $cur.FeelsLikeC + " °C");            $cur.weatherCode;  false),
-                  row("morning"; $h[3].tempC;  ("rain " + ($h[3].chanceofrain|lpad(3)) + " %"); $h[3].weatherCode; false),
-                  row("noon";    $h[4].tempC;  ("rain " + ($h[4].chanceofrain|lpad(3)) + " %"); $h[4].weatherCode; false),
-                  row("evening"; $h[6].tempC;  ("rain " + ($h[6].chanceofrain|lpad(3)) + " %"); $h[6].weatherCode; false),
-                  row("night";   $h[7].tempC;  ("rain " + ($h[7].chanceofrain|lpad(3)) + " %"); $h[7].weatherCode; true)
-              ' > $cache.tmp 2>/dev/null; and test -s $cache.tmp
-              mv $cache.tmp $cache
-            else
-              rm -f $cache.tmp
-            end
-          end
-          test -f $cache; and cat $cache; or echo "weather unavailable"
+          ${weatherUpdate}
+          test -f $HOME/.cache/wttr-forecast; and cat $HOME/.cache/wttr-forecast; or echo "weather unavailable"
         '';
       };
 
@@ -373,6 +378,26 @@ in
     Unit.Description = "Refresh the tldr page cache weekly";
     Timer = {
       OnCalendar = "weekly";
+      Persistent = true;
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
+
+  # Keep the weather cache warm OFF the interactive path (loginShellInit prints
+  # it on every shell start, so it must never block on the network). Same idea
+  # as tldr-update: a oneshot refresh, here on a 15-minute timer plus on boot.
+  systemd.user.services.weather-update = {
+    Unit.Description = "Refresh the cached weather forecast";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${weatherUpdate}";
+    };
+  };
+  systemd.user.timers.weather-update = {
+    Unit.Description = "Refresh the cached weather forecast every 15 minutes";
+    Timer = {
+      OnBootSec = "1min";
+      OnUnitActiveSec = "15min";
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];
