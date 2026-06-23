@@ -13,6 +13,7 @@
       songrec # shazam-like music recognition
       digikam # photo organizer
       bitwig-studio # audio daw
+      transcribe # transcribe recorded music by ear (unfree)
       keepassxc
       obsidian
       # exodus — blocked: nixpkgs 26.1.5 can't be auto-downloaded; install manually or via Flatpak
@@ -104,7 +105,6 @@
       zoxide # Better cd
       vim # Classic editor
       neovim # Modern vim
-      chezmoi # Dotfile manager
       ripdrag # Drag-and-drop from CLI
       mediainfo # Media file info for yazi
       evtest # check input events
@@ -121,6 +121,7 @@
       pipes # terminal screensaver
       pulsemixer
       tty-clock # cli clock
+      fortune-kind # curated, kinder fortune (rust)
 
       openssl
       ripgrep # grep replacement

@@ -67,6 +67,7 @@ in
       if status is-interactive
         fastfetch
         tldr-installed
+        weather
       end
     '';
 
@@ -256,6 +257,53 @@ in
         '';
       };
 
+      # Custom weather panel built from wttr.in JSON (?format=j1) with jq.
+      # We render our own layout: current temp + feels-like, then the rest of
+      # today (morning/noon/evening/night) with rain %, day/night icons — no
+      # wind or visibility clutter. The hourly array is in 3-hour steps, so
+      # indices 3/4/6/7 = 09:00 / 12:00 / 18:00 / 21:00. ic() buckets WWO
+      # weather codes (113 clear, 116 partly, 200/386 thunder, …) into emoji,
+      # kept last in each row so their double-width can't break alignment.
+      # Cached ~15 min so it never delays an interactive shell and keeps the
+      # last good copy offline. Swap "Wien" to retarget; run `weather` to refresh.
+      weather = {
+        description = "Cached weather panel (current + rest of today, rain %) from wttr.in JSON";
+        body = ''
+          set -l cache $HOME/.cache/wttr-forecast
+          if not test -f $cache; or test (find $cache -mmin +15 2>/dev/null | count) -gt 0
+            if curl -fsS --max-time 4 'https://wttr.in/Wien?format=j1' 2>/dev/null | jq -r '
+                def ic($code; $night):
+                  ($code|tonumber) as $c
+                  | if   $c == 113 then (if $night then "🌙" else "☀️" end)
+                    elif $c == 116 then "⛅"
+                    elif ($c == 119 or $c == 122) then "☁️"
+                    elif ($c == 143 or $c == 248 or $c == 260) then "🌫️"
+                    elif ($c >= 386 or $c == 200) then "⛈️"
+                    elif (($c >= 317 and $c <= 377) or $c == 227 or $c == 230) then "🌨️"
+                    elif ($c >= 293) then "🌧️"
+                    else "🌦️" end;
+                def rpad($n): . as $s | $s + (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end);
+                def lpad($n): . as $s | (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end) + $s;
+                .current_condition[0] as $cur
+                | .weather[0].hourly as $h
+                | def row($l; $t; $mid; $code; $night):
+                    "  " + ($l|rpad(8)) + ($t|tostring|lpad(2)) + " °C   " + ($mid|rpad(12)) + ic($code; $night);
+                  "Wien · rest of today",
+                  row("now";     $cur.temp_C;  ("feels " + $cur.FeelsLikeC + " °C");            $cur.weatherCode;  false),
+                  row("morning"; $h[3].tempC;  ("rain " + ($h[3].chanceofrain|lpad(3)) + " %"); $h[3].weatherCode; false),
+                  row("noon";    $h[4].tempC;  ("rain " + ($h[4].chanceofrain|lpad(3)) + " %"); $h[4].weatherCode; false),
+                  row("evening"; $h[6].tempC;  ("rain " + ($h[6].chanceofrain|lpad(3)) + " %"); $h[6].weatherCode; false),
+                  row("night";   $h[7].tempC;  ("rain " + ($h[7].chanceofrain|lpad(3)) + " %"); $h[7].weatherCode; true)
+              ' > $cache.tmp 2>/dev/null; and test -s $cache.tmp
+              mv $cache.tmp $cache
+            else
+              rm -f $cache.tmp
+            end
+          end
+          test -f $cache; and cat $cache; or echo "weather unavailable"
+        '';
+      };
+
       # Godot launcher shortcut
       godot = "command godot --rendering-driver opengl3 $argv";
 
@@ -308,5 +356,25 @@ in
   programs.zoxide = {
     enable = true;
     enableFishIntegration = true;
+  };
+
+  # Keep the tldr page cache fully populated OFF the interactive path. `tldr-installed`
+  # picks a random page at shell startup; the client fetches any uncached page over the
+  # network (~1.5s), so random picks were stalling the prompt. A periodic full refresh
+  # makes every pick a local cache hit.
+  systemd.user.services.tldr-update = {
+    Unit.Description = "Refresh the tldr page cache";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.tldr}/bin/tldr --update";
+    };
+  };
+  systemd.user.timers.tldr-update = {
+    Unit.Description = "Refresh the tldr page cache weekly";
+    Timer = {
+      OnCalendar = "weekly";
+      Persistent = true;
+    };
+    Install.WantedBy = [ "timers.target" ];
   };
 }
