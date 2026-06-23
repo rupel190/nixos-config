@@ -7,4 +7,11 @@ in
     amanita-host
     amanita-rupel
   ];
+
+  # Cloudflare API token (Pages:Edit) for deploying the recustomize pipeline report.
+  # host key decrypts at activation; rupel key lets you `ragenix -e` it.
+  "cloudflare-api-token.age".publicKeys = [
+    amanita-host
+    amanita-rupel
+  ];
 }
