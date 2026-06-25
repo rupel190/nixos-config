@@ -104,11 +104,12 @@ in
     loginShellInit = ''
       if status is-interactive
         fastfetch
-        tldr-installed
         if test -f $HOME/.cache/wttr-forecast
           echo
           cat $HOME/.cache/wttr-forecast
+          echo
         end
+        tldr-installed
       end
     '';
 
@@ -318,15 +319,27 @@ in
       # Terminal image display
       imgcat = "wezterm imgcat $argv";
 
-      # One-shot song recognition from active audio output — prints and copies result to clipboard
+      # One-shot song recognition from active audio output — prints, copies to clipboard, and logs to its own TSV
       shazam = {
-        description = "Identify currently playing song from active audio output (one-shot)";
+        description = "Identify currently playing song from active audio output (one-shot); logs to ~/.local/share/shazam-oneshot.tsv";
         body = ''
-          set -l sink (pactl get-default-sink)
-          set -l result (songrec recognize --audio-device "$sink.monitor" --json 2>/dev/null | jq -r 'if .track then "\(.track.subtitle) – \(.track.title)" else empty end')
-          if test -n "$result"
-            echo $result
-            echo $result | wl-copy
+          # songrec captures the monitor (loopback) of the default sink. wpctl is the
+          # native PipeWire/WirePlumber client (pactl isn't installed); node.name + .monitor
+          # is exactly the device token songrec's --list-devices reports.
+          set -l monitor (wpctl inspect @DEFAULT_AUDIO_SINK@ | string match -rg 'node\.name = "(.+)"').monitor
+          if test -z "$monitor" -o "$monitor" = ".monitor"
+            echo "Could not determine default audio sink (is PipeWire running?)" >&2
+            return 1
+          end
+          set -l logfile $HOME/.local/share/shazam-oneshot.tsv
+          # one songrec call; capture artist<TAB>title to mirror shazam-auto's TSV columns
+          set -l entry (songrec recognize --audio-device "$monitor" --json 2>/dev/null | jq -r 'if .track then "\(.track.subtitle)\t\(.track.title)" else empty end')
+          if test -n "$entry"
+            set -l display (string replace -r -- '\t' ' – ' $entry)
+            echo $display
+            echo $display | wl-copy
+            # log every successful match to its OWN file (separate from shazam-auto's history)
+            echo (date "+%Y-%m-%d %H:%M")(printf '\t')$entry >> $logfile
           else
             echo "No match found" >&2
             return 1
@@ -339,10 +352,15 @@ in
         description = "Continuously log recognized songs to ~/.local/share/shazam-history.tsv";
         body = ''
           set -l logfile $HOME/.local/share/shazam-history.tsv
-          set -l sink (pactl get-default-sink)
-          echo "Listening on $sink.monitor — logging to $logfile (Ctrl-C to stop)"
+          # See `shazam`: derive the default sink's monitor via wpctl (pactl isn't installed).
+          set -l monitor (wpctl inspect @DEFAULT_AUDIO_SINK@ | string match -rg 'node\.name = "(.+)"').monitor
+          if test -z "$monitor" -o "$monitor" = ".monitor"
+            echo "Could not determine default audio sink (is PipeWire running?)" >&2
+            return 1
+          end
+          echo "Listening on $monitor — logging to $logfile (Ctrl-C to stop)"
           set -l prev ""
-          songrec listen --audio-device "$sink.monitor" --json 2>/dev/null \
+          songrec listen --audio-device "$monitor" --json 2>/dev/null \
             | jq --unbuffered -r 'if .track then "\(.track.subtitle)\t\(.track.title)" else empty end' \
             | while read -l entry
               if test "$entry" != "$prev"
