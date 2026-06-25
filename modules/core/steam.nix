@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, host, ... }:
 {
   programs = {
     steam = {
@@ -17,6 +17,12 @@
         # ! Disable AVX-512 CPU instructions to avoid Steam SIGILL issues
         extraProfile = ''
           export GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX512F
+        ''
+        # cordyceps (laptop) only: Hyprland's xwayland { force_zero_scaling = true }
+        # reports scale 1 to XWayland, so Steam's client UI renders tiny on the
+        # HiDPI eDP-1 panel. Scale the desktop UI back up. Tune to taste (1.5/2).
+        + lib.optionalString (host == "cordyceps") ''
+          export STEAM_FORCE_DESKTOPUI_SCALING=1.5
         '';
         extraPkgs =
           pkgs: with pkgs; [
