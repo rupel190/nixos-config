@@ -92,6 +92,7 @@
       tree-sitter # treesitter CLI
       nodejs # Node.js runtime
       yarn # JS package manager
+      bun # fast JS runtime, bundler & package manager
       cargo # Rust package manager
       rustc # Rust compiler
       rustfmt # Rust formatter
