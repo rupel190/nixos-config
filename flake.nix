@@ -56,6 +56,10 @@
       url = "github:EntropyWorks/plasticityAppImage";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # No nixpkgs.follows: keeps the upstream pin so Garnix binary cache hits
+    # (avoids compiling ElementalWarrior's patched Wine fork locally).
+    affinity-nix.url = "github:mrshmllow/affinity-nix";
   };
 
   outputs =

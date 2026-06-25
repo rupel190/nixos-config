@@ -6,7 +6,10 @@
   ...
 }:
 {
-  nixpkgs.overlays = [ inputs.millennium.overlays.default ];
+  nixpkgs.overlays = [
+    inputs.millennium.overlays.default
+    inputs.affinity-nix.overlays.default
+  ];
 
   # imports = [ inputs.nix-gaming.nixosModules.default ];
   nix = {
@@ -19,10 +22,12 @@
       substituters = [
         "https://cache.nixos.org"
         "https://nix-gaming.cachix.org"
+        "https://cache.garnix.io" # affinity-nix prebuilt wine prefix
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
+        "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
       ];
     };
   };
@@ -31,6 +36,7 @@
     wget
     git
     pkgs.ragenix
+    affinity-v3 # unified Affinity suite via affinity-nix (wine); needs your own installer on first run
   ];
 
   time.timeZone = "Europe/Berlin";
