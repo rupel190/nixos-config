@@ -32,6 +32,8 @@
     openssh.authorizedKeys.keys = [
       # cordyceps host
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA9X3TOZAnn2UkKhDD0sKMpFBhDCc5T+mq3ARQh+LefK rupel@cordyceps"
+      # phone (Termux)
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFnj3eLieTvNxlFi+hCesV4gHJkx1CepEAu4/v0ZJc7o u0_a713@localhost"
     ];
   };
   nix.settings.allowed-users = [ "${username}" ];
