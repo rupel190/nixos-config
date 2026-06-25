@@ -20,6 +20,12 @@
         # Notifications
         "$mainMod, N, exec, swaync-client -t"
 
+        # Idle inhibit toggle (caffeine) — holds a Wayland idle inhibitor via
+        # wlinhibit so hypridle won't blank/lock. Stateless toggle: pkill's exit
+        # code IS the state (killed something = it was on → now off). notify-send
+        # routes through swaync; the synchronous hint replaces the prior toast.
+        ''$mainMod SHIFT, I, exec, pkill -x wlinhibit && notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit OFF" || (wlinhibit & notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit ON")''
+
         # Screenshots
         "$mainMod, S, exec, slurp | grim -g - - | wl-copy"
         "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | tee /tmp/screenshot.png | wl-copy && swappy -f /tmp/screenshot.png -o ~/Pictures/swappy/$(date +%F_%H-%M-%S).png"

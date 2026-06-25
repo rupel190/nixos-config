@@ -21,6 +21,8 @@ in
     # wl-clip-persist
     # cliphist
     wf-recorder
+    wlinhibit
+    libnotify # provides notify-send so keybind/script notifications reach swaync over D-Bus
     # glib
     wayland
     # direnv
