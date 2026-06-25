@@ -142,10 +142,16 @@
         direction = "down"; # vertical tape; new windows grow downward
         follow_focus = true; # auto-scroll the focused window into view (default)
         fullscreen_on_one_column = true; # a lone window still fills the screen
-        # Peek: focused window is centered (0) and sized to <1.0 of the scroll axis,
-        # so the neighbours above/below bleed into the top/bottom edges.
-        focus_fit_method = 0; # 0 = center (both neighbours peek); 1 = fit (default)
-        column_width = 0.8; # leave a 20% margin for the peek; raise toward 1.0 for less
+        # focus_fit_method 1 = fit: the focused column scrolls flush into view, so a
+        # stack reads from the top edge downward. column_width is the height fraction
+        # EACH window claims on the vertical (direction:down) tape — there is no
+        # separate "peek" knob, the peek is just leftover space. At 0.3, three windows
+        # fill ~90% and a 4th peeks ~10% at the bottom. Trade-off: with only 2-3
+        # windows open the tape underfills and leaves empty space below (a lone window
+        # still fullscreens via fullscreen_on_one_column). Raise toward 0.333 to kill
+        # the peek (3 windows fill exactly); lower for a deeper peek + more dead space.
+        focus_fit_method = 1;
+        column_width = 0.3;
       };
 
       decoration = {
