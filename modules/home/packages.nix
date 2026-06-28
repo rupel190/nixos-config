@@ -14,6 +14,7 @@
       digikam # photo organizer
       bitwig-studio # audio daw
       transcribe # transcribe recorded music by ear (unfree)
+      qpwgraph # pipewire patchbay — visual audio routing (drag-and-drop graph)
       keepassxc
       obsidian
       # exodus — blocked: nixpkgs 26.1.5 can't be auto-downloaded; install manually or via Flatpak
@@ -28,6 +29,7 @@
       }))
       evince # (gnome) pdf reader
       blockbench # low-poly 3D modeling and animation
+      godot_4
       freecad # CAD
       openscad-unstable # parametric CAD (2026 master; 2021.01 fails GLEW link)
       (inkscape-with-extensions.override {
@@ -76,6 +78,10 @@
       eza # ls replacement
       fd # find replacement
       ffmpeg
+      # Webcam controls (OBSBOT Meet 2) — UVC has no Linux vendor app; these cover it:
+      v4l-utils # v4l2-ctl CLI: standard controls (brightness/gain/exposure/WB), set live mid-call
+      cameractrls # decodes OBSBOT vendor Extension Unit: color_preset + on-camera save/load presets
+      guvcview # GTK GUI: sliders + live preview (use between calls — needs exclusive camera stream)
       gifsicle # gif utility
       gtrash # rm replacement, put deleted files in system trash
       jq # JSON processor
