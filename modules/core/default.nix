@@ -9,6 +9,7 @@
 {
   imports = [
     ./bootloader.nix
+    ./greetd.nix
     ./hardware.nix
     ./xserver.nix
     ./network.nix

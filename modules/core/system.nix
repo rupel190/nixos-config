@@ -44,6 +44,14 @@
   console = {
     font = "Lat2-Terminus16";
     keyMap = "us";
+    # Catppuccin Macchiato palette for the Linux TTY (and therefore the tuigreet login).
+    # Matches the macchiato cursor theme used in Hyprland. 16 entries, hex without '#':
+    # normal 0-7 then bright 8-15. Index 0 (base #24273a) doubles as the console
+    # background, giving the dark Catppuccin backdrop.
+    colors = [
+      "24273a" "ed8796" "a6da95" "eed49f" "8aadf4" "f5bde6" "8bd5ca" "b8c0e0"
+      "5b6078" "ed8796" "a6da95" "eed49f" "8aadf4" "f5bde6" "8bd5ca" "a5adcb"
+    ];
   };
 
   nixpkgs.config = {
