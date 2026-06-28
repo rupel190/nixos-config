@@ -8,38 +8,45 @@ let
   getProgramName = pkg: pkg.meta.mainProgram or pkg.pname or (lib.getName pkg);
   allowedCmds = lib.concatStringsSep "\n" (map getProgramName config.home.packages);
 
-  # Background weather refresh: fetch wttr.in JSON and render the labeled panel
-  # (header + one row per period: now/morning/noon/evening/night) into the cache
-  # that loginShellInit prints beneath fastfetch. Tool paths are pinned so the
-  # systemd timer works regardless of PATH. ic() buckets WWO weather codes into
+  # Background weather refresh: fetch GeoSphere Austria's AROME model (via the
+  # Open-Meteo gateway, which serves the same model already in local time, with
+  # apparent temperature, precip probability and WMO weather codes precomputed)
+  # and render the labeled panel (header + one row per period: now/morning/noon/
+  # evening/night) into the cache that loginShellInit prints beneath fastfetch.
+  # Coordinates are WIEN/HOHE WARTE (GeoSphere station 11035 — the same station
+  # ORF shows for Vienna); swap lat/lon to retarget. curl/jq paths are pinned so
+  # the systemd timer works regardless of PATH. ic() maps WMO weather codes to
   # emoji (kept last so their double-width can't break column alignment). hourly
-  # is in 3-hour steps, so indices 3/4/6/7 = 09:00/12:00/18:00/21:00. Swap "Wien"
-  # to retarget. The atomic .tmp -> mv keeps the last good copy when offline.
+  # is full-day local, so the period indices are just the hour: 9/12/18/21. The
+  # atomic .tmp -> mv keeps the last good copy when offline.
   weatherUpdate = pkgs.writeShellScript "weather-update" ''
-    cache="$HOME/.cache/wttr-forecast"
-    ${pkgs.curl}/bin/curl -fsS --max-time 8 'https://wttr.in/Wien?format=j1' 2>/dev/null \
+    cache="$HOME/.cache/weather-panel"
+    ${pkgs.curl}/bin/curl -fsS --max-time 8 'https://api.open-meteo.com/v1/forecast?latitude=48.2486&longitude=16.3564&models=geosphere_seamless&timezone=Europe%2FVienna&forecast_days=1&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,precipitation_probability,weather_code' 2>/dev/null \
       | ${pkgs.jq}/bin/jq -r '
-          def ic($code; $night):
-            ($code|tonumber) as $c
-            | if   $c == 113 then (if $night then "🌙" else "☀️" end)
-              elif $c == 116 then "⛅"
-              elif ($c == 119 or $c == 122) then "☁️"
-              elif ($c == 143 or $c == 248 or $c == 260) then "🌫️"
-              elif ($c >= 386 or $c == 200) then "⛈️"
-              elif (($c >= 317 and $c <= 377) or $c == 227 or $c == 230) then "🌨️"
-              elif ($c >= 293) then "🌧️"
-              else "🌦️" end;
           def rpad($n): . as $s | $s + (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end);
           def lpad($n): . as $s | (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end) + $s;
-          .current_condition[0] as $cur | .weather[0].hourly as $h
-          | def row($l; $t; $mid; $code; $night):
-              "  " + ($l|rpad(8)) + ($t|tostring|lpad(2)) + " °C   " + ($mid|rpad(12)) + ic($code; $night);
-            "Wien · rest of today",
-            row("now";     $cur.temp_C; "feels " + $cur.FeelsLikeC + " °C"; $cur.weatherCode; false),
-            row("morning"; $h[3].tempC; "rain " + ($h[3].chanceofrain|lpad(3)) + " %"; $h[3].weatherCode; false),
-            row("noon";    $h[4].tempC; "rain " + ($h[4].chanceofrain|lpad(3)) + " %"; $h[4].weatherCode; false),
-            row("evening"; $h[6].tempC; "rain " + ($h[6].chanceofrain|lpad(3)) + " %"; $h[6].weatherCode; false),
-            row("night";   $h[7].tempC; "rain " + ($h[7].chanceofrain|lpad(3)) + " %"; $h[7].weatherCode; true)
+          def ic($c; $night):
+            if   $c == 0 then (if $night then "🌙" else "☀️" end)
+            elif ($c == 1 or $c == 2) then "⛅"
+            elif $c == 3 then "☁️"
+            elif ($c == 45 or $c == 48) then "🌫️"
+            elif (($c >= 71 and $c <= 77) or $c == 85 or $c == 86) then "🌨️"
+            elif $c >= 95 then "⛈️"
+            elif $c >= 51 then "🌧️"
+            else "🌦️" end;
+          .current as $cur | .hourly as $h
+          | def row($l; $i; $night):
+              "  " + ($l|rpad(8)) + ($h.temperature_2m[$i]|round|tostring|lpad(2)) + " °C   "
+              + (("rain " + ($h.precipitation_probability[$i]|tostring|lpad(3)) + " %")|rpad(12))
+              + ic($h.weather_code[$i]; $night);
+            "Hohe Warte · rest of today",
+            "  " + ("now"|rpad(8)) + ($cur.temperature_2m|round|tostring|lpad(2)) + " °C   "
+              + (("feels " + ($cur.apparent_temperature|round|tostring) + " °C")|rpad(12))
+              + ic($cur.weather_code; ($cur.is_day == 0)),
+            row("morning"; 9;  false),
+            row("noon";    12; false),
+            row("evening"; 18; false),
+            row("night";   21; true)
         ' > "$cache.tmp" 2>/dev/null \
       && test -s "$cache.tmp" \
       && mv "$cache.tmp" "$cache" \
@@ -104,9 +111,9 @@ in
     loginShellInit = ''
       if status is-interactive
         fastfetch
-        if test -f $HOME/.cache/wttr-forecast
+        if test -f $HOME/.cache/weather-panel
           echo
-          cat $HOME/.cache/wttr-forecast
+          cat $HOME/.cache/weather-panel
           echo
         end
         tldr-installed
@@ -306,7 +313,7 @@ in
         description = "Refresh and show the weather panel (current + rest of today, with rain %)";
         body = ''
           ${weatherUpdate}
-          test -f $HOME/.cache/wttr-forecast; and cat $HOME/.cache/wttr-forecast; or echo "weather unavailable"
+          test -f $HOME/.cache/weather-panel; and cat $HOME/.cache/weather-panel; or echo "weather unavailable"
         '';
       };
 
