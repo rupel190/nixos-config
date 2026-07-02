@@ -13,7 +13,13 @@
       # TODO: Explicit definition required?
       extraCompatPackages = [ pkgs.proton-ge-bin ];
 
-      package = pkgs.millennium-steam.override {
+      # TEMP (2026-07-02): reverted from pkgs.millennium-steam to vanilla pkgs.steam.
+      # Steam auto-updated its client (buildid 1782866176 / Chrome 126) and Millennium
+      # 3.3.0-beta.7's cef_browser_host_create_browser hook deadlocks the new webhelper
+      # → UI hangs at 100% CPU on every launch. No injection = no hook = no hang.
+      # Restore `pkgs.millennium-steam.override` once a Millennium build supports this
+      # Steam client (the flake.lock already stages a newer rev to try first).
+      package = pkgs.steam.override {
         # ! Disable AVX-512 CPU instructions to avoid Steam SIGILL issues
         extraProfile = ''
           export GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX512F

@@ -56,6 +56,35 @@
   # Keep swappiness low — prefer RAM over swap to avoid microstutters in games
   boot.kernel.sysctl."vm.swappiness" = 10;
 
+  # Out-of-memory handling: one *visible* guard instead of the silent, dormant
+  # systemd-oomd (which sat idle through the 2026-07-02 Steam leak that drove free
+  # RAM to 751 MiB — it only pressure-kills opted-in cgroups, not Hyprland-exec'd apps).
+  # earlyoom SIGTERMs the biggest RAM hog *before* the desktop freezes in swap-thrash,
+  # pops a desktop notification (so a kill is never a "mystery crash"), and logs every
+  # kill to `journalctl -u earlyoom`.
+  systemd.oomd.enable = false;
+  services.earlyoom = {
+    enable = true;
+    # RAM-governed (a bit aggressive): earlyoom's condition is AND (mem AND swap both
+    # low). With swappiness=10 we deliberately avoid swap, so waiting for swap to also
+    # fill just prolongs thrash. Setting the swap gate to 100% (always true) drops it out
+    # of the AND → RAM exhaustion alone triggers. Fires SIGTERM at <=5% RAM free (~3 GiB);
+    # SIGKILL auto-derives to <=2.5%. This catches a leak (RAM gone, swap still free) that
+    # the default <=10%-swap gate would have ignored (the 2026-07-02 Steam leak).
+    freeMemThreshold = 5;
+    freeSwapThreshold = 100;
+    enableNotifications = true; # the anti-mystery switch: desktop toast on every kill
+    extraArgs = [
+      # Match earlyoom's 15-char /proc/comm as UNANCHORED substrings (NixOS wraps
+      # binaries: `.Hyprland-wrapp`, `.Discord-wrappe`, `.zen-wrapped`).
+      # Prefer disposable RAM hogs; never touch anything that would wreck the session.
+      "--prefer"
+      "steamwebhelper|chrome|firefox|zen|Discord|slack|electron|curseforge"
+      "--avoid"
+      "Hyprland|Xwayland|pipewire|wireplumber|sshd|systemd|dbus|greetd"
+    ];
+  };
+
   # Bluetooth
   hardware.bluetooth = {
     enable = true;

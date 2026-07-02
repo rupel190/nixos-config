@@ -5,7 +5,7 @@
   ...
 }:
 let
-  spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.system};
+  spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.hostPlatform.system};
   visualizer = {
     src = pkgs.fetchFromGitHub {
       owner = "Konsl";
@@ -27,17 +27,15 @@ in
     # RDNA 4 rendering fix:
     # - Native Wayland mode (NIXOS_OZONE_WL=1 default) hits a CEF/Chromium 143 assertion
     #   in wp_color_manager_v1 handling on Hyprland 0.54 (SIGTRAP crash).
-    # - X11/XWayland mode without ANGLE: RADV/GFX1201 reports non-conformant Vulkan →
-    #   Chromium kills GPU process → blank window.
-    # Fix: force X11 (wayland=false overrides NIXOS_OZONE_WL) + ANGLE-over-Vulkan
-    # (same approach as TickTick/Plasticity in packages.nix).
+    # - X11 + ANGLE-over-Vulkan (the previous fix) SIGABRTs outright since the 2026-06
+    #   Mesa bump: the ANGLE→RADV path on GFX1201 aborts the GPU process and wedges the
+    #   whole session (confirmed via coredump 2026-07-01, "froze when switching to Spotify").
+    # Fix: force X11 (wayland=false overrides NIXOS_OZONE_WL) + native desktop GL
+    # (radeonsi 4.6, conformant) — bypasses ANGLE entirely, same path as plasticity.nix.
     wayland = false;
     spotifyPackage = pkgs.spotify.overrideAttrs (old: {
       preFixup = (old.preFixup or "") + ''
-        gappsWrapperArgs+=(--set VK_ICD_FILENAMES /run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json)
-        gappsWrapperArgs+=(--add-flags "--use-gl=angle")
-        gappsWrapperArgs+=(--add-flags "--use-angle=vulkan")
-        gappsWrapperArgs+=(--add-flags "--enable-features=VulkanFromANGLE,DefaultANGLEVulkan")
+        gappsWrapperArgs+=(--add-flags "--use-gl=desktop")
         gappsWrapperArgs+=(--add-flags "--enable-gpu-rasterization")
         gappsWrapperArgs+=(--add-flags "--ignore-gpu-blocklist")
       '';
