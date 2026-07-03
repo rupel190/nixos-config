@@ -11,7 +11,7 @@
 
   # WirePlumber device tweaks: match a device by its properties, then override them.
   services.pipewire.wireplumber.extraConfig = {
-    # Rename the GPU's HDMI audio (HDMI 3) so it shows as "Marantz" in pulsemixer.
+    # Rename the GPU's HDMI audio (HDMI 3) so it shows as "Marantz Stereo 70s" in pulsemixer.
     # node.name encodes the HDMI port (extra2 = HDMI 3); changes if you move the cable.
     "51-rename-marantz" = {
       "monitor.alsa.rules" = [
@@ -20,8 +20,8 @@
             { "node.name" = "alsa_output.pci-0000_03_00.1.hdmi-stereo-extra2"; }
           ];
           actions.update-props = {
-            "node.description" = "Marantz";
-            "node.nick" = "Marantz";
+            "node.description" = "Marantz Stereo 70s";
+            "node.nick" = "Marantz Stereo 70s";
           };
         }
       ];
@@ -46,14 +46,14 @@
   # Capture the Volt 4 rear line inputs 3+4 (RL/RR in the surround-4.0 channel map,
   # where the Maschine's L/R are patched) and play them to the default sink as
   # stereo FL/FR. No playback target.object => it follows whatever sink is default
-  # (headset, Marantz, ...). Appears in pulsemixer as "Maschine -> Headset" with its
+  # (headset, Marantz, ...). Appears in pulsemixer as "Volt line-in 3+4 loopback" with its
   # own volume = an independent fader for the Maschine, separate from game audio.
   services.pipewire.extraConfig.pipewire."99-maschine-loopback" = {
     "context.modules" = [
       {
         name = "libpipewire-module-loopback";
         args = {
-          "node.description" = "Maschine -> Headset";
+          "node.description" = "Volt line-in 3+4 loopback";
           "capture.props" = {
             "node.name" = "maschine.capture";
             "media.class" = "Stream/Input/Audio";
@@ -63,7 +63,7 @@
           };
           "playback.props" = {
             "node.name" = "maschine.playback";
-            "node.description" = "Maschine -> Headset";
+            "node.description" = "Volt line-in 3+4 loopback";
             "media.class" = "Stream/Output/Audio";
             "audio.position" = [ "FL" "FR" ]; # RL->left ear, RR->right ear
           };
