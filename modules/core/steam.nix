@@ -20,6 +20,18 @@
       # Restore `pkgs.millennium-steam.override` once a Millennium build supports this
       # Steam client (the flake.lock already stages a newer rev to try first).
       package = pkgs.steam.override {
+        # gfx1201 (RDNA4): Steam's CEF UI (steamwebhelper) defaults to
+        # ANGLE-over-Vulkan (RADV), which isn't conformant on this GPU → the CEF
+        # GPU process crashes, Steam auto-disables CEF GPU, and the UI falls back
+        # to a *software* compositor that leaks RAM to ~40GB until earlyoom kills
+        # it — the recurring "Steam unresponsive" freeze. -cef-force-glx routes
+        # CEF through native desktop GL (radeonsi GL 4.6, conformant) instead, so
+        # gpu_compositing stays enabled and it never software-composites. Same
+        # escape as Plasticity's / Spotify's --use-gl=desktop; drop once RADV is
+        # conformant on gfx1201. Verified 2026-07-05: GL_RENDERER flipped
+        # RADV-Vulkan → radeonsi-GL, gpu_compositing enabled, idle RSS 20GB→2.4GB.
+        extraArgs = "-cef-force-glx";
+
         # ! Disable AVX-512 CPU instructions to avoid Steam SIGILL issues
         extraProfile = ''
           export GLIBC_TUNABLES=glibc.cpu.hwcaps=-AVX512F
