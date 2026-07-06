@@ -3,7 +3,7 @@
   programs.wezterm = {
     enable = true;
     package = pkgs.wezterm; # Stable from nixpkgs (better OpenGL integration)
-    # package = inputs.wezterm.packages.${pkgs.system}.default; # Nightly (has OpenGL issues)
+    # package = inputs.wezterm.packages.${pkgs.stdenv.hostPlatform.system}.default; # Nightly (has OpenGL issues)
 
     extraConfig = # lua
       ''
@@ -111,6 +111,11 @@
            -- Simpler splits
            { key = "|", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
            { key = "_", mods = "CTRL|SHIFT", action = wezterm.action.SplitVertical { domain = "CurrentPaneDomain" } },
+
+           -- Move a pane out to a new window / new tab, or swap panes within a tab
+           { key = "n", mods = "CTRL|SHIFT|ALT", action = wezterm.action.PaneSelect { mode = "MoveToNewWindow" } },
+           { key = "t", mods = "CTRL|SHIFT|ALT", action = wezterm.action.PaneSelect { mode = "MoveToNewTab" } },
+           { key = "s", mods = "CTRL|SHIFT|ALT", action = wezterm.action.PaneSelect { mode = "SwapWithActive" } },
 
            -- Vim-style pane navigation (Ctrl+Alt to avoid conflicts with nvim)
            { key = "h", mods = "CTRL|ALT", action = wezterm.action.ActivatePaneDirection "Left" },
