@@ -143,15 +143,18 @@
         follow_focus = true; # auto-scroll the focused window into view (default)
         fullscreen_on_one_column = true; # a lone window still fills the screen
         # focus_fit_method 1 = fit: the focused column scrolls flush into view, so a
-        # stack reads from the top edge downward. column_width is the height fraction
-        # EACH window claims on the vertical (direction:down) tape — there is no
-        # separate "peek" knob, the peek is just leftover space. At 0.3, three windows
-        # fill ~90% and a 4th peeks ~10% at the bottom. Trade-off: with only 2-3
-        # windows open the tape underfills and leaves empty space below (a lone window
-        # still fullscreens via fullscreen_on_one_column). Raise toward 0.333 to kill
-        # the peek (3 windows fill exactly); lower for a deeper peek + more dead space.
+        # stack reads from the top edge downward.
         focus_fit_method = 1;
-        column_width = 0.3;
+
+        # On the direction:down tape, column_width / explicit_column_widths are HEIGHT
+        # fractions each window claims (no separate "peek" knob — the peek is leftover
+        # space). explicit_column_widths is the list cycled by meta+,/meta+. (colresize
+        # -conf/+conf); column_width is the size a NEW window spawns at.
+        # Spawn at 0.5 (the 2nd step) so a fresh window is half the screen tall — two
+        # stack to fill the portrait screen, a 3rd peeks below — instead of the cramped
+        # 0.333 (or the old 0.3, which was even smaller than the smallest cycle step).
+        explicit_column_widths = "0.333, 0.5, 0.667, 1.0";
+        column_width = 0.5;
       };
 
       decoration = {

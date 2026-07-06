@@ -6,16 +6,16 @@ in
 {
   services.hyprpaper = {
     enable = true;
-    package = inputs.hyprpaper.packages.${pkgs.system}.hyprpaper;
+    package = inputs.hyprpaper.packages.${pkgs.stdenv.hostPlatform.system}.hyprpaper;
     settings = {
       wallpaper = map mkWallpaper [ "DP-1" "DP-2" "HDMI-A-1" "HDMI-A-2" ];
     };
   };
   home.packages = with pkgs; [
     # swww
-    # inputs.hypr-contrib.packages.${pkgs.system}.grimblast
+    # inputs.hypr-contrib.packages.${pkgs.stdenv.hostPlatform.system}.grimblast
     hyprpicker
-    # inputs.hyprmag.packages.${pkgs.system}.hyprmag
+    # inputs.hyprmag.packages.${pkgs.stdenv.hostPlatform.system}.hyprmag
     grim
     slurp
     # wl-clip-persist
@@ -32,6 +32,10 @@ in
   ];
   wayland.windowManager.hyprland = {
     enable = true;
+    # Pin the legacy emitter explicitly. The HM module's default flipped from
+    # "hyprlang" to "lua", but our whole config (settings + layoutmsg binds) is
+    # written in hyprlang syntax, so keep it until we deliberately port to lua.
+    configType = "hyprlang";
     xwayland = {
       enable = true;
       # hidpi = true;
