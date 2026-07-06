@@ -5,7 +5,7 @@ let
     src = inputs.surge;
     version = "0.8.5";
     buildGoModule = args: pkgs.buildGoModule (args // {
-      vendorHash = "sha256-5z4qZnbYEYhJ8mm/kBxhMDaVLxWfo/UKiXhtdoJTSZM=";
+      vendorHash = "sha256-lEE99rVSnq8v4BViSknlGivbMgCt2926aaZPng2uFnk=";
     });
   };
 in

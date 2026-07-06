@@ -1,6 +1,6 @@
 { pkgs, inputs, ... }:
 let
-  plasticity-unwrapped = inputs.plasticityAppImage.packages.${pkgs.system}.plasticity;
+  plasticity-unwrapped = inputs.plasticityAppImage.packages.${pkgs.stdenv.hostPlatform.system}.plasticity;
 
   # gfx1201 (RX 9070 XT) workaround: Chromium's default ANGLE path mistypes WebGL
   # vertex attributes on this GPU's non-conformant RADV Vulkan, so every draw is

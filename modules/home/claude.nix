@@ -21,7 +21,7 @@ let
 in
 {
   home.packages = [
-    inputs.claude-code.packages.${pkgs.system}.default
+    inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.claude-monitor
     claude-desktop-with-fhs
   ];
