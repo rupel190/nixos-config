@@ -12,6 +12,13 @@
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
+    # Touchscreen gestures (cordyceps FW13 touch panel). Separate repo from the
+    # official hyprland-plugins; must follow our git Hyprland so the plugin ABI
+    # matches (the nixpkgs hyprgrass is built against nixpkgs' Hyprland).
+    hyprgrass = {
+      url = "github:horriblename/hyprgrass";
+      inputs.hyprland.follows = "hyprland";
+    };
     hyprpaper = {
       url = "github:hyprwm/hyprpaper";
       inputs.nixpkgs.follows = "nixpkgs";

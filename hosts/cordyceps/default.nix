@@ -8,6 +8,10 @@
   # Host-specific configuration
   networking.hostName = "cordyceps";
 
+  # Firmware updates via LVFS (needed for BIOS >= 4.02, which enables the
+  # official FW13 touch panel). Run: fwupdmgr refresh --force && fwupdmgr update
+  services.fwupd.enable = true;
+
   # Laptop-specific settings
   # services.logind.extraConfig = ''
   #   # Don't shutdown when power button is short-pressed (useful for laptops)
