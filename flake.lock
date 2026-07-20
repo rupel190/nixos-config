@@ -1262,11 +1262,11 @@
     },
     "nixpkgs_7": {
       "locked": {
-        "lastModified": 1783776592,
-        "narHash": "sha256-UgCQzxeWI75XM8G+hPrPh+MKzEPjG3SpAj7dtqSbksA=",
+        "lastModified": 1784497964,
+        "narHash": "sha256-vlHUuqAcbcH2RKmHbPiuQzbv1pnzzavXnI62RD0bqCU=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "e7a3ca8092b61ff85b6a45bf863ea2b2d6a661b3",
+        "rev": "241313f4e8e508cb9b13278c2b0fa25b9ca27163",
         "type": "github"
       },
       "original": {
@@ -1422,6 +1422,7 @@
         "nixpkgs": "nixpkgs_7",
         "plasticityAppImage": "plasticityAppImage",
         "ragenix": "ragenix",
+        "singify": "singify",
         "spicetify-nix": "spicetify-nix",
         "surge": "surge",
         "wezterm": "wezterm",
@@ -1488,6 +1489,26 @@
         "type": "github"
       }
     },
+    "singify": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784591187,
+        "narHash": "sha256-BCq5xF22zrPpMRrAqOmnp3KsmJZy38quRBuNV3QGDLE=",
+        "owner": "rupel190",
+        "repo": "singify",
+        "rev": "cf3327bda6ed1591431b492a7448ea76d9a406b3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rupel190",
+        "repo": "singify",
+        "type": "github"
+      }
+    },
     "spicetify-nix": {
       "inputs": {
         "nixpkgs": [
@@ -1496,11 +1517,11 @@
         "systems": "systems_7"
       },
       "locked": {
-        "lastModified": 1783838433,
-        "narHash": "sha256-Zb8+v76qSPYDlUea1y30YzgdEoDjA97vRmeqfPAqwZs=",
+        "lastModified": 1784481035,
+        "narHash": "sha256-nC0QN+GPTnA5i+WBx8S2rG8+VFh+EeBnEe5mU3hlAcQ=",
         "owner": "Gerg-L",
         "repo": "spicetify-nix",
-        "rev": "c6ab7371e40abd405313af9bddafd5f37cc94f83",
+        "rev": "a6baa7464f9b21a106dcfabb0bdcfe96fb434409",
         "type": "github"
       },
       "original": {

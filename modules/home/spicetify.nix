@@ -15,6 +15,13 @@ let
     };
     name = "index.js";
   };
+  # singify — UltraStar karaoke overlay. Built from source by the singify flake
+  # input (no copied-in binary). To ship new changes: push to the singify repo,
+  # then `nix flake update singify` here and rebuild.
+  singify = {
+    src = inputs.singify.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    name = "karaoke.js";
+  };
 in
 {
   # Note: Spotify unfree package is allowed via system-wide nixpkgs.config.allowUnfree in modules/core/system.nix
@@ -27,15 +34,20 @@ in
     # RDNA 4 rendering fix:
     # - Native Wayland mode (NIXOS_OZONE_WL=1 default) hits a CEF/Chromium 143 assertion
     #   in wp_color_manager_v1 handling on Hyprland 0.54 (SIGTRAP crash).
-    # - X11 + ANGLE-over-Vulkan (the previous fix) SIGABRTs outright since the 2026-06
-    #   Mesa bump: the ANGLE→RADV path on GFX1201 aborts the GPU process and wedges the
-    #   whole session (confirmed via coredump 2026-07-01, "froze when switching to Spotify").
-    # Fix: force X11 (wayland=false overrides NIXOS_OZONE_WL) + native desktop GL
-    # (radeonsi 4.6, conformant) — bypasses ANGLE entirely, same path as plasticity.nix.
+    # - X11 + ANGLE-over-Vulkan SIGABRTs outright since the 2026-06 Mesa bump: the
+    #   ANGLE→RADV path on GFX1201 aborts the GPU process and wedges the whole session
+    #   (confirmed via coredump 2026-07-01, "froze when switching to Spotify").
+    # - `--use-gl=desktop` (the prior fix) went stale when Spotify moved to Chrome 146:
+    #   that value was removed from Chromium ~M112, so GL init failed and the GPU process
+    #   fell back to `--use-gl=disabled` (software compositing, sluggish). 2026-07-20.
+    # Fix: force X11 (wayland=false overrides NIXOS_OZONE_WL) + ANGLE-over-native-GL
+    # (`--use-angle=gl` → radeonsi), which keeps hardware accel while still bypassing the
+    # ANGLE→Vulkan/RADV path that crashes. Verified: gpu-process runs use-gl=angle.
     wayland = false;
     spotifyPackage = pkgs.spotify.overrideAttrs (old: {
       preFixup = (old.preFixup or "") + ''
-        gappsWrapperArgs+=(--add-flags "--use-gl=desktop")
+        gappsWrapperArgs+=(--add-flags "--use-gl=angle")
+        gappsWrapperArgs+=(--add-flags "--use-angle=gl")
         gappsWrapperArgs+=(--add-flags "--enable-gpu-rasterization")
         gappsWrapperArgs+=(--add-flags "--ignore-gpu-blocklist")
       '';
@@ -43,6 +55,7 @@ in
 
     enabledExtensions = with spicePkgs.extensions; [
       visualizer
+      singify
       adblock
       hidePodcasts
       shuffle # shuffle+ True shuffle using the Fisher-Yates algorithm (zero bias).
