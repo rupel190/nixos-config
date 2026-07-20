@@ -75,6 +75,17 @@
 
          -- Window settings
          config.adjust_window_size_when_changing_font_size = false
+         -- ROOT-CAUSE FIX for the oscillating/"breathing" window on resize under Hyprland.
+         -- Off a tiler, wezterm is its own size authority: it rounds the compositor's
+         -- geometry down to whole cells and *requests* that size back to avoid a partial
+         -- cell row. Hyprland (also a size authority) re-imposes its tiled geometry and
+         -- sends a fresh configure -> the two disagree by a few px forever -> oscillation.
+         -- This tells wezterm "you're under a tiler, accept the geometry and letterbox the
+         -- leftover pixels" instead of fighting. The no_anim windowrule + { Cells = 2 }
+         -- splits only reduced how visible the fight was; this removes the driving force.
+         -- DO NOT DELETE: silently dropped once in c25b264 (bundled with the WebGpu change),
+         -- which is why the symptom kept coming back. XDG_CURRENT_DESKTOP=Hyprland must match.
+         config.tiling_desktop_environments = { "Hyprland" }
          config.enable_scroll_bar = true
          config.scrollback_lines = 200000
          config.window_background_opacity = 0.9
@@ -175,6 +186,16 @@
          -- Override tabline's decoration settings (must be AFTER apply_to_config)
          config.window_decorations = "NONE"
          config.integrated_title_buttons = {}
+
+         -- Clickable links, including file:// (Claude Code and other tools print these).
+         -- Gesture: Ctrl+Click opens the link under the cursor (via xdg-open -> your default
+         -- browser). If a full-screen TUI has grabbed the mouse, hold Shift as well to bypass
+         -- its mouse capture: Shift+Ctrl+Click.
+         config.hyperlink_rules = wezterm.default_hyperlink_rules()
+         table.insert(config.hyperlink_rules, {
+           regex = [[\bfile://\S+]],
+           format = "$0",
+         })
 
          return config
       '';
