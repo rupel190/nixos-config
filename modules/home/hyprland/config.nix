@@ -19,8 +19,11 @@
         # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
         # "hyprlock"
 
-        # Set primary monitor (Wayland-native way)
-        # "hyprctl dispatch focusmonitor DP-2"
+        # Set DP-2 (center 240Hz QHD) as the "main" screen: focus it at startup so
+        # ad-hoc app launches land here instead of the leftmost 4K DP-1, which would
+        # otherwise hold startup focus. Apps pinned via windowrule/workspace are
+        # unaffected — this only sets the default focus for unpinned launches.
+        "hyprctl dispatch focusmonitor DP-2"
         # Auth daemon for GUI apps requesting privilege elevation
         "vicinae server"
         "systemctl --user restart hyprpaper"
