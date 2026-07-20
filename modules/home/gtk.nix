@@ -19,6 +19,10 @@
       package = pkgs.catppuccin-gtk.override {
         accents = [ "teal" ];
         variant = "macchiato";
+        # nixpkgs 0711 defaults python3 to 3.14, whose argparse.BooleanOptionalAction
+        # rejects the `type=` kwarg catppuccin-gtk's build.py passes → build crash.
+        # Build with 3.13 (still accepts type=) until upstream catppuccin-gtk is 3.14-ready.
+        python3 = pkgs.python313;
       };
     };
 

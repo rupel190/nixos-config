@@ -9,6 +9,85 @@
   nixpkgs.overlays = [
     inputs.millennium.overlays.default
     inputs.affinity-nix.overlays.default
+
+    # catppuccin (python) 2.5.0 sweeps its optional matplotlib integration into
+    # nativeCheckInputs + pythonImportsCheck, so `import catppuccin` runs at build
+    # time and calls the now-removed matplotlib.style.core API → build crash, which
+    # breaks catppuccin-gtk (used in modules/home/gtk.nix). matplotlib is only an
+    # extra (never a runtime dep, and catppuccin-gtk doesn't use it), so drop it.
+    (final: prev: {
+      pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
+        (pyfinal: pyprev: {
+          catppuccin = pyprev.catppuccin.overridePythonAttrs (_: {
+            # Skip the check phase: catppuccin 2.5.0's tests/test_matplotlib.py
+            # hard-imports matplotlib, and its integration calls the removed
+            # matplotlib.style.core API. matplotlib is only a check input (never a
+            # runtime dep), so dropping checks lets catppuccin-gtk build cleanly.
+            doCheck = false;
+          });
+        })
+      ];
+    })
+
+    # gdal 3.13.1's autotest suite has one failing test in this nixpkgs pin:
+    # gdrivers/zarr_driver.py::test_zarr_read_simple_sharding asserts that a
+    # `zarr.json.gmac` tile-presence cache sidecar is written after opening a
+    # sharded Zarr with CACHE_TILE_PRESENCE=YES — it isn't, so pytestCheckHook
+    # fails the whole build. gdal fails identically on Hydra, so gdal-minimal is
+    # never cached and gets rebuilt (and re-fails) locally, blocking the closure
+    # pdal -> vtk -> freecad -> home-manager -> system. Append the one test to the
+    # existing `disabledTests` allowlist (idiomatic, keeps the other ~18.7k tests).
+    # Overriding base `gdal` propagates through the fixed point into `gdalMinimal`
+    # (= gdal.override { useMinimalFeatures = true; }) and vtk's inline minimal
+    # override, so this single entry covers every path. Drop on the next bump that
+    # fixes the test upstream.
+    (final: prev: {
+      gdal = prev.gdal.overrideAttrs (old: {
+        disabledTests = (old.disabledTests or [ ]) ++ [
+          "test_zarr_read_simple_sharding"
+        ];
+      });
+    })
+
+    # pdal 2.9.3 doesn't compile against gdal 3.13.1 (same pin): recent gdal made
+    # GDALDataset::GetMetadata() return CSLConstList (const char* const*) instead
+    # of char**, and pdal's Raster::getMetadata still assigns it to a plain char**
+    # -> "invalid conversion ... [-fpermissive]" hard error, which sinks the whole
+    # closure (vtk -> freecad -> home-manager -> system). The pointer is read-only
+    # ("// m_ds owns this"), so the correct upstream fix is to declare it const;
+    # retype the one declaration to match. --replace-fail makes the build error out
+    # (instead of silently no-op'ing) once a pdal bump changes this line = remove me.
+    (final: prev: {
+      pdal = prev.pdal.overrideAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace pdal/private/gdal/Raster.cpp \
+            --replace-fail "char **papszMetadata = NULL;" "CSLConstList papszMetadata = NULL;"
+        '';
+      });
+    })
+
+    # Same gdal 3.13.1 CSLConstList break, third victim: vtk 9.5.2's GDAL raster
+    # reader assigns GDALGetMetadata() (now returns CSLConstList = const char* const*)
+    # to char** at two spots in IO/GDAL/vtkGDALRasterReader.cxx (lines 185, 881),
+    # both read-only (CSLCount + iterate). vtk's IO/GDAL failure is what actually
+    # sank the build — it was hidden behind FiltersCore in the parallel-make output.
+    # Retype both to CSLConstList (NOT line 733's GetCategoryNames(), which still
+    # returns char** and compiles fine). Overriding base `vtk` propagates through the
+    # fixed point into the Qt/python variants freecad pulls. Remove on the bump that
+    # const-corrects vtk upstream (--replace-fail will error to remind us).
+    (final: prev: {
+      vtk = prev.vtk.overrideAttrs (old: {
+        postPatch = (old.postPatch or "") + ''
+          substituteInPlace IO/GDAL/vtkGDALRasterReader.cxx \
+            --replace-fail \
+              "char** papszMetaData = GDALGetMetadata(this->GDALData, nullptr);" \
+              "CSLConstList papszMetaData = GDALGetMetadata(this->GDALData, nullptr);" \
+            --replace-fail \
+              "char** papszMetadata = GDALGetMetadata(this->Impl->GDALData, domain.c_str());" \
+              "CSLConstList papszMetadata = GDALGetMetadata(this->Impl->GDALData, domain.c_str());"
+        '';
+      });
+    })
   ];
 
   # imports = [ inputs.nix-gaming.nixosModules.default ];
