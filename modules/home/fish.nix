@@ -336,7 +336,11 @@ in
       godot = "command godot --rendering-driver opengl3 $argv";
 
       # Flatpak apps
-      bambu-studio = "flatpak run --env=VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json com.bambulab.BambuStudio $argv";
+      # WEBKIT_DISABLE_DMABUF_RENDERER: embedded WebKitGTK view crashes on GFX1201 via DMABUF/GL.
+      # env PATH=/usr/bin:...: GNOME 50 runtime loads icons via glycin, whose loader sub-sandbox
+      #   inherits our PATH; NixOS has no /usr/bin so glycin's `prlimit` wrapper isn't found and
+      #   GTK "Bail out!"s on the first SVG. See modules/home/xdg-mimes.nix for the full writeup.
+      bambu-studio = "env PATH=/usr/bin:/run/current-system/sw/bin flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 com.bambulab.BambuStudio $argv";
 
       # Terminal image display
       imgcat = "wezterm imgcat $argv";

@@ -117,7 +117,11 @@
         ];
         bambu-studio = [
           {
-            run = ''flatpak run --env=VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json com.bambulab.BambuStudio "$@"'';
+            # WEBKIT_DISABLE_DMABUF_RENDERER: embedded WebKitGTK view crashes on GFX1201 via DMABUF/GL.
+            # env PATH=/usr/bin:...: glycin loader sub-sandbox needs /usr/bin on PATH for `prlimit`
+            #   (NixOS has none) or the GNOME 50 runtime GTK "Bail out!"s on the first SVG icon.
+            #   Full writeup in modules/home/xdg-mimes.nix.
+            run = ''env PATH=/usr/bin:/run/current-system/sw/bin flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 com.bambulab.BambuStudio "$@"'';
             orphan = true;
             desc = "Open in Bambu Studio";
           }

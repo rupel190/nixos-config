@@ -141,13 +141,26 @@ in
 
   # Create yazi-wezterm.desktop for opening directories in yazi via wezterm
   # This is used by apps like Steam when clicking "Browse local files"
-  # Bambu Studio via Flatpak with RDNA 4 Vulkan ICD fix
+  # Bambu Studio via Flatpak. Two NixOS/GFX1201 workarounds, both baked into every launcher
+  # (this desktop entry, the fish alias, the yazi opener):
+  #
+  # 1. WEBKIT_DISABLE_DMABUF_RENDERER=1 — the embedded WebKitGTK view (MakerWorld deep-links,
+  #    login/home panel) SIGSEGVs via its DMABUF/GL renderer on RDNA4; the SHM path avoids it.
+  #    (The old VK_ICD_FILENAMES=/run/opengl-driver injection was a no-op — Flatpak mounts
+  #    neither /run/opengl-driver nor /nix/store — and the runtime's own RADV supports RDNA4.)
+  #
+  # 2. env PATH=/usr/bin:... — since the GNOME 50 runtime (Bambu 2.7.x) GTK loads icons via
+  #    glycin, which runs its SVG loader in a NESTED `flatpak-spawn --sandbox` wrapped in
+  #    `prlimit`. That sub-sandbox inherits the LAUNCHER's PATH, and on NixOS there is no
+  #    /usr/bin in PATH → `prlimit` isn't found → loader dies → GTK "Bail out!" on the first
+  #    SVG icon = instant crash. /usr/bin exists INSIDE the runtime, so naming it on PATH is
+  #    enough; /run/current-system/sw/bin is kept so `flatpak` itself resolves.
   xdg.desktopEntries.bambu-studio = {
     name = "Bambu Studio";
     genericName = "3D Printer Slicer";
     icon = "com.bambulab.BambuStudio";
     comment = "Bambu Lab slicer";
-    exec = "flatpak run --env=VK_ICD_FILENAMES=/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json com.bambulab.BambuStudio %u";
+    exec = "env PATH=/usr/bin:/run/current-system/sw/bin flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 com.bambulab.BambuStudio %u";
     terminal = false;
     type = "Application";
     categories = [ "Graphics" "3DGraphics" ];
