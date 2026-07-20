@@ -28,6 +28,7 @@
     ./plasticity.nix # plasticity CAD (AppImage)
     ./packages.nix # additional packages
     ./browser.nix # zen browser
+    ./vicinae.nix # launcher + browser tab integration (native messaging host)
     ./gtk.nix # gtk theme
     ./xdg-mimes.nix # file associations
     ./clouddrives.nix # cloud drive sync services (OneDrive)
