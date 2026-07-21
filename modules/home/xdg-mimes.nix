@@ -14,7 +14,7 @@ let
     # archive - using terminal tools
     discord = [ "discord.desktop" ];
     bambustudio = [ "bambu-studio.desktop" ];
-    plasticity = [ "Plasticity.desktop" ];
+    plasticity = [ "plasticity.desktop" ];
   };
 
   mimeMap = {
@@ -78,7 +78,7 @@ let
     #   "application/*tar"
     # ];
     discord = [ "x-scheme-handler/discord" ];
-    bambustudio = [ "x-scheme-handler/bambustudio" "model/3mf" "application/vnd.ms-3mfdocument" ];
+    bambustudio = [ "x-scheme-handler/bambustudio" "model/3mf" "application/vnd.ms-3mfdocument" "model/stl" ];
     plasticity = [ "model/step" "application/x-step" ];
   };
 
@@ -164,7 +164,7 @@ in
     terminal = false;
     type = "Application";
     categories = [ "Graphics" "3DGraphics" ];
-    mimeType = [ "x-scheme-handler/bambustudio" "model/3mf" ];
+    mimeType = [ "x-scheme-handler/bambustudio" "model/3mf" "model/stl" ];
   };
 
 
