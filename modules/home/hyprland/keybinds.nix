@@ -80,11 +80,7 @@
         "$mainMod, SPACE, togglespecialworkspace, magic"
         "$mainMod SHIFT, SPACE, movetoworkspace, special:magic"
 
-        # Resize window
-        "$mainMod, left, resizeactive, -50 0"
-        "$mainMod, right, resizeactive, 50 0"
-        "$mainMod, up, resizeactive, 0 -50"
-        "$mainMod, down, resizeactive, 0 50"
+        # Resize window — moved to the `binde` list below so holding a key repeats.
 
         # Scrolling layout (workspaces 7-9) — layoutmsg is layout-scoped, so these
         # are no-ops on dwindle workspaces. mouse_up/down = scroll wheel (free: the
@@ -142,6 +138,20 @@
         "$mainMod ALT, 8, movetoworkspace, 8"
         "$mainMod ALT, 9, movetoworkspace, 9"
         "$mainMod ALT, 0, movetoworkspace, 10"
+      ];
+
+      # Resize window (binde = repeat while held). Arrows are the coarse step
+      # (100px), Super+Shift+HJKL the fine step (50px). HJKL follows the same
+      # h=left/j=down/k=up/l=right mapping as the movefocus/movewindow binds.
+      binde = [
+        "$mainMod, left, resizeactive, -100 0"
+        "$mainMod, right, resizeactive, 100 0"
+        "$mainMod, up, resizeactive, 0 -100"
+        "$mainMod, down, resizeactive, 0 100"
+        "$mainMod SHIFT, H, resizeactive, -50 0"
+        "$mainMod SHIFT, L, resizeactive, 50 0"
+        "$mainMod SHIFT, K, resizeactive, 0 -50"
+        "$mainMod SHIFT, J, resizeactive, 0 50"
       ];
 
       # Note: Laptop-specific keybinds (brightness, audio) are in laptop-only.nix
