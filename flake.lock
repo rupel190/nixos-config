@@ -1496,11 +1496,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784591187,
-        "narHash": "sha256-BCq5xF22zrPpMRrAqOmnp3KsmJZy38quRBuNV3QGDLE=",
+        "lastModified": 1784592342,
+        "narHash": "sha256-/FNiyXga28bCw97xbb0o5IC8ttdko/8uf/fn1HW7tOY=",
         "owner": "rupel190",
         "repo": "singify",
-        "rev": "cf3327bda6ed1591431b492a7448ea76d9a406b3",
+        "rev": "59e0e75ffc565e5a9bf5f8f7b7755eec19b63d66",
         "type": "github"
       },
       "original": {
