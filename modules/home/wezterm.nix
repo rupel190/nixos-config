@@ -38,7 +38,7 @@
            }
            local bottom_pane = remote_pane:split {
              direction = 'Bottom',
-             size = { Cells = 2 },
+             size = 0.05,
            }
            bottom_pane:split {
              direction = 'Right',
@@ -54,7 +54,7 @@
            }
            local bottom_pane = remote_pane:split {
              direction = 'Bottom',
-             size = { Cells = 2 },
+             size = 0.05,
            }
            bottom_pane:split {
              direction = 'Right',
@@ -81,7 +81,7 @@
          -- cell row. Hyprland (also a size authority) re-imposes its tiled geometry and
          -- sends a fresh configure -> the two disagree by a few px forever -> oscillation.
          -- This tells wezterm "you're under a tiler, accept the geometry and letterbox the
-         -- leftover pixels" instead of fighting. The no_anim windowrule + { Cells = 2 }
+         -- leftover pixels" instead of fighting. The no_anim windowrule + thin bottom
          -- splits only reduced how visible the fight was; this removes the driving force.
          -- DO NOT DELETE: silently dropped once in c25b264 (bundled with the WebGpu change),
          -- which is why the symptom kept coming back. XDG_CURRENT_DESKTOP=Hyprland must match.
@@ -178,7 +178,17 @@
            },
            tabs = {
              tab_active = { { 'process', padding = { left = 0, right = 1 } } },
-             tab_inactive = { { 'process', padding = { left = 0, right = 1 } }, 'output' },
+             tab_inactive = {
+               { 'process', padding = { left = 0, right = 1 } },
+               -- Unseen-output cue on backgrounded tabs (e.g. Claude finished / is waiting).
+               -- Blank when idle so the bell only shows on activity and actually pops;
+               -- WezTerm auto-clears unseen-output state when the tab regains focus.
+               {
+                 'output',
+                 icon = { wezterm.nerdfonts.md_bell_ring, color = { fg = '#f9e2af' } },
+                 icon_no_output = "",
+               },
+             },
            },
          })
          tabline.apply_to_config(config)
