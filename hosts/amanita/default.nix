@@ -29,22 +29,18 @@
   hardware.openrazer.enable = true;
   hardware.openrazer.users = [ "rupel" ];
 
-  # Logitech G29 - install oversteer udev rules for wheel control
-  services.udev.packages = [ pkgs.oversteer ];
+  # Logitech G29 wheel (oversteer) + Wooting keyboard hidraw access.
+  # Must be packages, not extraRules: extraRules lands in 99-local.rules, but
+  # systemd's 73-seat-late.rules is what turns TAG+="uaccess" into an ACL —
+  # a tag set at 99 is never acted on. These install at priority 60/70.
+  services.udev.packages = [
+    pkgs.oversteer
+    pkgs.wooting-udev-rules
+  ];
 
   # Arduino handbrake - expose as joystick to SDL/BeamNG
-  # Wooting keyboard - grant user access without sudo
   services.udev.extraRules = ''
     SUBSYSTEM=="input", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="8037", ENV{ID_INPUT_JOYSTICK}="1"
-
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff01", TAG+="uaccess"
-    SUBSYSTEM=="usb",    ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff01", TAG+="uaccess"
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2402", TAG+="uaccess"
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff02", TAG+="uaccess"
-    SUBSYSTEM=="usb",    ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="ff02", TAG+="uaccess"
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2403", TAG+="uaccess"
-    SUBSYSTEM=="hidraw", ATTRS{idVendor}=="31e3", TAG+="uaccess"
-    SUBSYSTEM=="usb",    ATTRS{idVendor}=="31e3", TAG+="uaccess"
   '';
 
   # AMD + Wayland environment variables
