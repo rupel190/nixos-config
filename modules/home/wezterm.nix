@@ -27,38 +27,32 @@
              workspace = 'system',
              args = { 'pulsemixer' },
            }
+           pulsemixer_pane:split {
+             direction = 'Bottom',
+             size = 0.6,
+             args = { 'tera' },
+           }
            window:spawn_tab {
              args = { 'btop' },
            }
 
-           local tab, remote_pane, window = mux.spawn_window {
+           local tab, claude_pane, window = mux.spawn_window {
              workspace = 'recustomize',
-             args = { 'ssh', 'trichoderma' },
-             cwd = '/home/rupel/projects/recustomize',
-           }
-           local bottom_pane = remote_pane:split {
-             direction = 'Bottom',
-             size = 0.05,
-           }
-           bottom_pane:split {
-             direction = 'Right',
-             size = 0.5,
+             args = { 'claude' },
+             cwd = '/home/rupel/projects/recustomize/stitching-pipeline/',
            }
            window:spawn_tab {
-             cwd = '/home/rupel/projects/recustomize',
+             cwd = '/home/rupel/projects/recustomize/stitching-pipeline/',
            }
 
-           local tab, remote_pane, window = mux.spawn_window {
-             workspace = 'riedercc',
-             cwd = '/home/rupel/projects/rieder/rieder-site/ui',
+           local tab, claude_pane, window = mux.spawn_window {
+             workspace = 'nixos',
+             args = { 'claude' },
+             cwd = '/home/rupel/projects/nixos-config/',
            }
-           local bottom_pane = remote_pane:split {
+           claude_pane:split {
              direction = 'Bottom',
-             size = 0.05,
-           }
-           bottom_pane:split {
-             direction = 'Right',
-             size = 0.5,
+             size = 0.15,
            }
 
            local tab, beamng_pane, window = mux.spawn_window {
@@ -95,6 +89,9 @@
 
          -- Tab bar
          config.window_close_confirmation = "NeverPrompt"
+         -- Middle-click tab close is hardcoded to confirm=true in wezterm; this hook
+         -- reports every pane as non-stateful so no close overlay ever appears.
+         wezterm.on('mux-is-process-stateful', function(proc) return false end)
          config.hide_tab_bar_if_only_one_tab = false
          config.show_new_tab_button_in_tab_bar = false
 
@@ -118,6 +115,16 @@
 
            -- Disable close tab confirmation
            { key = "w", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentTab { confirm = false } },
+
+           -- Rename the current tab; empty input clears it back to the auto title.
+           -- Same field as `wezterm cli set-tab-title`, and it always wins over the
+           -- OSC title a program sets, so a claude tab keeps the name you gave it.
+           { key = "e", mods = "CTRL|SHIFT", action = wezterm.action.PromptInputLine {
+             description = "Tab name (empty = auto)",
+             action = wezterm.action_callback(function(window, _, line)
+               if line then window:active_tab():set_title(line) end
+             end),
+           } },
 
            -- Simpler splits
            { key = "|", mods = "CTRL|SHIFT", action = wezterm.action.SplitHorizontal { domain = "CurrentPaneDomain" } },
@@ -162,6 +169,77 @@
            end) },
         }
 
+         -- Tab titles. Panes live on the `unix` mux domain, where the GUI cannot see a
+         -- pane's foreground process, so tabline's `process` component silently falls
+         -- back to the pane's OSC title -- a full cwd path, or Claude's entire
+         -- conversation title. Derive a short title instead.
+         local TAB_TITLE_WIDTH = 24
+
+         local function basename(path)
+           return path:gsub("/+$", ""):match("([^/]+)$") or path
+         end
+
+         local function cwd_name(pane)
+           local cwd = pane and pane.current_working_dir
+           if not cwd then return nil end
+           local path = type(cwd) == "string" and cwd or (cwd.file_path or cwd.path or tostring(cwd))
+           -- cwd URLs often carry a trailing slash; strip it (but keep a bare "/")
+           path = (path:gsub("^%a+://[^/]*", ""):gsub("(.)/+$", "%1"))
+           if path == wezterm.home_dir then return "~" end
+           return basename(path)
+         end
+
+         -- Truncate on a word boundary, in display cells (not bytes)
+         local function shorten(text, max)
+           if wezterm.column_width(text) <= max then return text end
+           local cut = wezterm.truncate_right(text, max - 1)
+           if not text:sub(#cut + 1, #cut + 1):match("%s") then
+             local whole = cut:gsub("%s+%S*$", "") -- cut landed mid-word, drop that word
+             if wezterm.column_width(whole) >= max / 2 then cut = whole end
+           end
+           return cut .. "…"
+         end
+
+         -- Claude prefixes its title with a status glyph: braille frames while it works,
+         -- ✳ when idle. Keep the glyph (it animates -> a busy tab is visible at a glance).
+         local function split_status_glyph(title)
+           local head, rest = title:match("^(%S+)%s+(.+)$")
+           if not head then return nil end
+           local b1, b2 = head:byte(1), head:byte(2)
+           if head == "✳" or (b1 == 0xE2 and b2 and b2 >= 0xA0 and b2 <= 0xA3) then
+             return head, rest
+           end
+           return nil
+         end
+
+         local function tab_title(tab)
+           local pane = tab.active_pane or {}
+
+           -- An explicit title (Ctrl+Shift+E, `wezterm cli set-tab-title`) always wins
+           if tab.tab_title and #tab.tab_title > 0 then
+             return shorten(tab.tab_title, TAB_TITLE_WIDTH) .. " "
+           end
+
+           local title = pane.title or ""
+           local glyph, rest = split_status_glyph(title)
+           if glyph then
+             return glyph .. " " .. shorten(rest, TAB_TITLE_WIDTH) .. " "
+           end
+
+           -- Local (non-mux) panes still report a real process name
+           local proc = pane.foreground_process_name
+           if proc and #proc > 0 then
+             proc = basename(proc)
+             if proc ~= "fish" and proc ~= "bash" then return proc .. " " end
+           end
+
+           -- A path-ish or empty title is worth no more than its leaf directory
+           if title == "" or title:match("^[~/]") or title:match("^%a+://") then
+             return (cwd_name(pane) or "shell") .. " "
+           end
+           return shorten(title, TAB_TITLE_WIDTH) .. " "
+         end
+
          -- Tabline plugin
          local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
          tabline.setup({
@@ -177,9 +255,9 @@
              tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
            },
            tabs = {
-             tab_active = { { 'process', padding = { left = 0, right = 1 } } },
+             tab_active = { tab_title },
              tab_inactive = {
-               { 'process', padding = { left = 0, right = 1 } },
+               tab_title,
                -- Unseen-output cue on backgrounded tabs (e.g. Claude finished / is waiting).
                -- Blank when idle so the bell only shows on activity and actually pops;
                -- WezTerm auto-clears unseen-output state when the tab regains focus.
