@@ -8,6 +8,7 @@ in
     enable = true;
     package = inputs.hyprpaper.packages.${pkgs.stdenv.hostPlatform.system}.hyprpaper;
     settings = {
+      splash = false; # hyprpaper's own splash overlay defaults to ON since rev c011bd2
       wallpaper = map mkWallpaper [ "DP-1" "DP-2" "HDMI-A-1" "HDMI-A-2" ];
     };
   };
