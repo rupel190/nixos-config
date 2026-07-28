@@ -54,7 +54,11 @@ in
     });
 
     enabledExtensions = with spicePkgs.extensions; [
-      visualizer
+      # visualizer — DISABLED 2026-07-26: calls React.createContext at module
+      # top-level, but Spotify 1.2.92 dropped createContext from that webpack
+      # module → it throws on load and blanks the whole client (was NOT singify).
+      # Re-enable when Konsl/spicetify-visualizer ships a 1.2.92-compatible dist.
+      # visualizer
       singify
       adblock
       hidePodcasts
