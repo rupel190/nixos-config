@@ -23,6 +23,7 @@ in
   home.packages = [
     inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.claude-monitor
+    pkgs.sox # /voice audio recording (provides `rec`)
     claude-desktop-with-fhs
   ];
 }
