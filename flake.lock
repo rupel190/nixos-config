@@ -124,11 +124,11 @@
         "nixpkgs": "nixpkgs_4"
       },
       "locked": {
-        "lastModified": 1783864910,
-        "narHash": "sha256-+4Lomkyt8BbFXbS6ZBRvYLowaNNvZAcwFk03uXXs4yY=",
+        "lastModified": 1784948311,
+        "narHash": "sha256-zXmyx6HuIjH0RQPV4VjVAXQttLyLDk55x9c3NmDke8c=",
         "owner": "sadjow",
         "repo": "claude-code-nix",
-        "rev": "a2e4509a5afffc697f4e3074e29a34436c01bbf3",
+        "rev": "0d3cd1d6260b6f0ed232224c274c565407446fa1",
         "type": "github"
       },
       "original": {
@@ -1214,11 +1214,11 @@
     },
     "nixpkgs_4": {
       "locked": {
-        "lastModified": 1783604885,
-        "narHash": "sha256-tzMgSkV7kljEkqIjlgV6F+n+xD+/a35Db8bs7a4BFAo=",
+        "lastModified": 1784783405,
+        "narHash": "sha256-4IHyyLgLBdKefkljdKod4IMn023pQiDXAWJA187cmdY=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "767b0d3ec98a143ad9ed7dfc0d5553510ac27133",
+        "rev": "7525d999cd850b9a488817abc89c75dc733acf17",
         "type": "github"
       },
       "original": {
@@ -1496,15 +1496,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1784592342,
-        "narHash": "sha256-/FNiyXga28bCw97xbb0o5IC8ttdko/8uf/fn1HW7tOY=",
+        "lastModified": 1785075944,
+        "narHash": "sha256-4QPapHBfciN42Rj5MP7+fFvO4eZpA/0bdmwvX/YxIi4=",
         "owner": "rupel190",
         "repo": "singify",
-        "rev": "59e0e75ffc565e5a9bf5f8f7b7755eec19b63d66",
+        "rev": "e3b7a85b72ed54dc05e8a35ba081ae98cf3662c9",
         "type": "github"
       },
       "original": {
         "owner": "rupel190",
+        "ref": "feat/playlist-sessions",
         "repo": "singify",
         "type": "github"
       }
