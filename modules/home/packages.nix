@@ -126,7 +126,6 @@
       kitty # fallback
       cbonsai # terminal screensaver
       pipes # terminal screensaver
-      pulsemixer
       tty-clock # cli clock
       fortune-kind # curated, kinder fortune (rust)
 

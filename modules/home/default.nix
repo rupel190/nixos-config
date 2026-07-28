@@ -25,6 +25,7 @@
     ./spicetify.nix # spotify client
     ./mpv.nix # media player
     ./tera.nix # terminal radio player
+    ./pulsemixer.nix # audio mixer (patched selection highlight)
     ./plasticity.nix # plasticity CAD (AppImage)
     ./packages.nix # additional packages
     ./browser.nix # zen browser
