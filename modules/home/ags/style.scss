@@ -61,17 +61,12 @@ button.Clock:active {
 }
 
 // Type hierarchy: HH:MM is the thing being read at a glance, so it takes the
-// weight and the full-contrast colour. Seconds and date deliberately recede, so
-// the ticking digits do not compete for attention on a screenshare.
+// weight and the full-contrast colour; the date recedes behind it. No seconds —
+// nothing on the bar moves between minute rollovers, which keeps it quiet on a
+// screenshare.
 .Clock .hm {
   font-size: 14px;
   font-weight: 600;
-}
-
-.Clock .sec {
-  font-size: 10px;
-  color: $overlay1;
-  margin-left: 3px;
 }
 
 // The theme accent, used exactly once, as punctuation.

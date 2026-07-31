@@ -21,19 +21,26 @@ function openCalendar() {
 }
 
 export default function Clock() {
-  // Separate accessors rather than one preformatted string. createPoll only
-  // notifies subscribers when the value actually changes, so the HH:MM label
-  // repaints once a minute despite being sampled every second — and the seconds
-  // tick on their own without dragging the rest of the widget along.
+  // Still sampled every second despite only rendering HH:MM. createPoll notifies
+  // subscribers only when the value actually changes, so this repaints once a
+  // minute either way — whereas a literal 60_000 interval is unanchored to the
+  // wall clock and would show a stale minute for up to 59s after the rollover.
   const hm = createPoll(fmt("%H:%M"), 1000, () => fmt("%H:%M"))
-  const sec = createPoll(fmt("%S"), 1000, () => fmt("%S"))
   const date = createPoll(fmt("%a %d %b"), 60_000, () => fmt("%a %d %b"))
 
+  // focusable=false kills the focus ring. GTK4 draws focus with `outline`, and
+  // Catppuccin paints it in the teal accent — so clicking the clock left a bright
+  // teal box around it, since focus-on-click is true by default on buttons.
+  // Nothing on a bar should be a keyboard focus target anyway.
   return (
-    <button class="Clock" onClicked={openCalendar} tooltipText="Open Proton Calendar">
+    <button
+      class="Clock"
+      focusable={false}
+      onClicked={openCalendar}
+      tooltipText="Open Proton Calendar"
+    >
       <box>
         <label class="hm" label={hm} />
-        <label class="sec" label={sec} />
         <label class="sep" label="·" />
         <label class="date" label={date} />
       </box>
