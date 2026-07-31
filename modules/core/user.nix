@@ -27,6 +27,7 @@
       "seat" # Required for seat management
       "plugdev" # Required for Logitech HID++ device access (solaar)
       "dialout" # Required for serial port access (Arduino, USB-serial)
+      "i2c" # Required for DDC/CI monitor control (ddcutil) when there's no seat, e.g. over SSH
     ];
     shell = pkgs.fish;
     openssh.authorizedKeys.keys = [
