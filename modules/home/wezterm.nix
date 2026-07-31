@@ -98,13 +98,16 @@
          -- Catppuccin Macchiato theme
          config.color_scheme = "Catppuccin Macchiato"
 
+         config.inactive_pane_hsb = { saturation = 0.6, brightness = 0.8 }
+         config.colors = { split = "#c6a0f6" }
+
          -- Custom keybindings
          config.keys = {
            { key = "UpArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) },
            { key = "DownArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) },
            -- Scroll with CTRL+SHIFT (frees up PageUp/PageDown for nvim)
-           { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(-1.0) },
-           { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(1.0) },
+           { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(-0.5) },
+           { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(0.5) },
            { key = "h", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
            { key = "l", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(1) },
            { key = "{", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
@@ -352,15 +355,9 @@
          config.window_decorations = "NONE"
          config.integrated_title_buttons = {}
 
-         -- Clickable links, including file:// (Claude Code and other tools print these).
-         -- Gesture: Ctrl+Click opens the link under the cursor (via xdg-open -> your default
-         -- browser). If a full-screen TUI has grabbed the mouse, hold Shift as well to bypass
-         -- its mouse capture: Shift+Ctrl+Click.
-         config.hyperlink_rules = wezterm.default_hyperlink_rules()
-         table.insert(config.hyperlink_rules, {
-           regex = [[\bfile://\S+]],
-           format = "$0",
-         })
+         -- Links: plain click opens them; wezterm's default rules already match any \w+://
+         -- scheme incl. file://, so no custom rule is needed. Inside a TUI that grabs the
+         -- mouse (Claude Code sends ?1000h), Shift+Click bypasses the grab.
 
          return config
       '';
