@@ -253,8 +253,10 @@
              tabline_x = {},
              tabline_y = {},
              tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
-           },
-           tabs = {
+             -- These live under `sections`, NOT a `tabs` key: tabline has no such key,
+             -- so a `tabs = {...}` block is silently ignored and every tab falls back to
+             -- the plugin defaults (index + process). That is what happened between
+             -- f935941 and now -- the titles below never actually rendered.
              tab_active = { tab_title },
              tab_inactive = {
                tab_title,
