@@ -212,21 +212,44 @@
            return nil
          end
 
-         -- Claude Code sessions publish "I want something" as the `claude_status`
-         -- user var; ~/.claude/hooks/wezterm-status.sh writes the OSC straight to
-         -- claude's pty from the Notification hook and clears it once answered.
+         -- Claude Code sessions announce "I want something" by dropping a marker file
+         -- named <pane-id>.<status> here; ~/.claude/hooks/wezterm-status.sh writes it on
+         -- the Notification hook and removes it once the prompt is answered. A file
+         -- rather than a user var because claude's hooks have no controlling terminal,
+         -- and writing the SetUserVar escape to claude's pty injects bytes into a
+         -- fullscreen TUI mid-repaint -- enough to wedge the terminal's colour state.
+         local CLAUDE_ATTENTION_DIR = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/claude-attention"
          local CLAUDE_ALERTS = {
            permission = { icon = wezterm.nerdfonts.md_shield_alert, fg = "#181926", bg = "#ed8796" },
            waiting = { icon = wezterm.nerdfonts.md_message_alert, fg = "#181926", bg = "#f5a97f" },
          }
 
+         -- wezterm.glob is async ("attempt to yield from outside a coroutine") and
+         -- format-tab-title is not, so the directory is read on the status tick
+         -- (status_update_interval, 500ms) and the result cached for the renderer.
+         local claude_markers = {}
+         wezterm.on("update-status", function()
+           local ok, markers = pcall(wezterm.glob, CLAUDE_ATTENTION_DIR .. "/*")
+           claude_markers = ok and markers or {}
+         end)
+
          -- Claude can sit in any pane of the tab, not only the active one
          local function claude_alert(tab)
+           local markers = claude_markers
+           if #markers == 0 then return nil end
+
            local panes = tab.panes
            if type(panes) ~= "table" or #panes == 0 then panes = { tab.active_pane } end
            for _, pane in ipairs(panes) do
-             local status = pane and pane.user_vars and pane.user_vars.claude_status
-             if status and CLAUDE_ALERTS[status] then return CLAUDE_ALERTS[status] end
+             local id = pane and pane.pane_id
+             if id then
+               for _, marker in ipairs(markers) do
+                 local pane_id, status = marker:match("([^/]+)%.([^.]+)$")
+                 if tonumber(pane_id) == id and CLAUDE_ALERTS[status] then
+                   return CLAUDE_ALERTS[status]
+                 end
+               end
+             end
            end
          end
 
@@ -269,25 +292,29 @@
          local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
 
          -- Paint the entire tab chip (body *and* its powerline separators) while a
-         -- Claude session in it is waiting on you. tabline re-reads its theme for
-         -- every tab it formats, so a handler registered before tabline's -- one that
-         -- returns nil, leaving the drawing to tabline -- retints just that one tab.
+         -- Claude session in it is waiting on you. tabline re-reads its theme for every
+         -- tab it formats, so retinting theme.tab right before it draws colours exactly
+         -- one tab. We must drive that draw ourselves: wezterm gives format-tab-title to
+         -- the FIRST handler registered and takes whatever it returns as final -- nil
+         -- included -- so a pre-hook that returns nil doesn't fall through to tabline,
+         -- it silently drops you back to wezterm's built-in "index: title" tab bar.
          local tab_theme_default
-         wezterm.on("format-tab-title", function(tab)
+         wezterm.on("format-tab-title", function(tab, _, _, _, hover, _)
            local ok, theme = pcall(tabline.get_theme)
-           if not ok or type(theme) ~= "table" or not theme.tab then return nil end
-           tab_theme_default = tab_theme_default or {
-             active = { fg = theme.tab.active.fg, bg = theme.tab.active.bg },
-             inactive = { fg = theme.tab.inactive.fg, bg = theme.tab.inactive.bg },
-             inactive_hover = { fg = theme.tab.inactive_hover.fg, bg = theme.tab.inactive_hover.bg },
-           }
-           local alert = claude_alert(tab)
-           for _, key in ipairs({ "active", "inactive", "inactive_hover" }) do
-             local colors = alert or tab_theme_default[key]
-             theme.tab[key].fg = colors.fg
-             theme.tab[key].bg = colors.bg
+           if ok and type(theme) == "table" and theme.tab then
+             tab_theme_default = tab_theme_default or {
+               active = { fg = theme.tab.active.fg, bg = theme.tab.active.bg },
+               inactive = { fg = theme.tab.inactive.fg, bg = theme.tab.inactive.bg },
+               inactive_hover = { fg = theme.tab.inactive_hover.fg, bg = theme.tab.inactive_hover.bg },
+             }
+             local alert = claude_alert(tab)
+             for _, key in ipairs({ "active", "inactive", "inactive_hover" }) do
+               local colors = alert or tab_theme_default[key]
+               theme.tab[key].fg = colors.fg
+               theme.tab[key].bg = colors.bg
+             end
            end
-           return nil
+           return require("tabline.tabs").set_title(tab, hover)
          end)
 
          tabline.setup({
