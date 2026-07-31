@@ -78,3 +78,108 @@ button.Clock:active {
 .Clock .date {
   color: $subtext0;
 }
+
+// ── DDC monitor indicator ────────────────────────────────────────────────────
+
+menubutton.Display,
+menubutton.Display > button {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  min-height: 0;
+  min-width: 0;
+}
+
+menubutton.Display > button {
+  padding: 3px 10px;
+  border-radius: $radius;
+  transition: background-color 160ms ease;
+}
+
+menubutton.Display > button:hover {
+  background-color: rgba(73, 77, 100, 0.5);
+}
+
+.Display .icon {
+  color: $teal;
+  font-size: 14px;
+}
+
+.Display .summary {
+  color: $subtext0;
+}
+
+// A GTK4 popover paints its chrome on an inner `contents` node, not on the
+// popover element itself — styling `popover` alone does nothing visible.
+popover > contents {
+  background-color: $mantle;
+  border: 1px solid $surface0;
+  border-radius: 10px;
+  padding: 10px;
+  color: $text;
+}
+
+.DisplayPopover {
+  min-width: 260px;
+}
+
+.DisplayPopover .heading {
+  color: $overlay1;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.DisplayPopover .pct {
+  color: $subtext0;
+}
+
+// Only the fill colour is overridden; the trough and knob are left to the
+// Catppuccin theme rather than rebuilding GTK4's scale node tree by hand.
+.DisplayPopover scale highlight {
+  background-color: $teal;
+}
+
+// Segmented control — two buttons that read as a single pill.
+.segmented button {
+  background-color: rgba(54, 58, 79, 0.6);
+  border: none;
+  box-shadow: none;
+  min-height: 0;
+  padding: 4px 14px;
+  color: $subtext0;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.segmented button:first-child {
+  border-radius: $radius 0 0 $radius;
+}
+
+.segmented button:last-child {
+  border-radius: 0 $radius $radius 0;
+}
+
+.segmented button:hover {
+  background-color: $surface1;
+}
+
+.segmented button.active {
+  background-color: $teal;
+  color: $mantle;
+  font-weight: 600;
+}
+
+.refresh {
+  background-color: rgba(54, 58, 79, 0.6);
+  border: none;
+  box-shadow: none;
+  min-height: 0;
+  padding: 5px 10px;
+  border-radius: $radius;
+  color: $subtext0;
+}
+
+.refresh:hover {
+  background-color: $surface1;
+}

@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app"
 import { Astal, Gdk, Gtk } from "ags/gtk4"
 import Clock from "./Clock"
+import DisplayIndicator from "./Display"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   // Anchoring all three edges spans the monitor width; TOP alone would size the
@@ -34,8 +35,10 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Clock />
         </box>
 
-        {/* end — reserved for the ddcutil display indicator + tray */}
-        <box $type="end" halign={Gtk.Align.END} />
+        {/* end — DDC monitor controls; tray still to come */}
+        <box $type="end" halign={Gtk.Align.END}>
+          <DisplayIndicator />
+        </box>
       </centerbox>
     </window>
   )
