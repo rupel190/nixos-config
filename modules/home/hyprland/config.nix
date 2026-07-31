@@ -13,8 +13,10 @@
         # "wl-paste --watch cliphist store &"
         "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
 
-        # TODO: Add AGS startup here
-        # "ags &"
+        # No AGS entry here on purpose: the bar runs as a systemd user unit
+        # (programs.ags.systemd.enable in modules/home/ags), bound to
+        # graphical-session.target, so it starts and stops with the compositor.
+        # Reload after editing a widget: systemctl --user restart ags
 
         # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
         # "hyprlock"

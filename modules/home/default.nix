@@ -34,8 +34,7 @@
     ./xdg-mimes.nix # file associations
     ./clouddrives.nix # cloud drive sync services (OneDrive)
 
-    # Ready to enable when needed:
-    # ./ags - Simple bar widget (migrated from chezmoi)
+    ./ags # status bar (AGS 3 / Astal, GTK4) — runs as a systemd user unit
 
     # Unmanaged app configs (deployed as-is)
     ./dotfiles

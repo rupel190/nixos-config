@@ -1,28 +1,57 @@
-// https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gtk/theme/Adwaita/_colors-public.scss
-$fg-color: #{"@theme_fg_color"};
-$bg-color: #{"@theme_bg_color"};
+// Catppuccin Macchiato — matches the GTK theme set in modules/home/gtk.nix
+// (catppuccin-macchiato-teal-standard, teal accent).
+$mantle: #1e2030;
+$surface0: #363a4f;
+$text: #cad3f5;
+$subtext0: #a5adcb;
+$teal: #8bd5ca;
 
+// GTK4 CSS is a subset of the web's: no flexbox, no grid, no custom properties,
+// no `gap`. Layout comes entirely from the widget tree (box / centerbox and
+// their spacing props) — CSS only does colour, spacing and borders. Lengths need
+// an explicit unit; GTK silently drops `padding: 8`.
 window.Bar {
   background: transparent;
-  color: $bg-color;
-  font-weight: normal;
+  color: $text;
+  font-family: "GeistMono Nerd Font Mono", monospace;
+  font-size: 13px;
 
-  > centerbox {
-    background: rgba(0, 0, 0, 0.15);
-    border-radius: 10px;
-    // margin: 25;          // reduce outer space
+  // Not `> .bar-inner`: GTK inserts its own CSS nodes between a window and its
+  // child, so the direct-child combinator is unreliable here.
+  .bar-inner {
+    background: rgba(30, 32, 48, 0.92); // $mantle, translucent
+    border-bottom: 1px solid $surface0;
+    padding: 2px 12px;
+    min-height: 30px;
   }
 
-  button {
-    border-radius: 10px;
-    margin: 5px 0px 0px 0px;
-    padding: 2px 10px;
+  // A GTK4 MenuButton is a `menubutton` node wrapping a real `button` child, and
+  // the button is what carries the default background/border/shadow. Styling
+  // only `.Clock` leaves the stock chrome visible — the child has to be reset too.
+  .Clock,
+  .Clock > button {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    min-height: 0;
+    padding: 2px 12px;
+    border-radius: 8px;
   }
 
-  label {
-    padding: 25;
-    margin: 15;
-    font-size: 12px;
+  .Clock > button {
+    transition: background 150ms ease;
+  }
+
+  .Clock > button:hover {
+    background: $surface0;
+  }
+
+  .time {
+    color: $teal;
+    font-weight: bold;
+  }
+
+  .date {
+    color: $subtext0;
   }
 }
-

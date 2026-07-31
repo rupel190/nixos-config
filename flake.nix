@@ -24,6 +24,20 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # AGS 3.x — the scaffolding CLI that bundles our TypeScript/JSX into a GJS
+    # script. Not optional: nixpkgs ships 2.3.0, whose API is `astal/gtk3`
+    # (GTK3, `Variable().poll()`, `className=`), while modules/home/ags is
+    # written against v3's `ags/gtk4`. The flake also ships pre-generated @girs
+    # types — `ags init` otherwise shells out to `npx @ts-for-gir/cli`, which
+    # can't work in a sandboxed build.
+    # Deliberately does NOT set `inputs.astal.follows`: ags pins the exact astal
+    # rev its bundled type definitions were generated against, and overriding it
+    # desyncs the two.
+    ags = {
+      url = "github:aylur/ags";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     wezterm.url = "github:wez/wezterm?dir=nix";
     zen-browser.url = "github:youwen5/zen-browser-flake"; # Auto-updates daily
 
