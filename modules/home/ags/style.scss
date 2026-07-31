@@ -1,57 +1,85 @@
-// Catppuccin Macchiato — matches the GTK theme set in modules/home/gtk.nix
-// (catppuccin-macchiato-teal-standard, teal accent).
+// Catppuccin Macchiato — matches the GTK theme in modules/home/gtk.nix
+// (catppuccin-macchiato-teal-standard).
 $mantle: #1e2030;
 $surface0: #363a4f;
+$surface1: #494d64;
 $text: #cad3f5;
 $subtext0: #a5adcb;
+$overlay1: #8087a2;
 $teal: #8bd5ca;
 
+$bar-height: 32px;
+$radius: 8px;
+
 // GTK4 CSS is a subset of the web's: no flexbox, no grid, no custom properties,
-// no `gap`. Layout comes entirely from the widget tree (box / centerbox and
-// their spacing props) — CSS only does colour, spacing and borders. Lengths need
-// an explicit unit; GTK silently drops `padding: 8`.
+// no `gap`, no ::before/::after. Layout comes entirely from the widget tree
+// (box / centerbox and their spacing props) — CSS only does colour, type,
+// spacing and borders. Every length needs an explicit unit; GTK silently drops
+// `padding: 8`. Transitions go on longhand properties, not shorthands.
+
 window.Bar {
-  background: transparent;
+  background-color: transparent;
   color: $text;
-  font-family: "GeistMono Nerd Font Mono", monospace;
+  // The Nerd Font family only resolves once nerd-fonts.geist-mono is installed
+  // (gtk.nix). "Geist Mono" is the unpatched fallback, so a missing package
+  // degrades to the right typeface without icons rather than to DejaVu.
+  font-family: "GeistMono Nerd Font Mono", "Geist Mono", monospace;
   font-size: 13px;
+}
 
-  // Not `> .bar-inner`: GTK inserts its own CSS nodes between a window and its
-  // child, so the direct-child combinator is unreliable here.
-  .bar-inner {
-    background: rgba(30, 32, 48, 0.92); // $mantle, translucent
-    border-bottom: 1px solid $surface0;
-    padding: 2px 12px;
-    min-height: 30px;
-  }
+// Not `window.Bar > .bar-inner`: GTK inserts its own CSS nodes between a window
+// and its child, so the direct-child combinator is unreliable here.
+.bar-inner {
+  // Translucent on purpose — Hyprland frosts what sits behind it via the
+  // `layerrule = blur on, match:namespace ^(ags-bar)$` in hyprland/config.nix.
+  // Without that rule this degrades to flat dark grey, which still reads fine.
+  background-color: rgba(30, 32, 48, 0.78);
+  border-bottom: 1px solid rgba(54, 58, 79, 0.9);
+  min-height: $bar-height;
+  padding: 0 10px;
+}
 
-  // A GTK4 MenuButton is a `menubutton` node wrapping a real `button` child, and
-  // the button is what carries the default background/border/shadow. Styling
-  // only `.Clock` leaves the stock chrome visible — the child has to be reset too.
-  .Clock,
-  .Clock > button {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    min-height: 0;
-    padding: 2px 12px;
-    border-radius: 8px;
-  }
+button.Clock {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  // GTK4 buttons carry a themed min-height; zeroing it lets the padding below
+  // define the hit area instead of the Adwaita default fighting the bar height.
+  min-height: 0;
+  min-width: 0;
+  padding: 3px 12px;
+  border-radius: $radius;
+  transition: background-color 160ms ease;
+}
 
-  .Clock > button {
-    transition: background 150ms ease;
-  }
+button.Clock:hover {
+  background-color: rgba(73, 77, 100, 0.5);
+}
 
-  .Clock > button:hover {
-    background: $surface0;
-  }
+button.Clock:active {
+  background-color: rgba(73, 77, 100, 0.75);
+}
 
-  .time {
-    color: $teal;
-    font-weight: bold;
-  }
+// Type hierarchy: HH:MM is the thing being read at a glance, so it takes the
+// weight and the full-contrast colour. Seconds and date deliberately recede, so
+// the ticking digits do not compete for attention on a screenshare.
+.Clock .hm {
+  font-size: 14px;
+  font-weight: 600;
+}
 
-  .date {
-    color: $subtext0;
-  }
+.Clock .sec {
+  font-size: 10px;
+  color: $overlay1;
+  margin-left: 3px;
+}
+
+// The theme accent, used exactly once, as punctuation.
+.Clock .sep {
+  color: $teal;
+  margin: 0 9px;
+}
+
+.Clock .date {
+  color: $subtext0;
 }

@@ -270,6 +270,24 @@
         # ];
       };
 
+      # Frost whatever sits behind the AGS bar. The namespace is set on the
+      # Astal window in modules/home/ags/widget/Bar.tsx and is shared by all
+      # three bars, so one rule covers every monitor.
+      #
+      # Syntax note: 0.55 rejects the `layerrule = blur, ags-bar` form that every
+      # older guide shows — effects need an explicit value and matchers need the
+      # `match:` prefix, same as the windowrule list below. The bare form fails
+      # with "invalid field blur: missing a value".
+      #
+      # ignore_alpha (underscore — `ignorealpha` is rejected as an invalid field)
+      # keeps the blur from bleeding through the fully transparent part of the
+      # layer surface; the bar paints its own translucent background in
+      # style.scss and only that should be frosted.
+      layerrule = [
+        "blur on, match:namespace ^(ags-bar)$"
+        "ignore_alpha 0.3, match:namespace ^(ags-bar)$"
+      ];
+
       windowrule = [
         # See https://wiki.hypr.land/Configuring/Window-Rules/
 

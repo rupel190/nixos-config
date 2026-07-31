@@ -3,7 +3,8 @@
   fonts.fontconfig.enable = true;
 
   home.packages = with pkgs; [
-    geist-font # TODO: is this nerd font?!
+    geist-font
+    nerd-fonts.geist-mono
   ];
 
   gtk = {
