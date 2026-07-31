@@ -17,7 +17,9 @@ in
     # Desktop monitor configuration (amanita)
     # Laptop monitor config is in hosts/cordyceps/default.nix
     monitor = [
-      "DP-2, 2560x1440@239.972000, 0x0, 1"
+      # bitdepth 10: forces max bpc 10, which pushes 240Hz over HBR3 and makes
+      # amdgpu enable DSC (~16bpp) instead of falling back to 8 bpc.
+      "DP-2, 2560x1440@239.972000, 0x0, 1, bitdepth, 10"
       "DP-1, 3840x2160@120.00000, -2560x0, 1.5"
       "HDMI-A-2, preferred, 2560x0, 1, transform, 3"
       # Mirror DP-1 onto the AVR/HDMI-A-1 (dormant while unplugged).
