@@ -212,36 +212,84 @@
            return nil
          end
 
-         local function tab_title(tab)
-           local pane = tab.active_pane or {}
+         -- Claude Code sessions publish "I want something" as the `claude_status`
+         -- user var; ~/.claude/hooks/wezterm-status.sh writes the OSC straight to
+         -- claude's pty from the Notification hook and clears it once answered.
+         local CLAUDE_ALERTS = {
+           permission = { icon = wezterm.nerdfonts.md_shield_alert, fg = "#181926", bg = "#ed8796" },
+           waiting = { icon = wezterm.nerdfonts.md_message_alert, fg = "#181926", bg = "#f5a97f" },
+         }
 
+         -- Claude can sit in any pane of the tab, not only the active one
+         local function claude_alert(tab)
+           local panes = tab.panes
+           if type(panes) ~= "table" or #panes == 0 then panes = { tab.active_pane } end
+           for _, pane in ipairs(panes) do
+             local status = pane and pane.user_vars and pane.user_vars.claude_status
+             if status and CLAUDE_ALERTS[status] then return CLAUDE_ALERTS[status] end
+           end
+         end
+
+         local function tab_body(tab, pane, alert)
            -- An explicit title (Ctrl+Shift+E, `wezterm cli set-tab-title`) always wins
            if tab.tab_title and #tab.tab_title > 0 then
-             return shorten(tab.tab_title, TAB_TITLE_WIDTH) .. " "
+             return shorten(tab.tab_title, TAB_TITLE_WIDTH)
            end
 
            local title = pane.title or ""
            local glyph, rest = split_status_glyph(title)
            if glyph then
-             return glyph .. " " .. shorten(rest, TAB_TITLE_WIDTH) .. " "
+             -- an alert icon replaces Claude's own status glyph
+             return (alert and "" or glyph .. " ") .. shorten(rest, TAB_TITLE_WIDTH)
            end
 
            -- Local (non-mux) panes still report a real process name
            local proc = pane.foreground_process_name
            if proc and #proc > 0 then
              proc = basename(proc)
-             if proc ~= "fish" and proc ~= "bash" then return proc .. " " end
+             if proc ~= "fish" and proc ~= "bash" then return proc end
            end
 
            -- A path-ish or empty title is worth no more than its leaf directory
            if title == "" or title:match("^[~/]") or title:match("^%a+://") then
-             return (cwd_name(pane) or "shell") .. " "
+             return cwd_name(pane) or "shell"
            end
-           return shorten(title, TAB_TITLE_WIDTH) .. " "
+           return shorten(title, TAB_TITLE_WIDTH)
+         end
+
+         local function tab_title(tab)
+           local pane = tab.active_pane or {}
+           local alert = claude_alert(tab)
+           local text = tab_body(tab, pane, alert)
+           if alert then text = (alert.icon or "!") .. " " .. text end
+           return text .. " "
          end
 
          -- Tabline plugin
          local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
+         -- Paint the entire tab chip (body *and* its powerline separators) while a
+         -- Claude session in it is waiting on you. tabline re-reads its theme for
+         -- every tab it formats, so a handler registered before tabline's -- one that
+         -- returns nil, leaving the drawing to tabline -- retints just that one tab.
+         local tab_theme_default
+         wezterm.on("format-tab-title", function(tab)
+           local ok, theme = pcall(tabline.get_theme)
+           if not ok or type(theme) ~= "table" or not theme.tab then return nil end
+           tab_theme_default = tab_theme_default or {
+             active = { fg = theme.tab.active.fg, bg = theme.tab.active.bg },
+             inactive = { fg = theme.tab.inactive.fg, bg = theme.tab.inactive.bg },
+             inactive_hover = { fg = theme.tab.inactive_hover.fg, bg = theme.tab.inactive_hover.bg },
+           }
+           local alert = claude_alert(tab)
+           for _, key in ipairs({ "active", "inactive", "inactive_hover" }) do
+             local colors = alert or tab_theme_default[key]
+             theme.tab[key].fg = colors.fg
+             theme.tab[key].bg = colors.bg
+           end
+           return nil
+         end)
+
          tabline.setup({
            options = {
              theme = config.color_scheme or "default",
