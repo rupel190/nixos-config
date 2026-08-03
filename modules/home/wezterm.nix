@@ -98,13 +98,16 @@
          -- Catppuccin Macchiato theme
          config.color_scheme = "Catppuccin Macchiato"
 
+         config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.8 }
+         config.colors = { split = "#c6a0f6" }
+
          -- Custom keybindings
          config.keys = {
            { key = "UpArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) },
            { key = "DownArrow", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) },
            -- Scroll with CTRL+SHIFT (frees up PageUp/PageDown for nvim)
-           { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(-1.0) },
-           { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(1.0) },
+           { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(-0.5) },
+           { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.ScrollByPage(0.5) },
            { key = "h", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) },
            { key = "l", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(1) },
            { key = "{", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) },
@@ -212,36 +215,111 @@
            return nil
          end
 
-         local function tab_title(tab)
-           local pane = tab.active_pane or {}
+         -- Claude Code sessions announce "I want something" by dropping a marker file
+         -- named <pane-id>.<status> here; ~/.claude/hooks/wezterm-status.sh writes it on
+         -- the Notification hook and removes it once the prompt is answered. A file
+         -- rather than a user var because claude's hooks have no controlling terminal,
+         -- and writing the SetUserVar escape to claude's pty injects bytes into a
+         -- fullscreen TUI mid-repaint -- enough to wedge the terminal's colour state.
+         local CLAUDE_ATTENTION_DIR = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/claude-attention"
+         local CLAUDE_ALERTS = {
+           permission = { icon = wezterm.nerdfonts.md_shield_alert, fg = "#181926", bg = "#ed8796" },
+           waiting = { icon = wezterm.nerdfonts.md_message_alert, fg = "#181926", bg = "#f5a97f" },
+         }
 
+         -- wezterm.glob is async ("attempt to yield from outside a coroutine") and
+         -- format-tab-title is not, so the directory is read on the status tick
+         -- (status_update_interval, 500ms) and the result cached for the renderer.
+         local claude_markers = {}
+         wezterm.on("update-status", function()
+           local ok, markers = pcall(wezterm.glob, CLAUDE_ATTENTION_DIR .. "/*")
+           claude_markers = ok and markers or {}
+         end)
+
+         -- Claude can sit in any pane of the tab, not only the active one
+         local function claude_alert(tab)
+           local markers = claude_markers
+           if #markers == 0 then return nil end
+
+           local panes = tab.panes
+           if type(panes) ~= "table" or #panes == 0 then panes = { tab.active_pane } end
+           for _, pane in ipairs(panes) do
+             local id = pane and pane.pane_id
+             if id then
+               for _, marker in ipairs(markers) do
+                 local pane_id, status = marker:match("([^/]+)%.([^.]+)$")
+                 if tonumber(pane_id) == id and CLAUDE_ALERTS[status] then
+                   return CLAUDE_ALERTS[status]
+                 end
+               end
+             end
+           end
+         end
+
+         local function tab_body(tab, pane, alert)
            -- An explicit title (Ctrl+Shift+E, `wezterm cli set-tab-title`) always wins
            if tab.tab_title and #tab.tab_title > 0 then
-             return shorten(tab.tab_title, TAB_TITLE_WIDTH) .. " "
+             return shorten(tab.tab_title, TAB_TITLE_WIDTH)
            end
 
            local title = pane.title or ""
            local glyph, rest = split_status_glyph(title)
            if glyph then
-             return glyph .. " " .. shorten(rest, TAB_TITLE_WIDTH) .. " "
+             -- an alert icon replaces Claude's own status glyph
+             return (alert and "" or glyph .. " ") .. shorten(rest, TAB_TITLE_WIDTH)
            end
 
            -- Local (non-mux) panes still report a real process name
            local proc = pane.foreground_process_name
            if proc and #proc > 0 then
              proc = basename(proc)
-             if proc ~= "fish" and proc ~= "bash" then return proc .. " " end
+             if proc ~= "fish" and proc ~= "bash" then return proc end
            end
 
            -- A path-ish or empty title is worth no more than its leaf directory
            if title == "" or title:match("^[~/]") or title:match("^%a+://") then
-             return (cwd_name(pane) or "shell") .. " "
+             return cwd_name(pane) or "shell"
            end
-           return shorten(title, TAB_TITLE_WIDTH) .. " "
+           return shorten(title, TAB_TITLE_WIDTH)
+         end
+
+         local function tab_title(tab)
+           local pane = tab.active_pane or {}
+           local alert = claude_alert(tab)
+           local text = tab_body(tab, pane, alert)
+           if alert then text = (alert.icon or "!") .. " " .. text end
+           return text .. " "
          end
 
          -- Tabline plugin
          local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
+
+         -- Paint the entire tab chip (body *and* its powerline separators) while a
+         -- Claude session in it is waiting on you. tabline re-reads its theme for every
+         -- tab it formats, so retinting theme.tab right before it draws colours exactly
+         -- one tab. We must drive that draw ourselves: wezterm gives format-tab-title to
+         -- the FIRST handler registered and takes whatever it returns as final -- nil
+         -- included -- so a pre-hook that returns nil doesn't fall through to tabline,
+         -- it silently drops you back to wezterm's built-in "index: title" tab bar.
+         local tab_theme_default
+         wezterm.on("format-tab-title", function(tab, _, _, _, hover, _)
+           local ok, theme = pcall(tabline.get_theme)
+           if ok and type(theme) == "table" and theme.tab then
+             tab_theme_default = tab_theme_default or {
+               active = { fg = theme.tab.active.fg, bg = theme.tab.active.bg },
+               inactive = { fg = theme.tab.inactive.fg, bg = theme.tab.inactive.bg },
+               inactive_hover = { fg = theme.tab.inactive_hover.fg, bg = theme.tab.inactive_hover.bg },
+             }
+             local alert = claude_alert(tab)
+             for _, key in ipairs({ "active", "inactive", "inactive_hover" }) do
+               local colors = alert or tab_theme_default[key]
+               theme.tab[key].fg = colors.fg
+               theme.tab[key].bg = colors.bg
+             end
+           end
+           return require("tabline.tabs").set_title(tab, hover)
+         end)
+
          tabline.setup({
            options = {
              theme = config.color_scheme or "default",
@@ -253,8 +331,10 @@
              tabline_x = {},
              tabline_y = {},
              tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
-           },
-           tabs = {
+             -- These live under `sections`, NOT a `tabs` key: tabline has no such key,
+             -- so a `tabs = {...}` block is silently ignored and every tab falls back to
+             -- the plugin defaults (index + process). That is what happened between
+             -- f935941 and now -- the titles below never actually rendered.
              tab_active = { tab_title },
              tab_inactive = {
                tab_title,
@@ -275,15 +355,9 @@
          config.window_decorations = "NONE"
          config.integrated_title_buttons = {}
 
-         -- Clickable links, including file:// (Claude Code and other tools print these).
-         -- Gesture: Ctrl+Click opens the link under the cursor (via xdg-open -> your default
-         -- browser). If a full-screen TUI has grabbed the mouse, hold Shift as well to bypass
-         -- its mouse capture: Shift+Ctrl+Click.
-         config.hyperlink_rules = wezterm.default_hyperlink_rules()
-         table.insert(config.hyperlink_rules, {
-           regex = [[\bfile://\S+]],
-           format = "$0",
-         })
+         -- Links: plain click opens them; wezterm's default rules already match any \w+://
+         -- scheme incl. file://, so no custom rule is needed. Inside a TUI that grabs the
+         -- mouse (Claude Code sends ?1000h), Shift+Click bypasses the grab.
 
          return config
       '';
