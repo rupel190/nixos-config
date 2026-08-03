@@ -1,7 +1,18 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 let
-  wallpaper = "/home/rupel/Pictures/wallpaper/20251204024944_1.jpg";
-  mkWallpaper = monitor: { inherit monitor; path = wallpaper; };
+  wallpaperDir = "/home/rupel/Pictures/wallpaper";
+  # one image per output; entries for disconnected monitors are simply ignored
+  wallpapers = {
+    "DP-1" = "${wallpaperDir}/wallhaven-dp98km.png";
+    "DP-2" = "${wallpaperDir}/wallhaven-m98579.png";
+    "HDMI-A-1" = "${wallpaperDir}/wallhaven-kx8d81.png";
+    "HDMI-A-2" = "${wallpaperDir}/wallhaven-kx8d81.png";
+  };
 in
 {
   services.hyprpaper = {
@@ -9,7 +20,7 @@ in
     package = inputs.hyprpaper.packages.${pkgs.stdenv.hostPlatform.system}.hyprpaper;
     settings = {
       splash = false; # hyprpaper's own splash overlay defaults to ON since rev c011bd2
-      wallpaper = map mkWallpaper [ "DP-1" "DP-2" "HDMI-A-1" "HDMI-A-2" ];
+      wallpaper = lib.mapAttrsToList (monitor: path: { inherit monitor path; }) wallpapers;
     };
   };
   home.packages = with pkgs; [

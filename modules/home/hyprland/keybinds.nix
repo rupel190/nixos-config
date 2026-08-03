@@ -26,6 +26,14 @@
         # routes through swaync; the synchronous hint replaces the prior toast.
         ''$mainMod SHIFT, I, exec, pkill -x wlinhibit && notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit OFF" || (wlinhibit & notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit ON")''
 
+        # Read the clipboard aloud (read-along aid for dense prose): select a
+        # paragraph, copy, press. Pressing again while it speaks stops it — the
+        # script's state file is the state, same stateless-toggle idea as the
+        # idle inhibit bind above. Spelled out rather than bare "say-clip"
+        # because ~/.local/bin is on PATH for interactive shells, not for
+        # Hyprland's exec.
+        "$mainMod SHIFT, R, exec, ~/.local/bin/say-clip"
+
         # Screenshots
         "$mainMod, S, exec, slurp | grim -g - - | wl-copy"
         "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | tee /tmp/screenshot.png | wl-copy && swappy -f /tmp/screenshot.png -o ~/Pictures/swappy/$(date +%F_%H-%M-%S).png"
