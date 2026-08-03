@@ -67,6 +67,10 @@
          end)
 
 
+         -- Font: pairs with the Geist Sans UI font; unset = wezterm's built-in
+         -- JetBrains Mono. The Nerd Font patch carries the fastfetch/tabline glyphs.
+         config.font = wezterm.font("GeistMono Nerd Font Mono")
+
          -- Window settings
          config.adjust_window_size_when_changing_font_size = false
          -- ROOT-CAUSE FIX for the oscillating/"breathing" window on resize under Hyprland.

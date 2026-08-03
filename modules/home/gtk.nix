@@ -1,6 +1,13 @@
 { pkgs, config, ... }:
 {
-  fonts.fontconfig.enable = true;
+  fonts.fontconfig = {
+    enable = true;
+    # <prefer> prepends, so DejaVu/Noto stay behind for scripts Geist lacks
+    defaultFonts = {
+      sansSerif = [ "Geist" ];
+      monospace = [ "GeistMono Nerd Font Mono" ];
+    };
+  };
 
   home.packages = with pkgs; [
     geist-font
@@ -10,8 +17,9 @@
   gtk = {
     enable = true;
 
+    # Interface font: also what Firefox/Electron resolve CSS system-ui to
     font = {
-      name = "GeistMono Nerd Font Mono";
+      name = "Geist";
       size = 11;
     };
 
