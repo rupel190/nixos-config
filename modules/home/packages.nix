@@ -82,6 +82,7 @@
       v4l-utils # v4l2-ctl CLI: standard controls (brightness/gain/exposure/WB), set live mid-call
       cameractrls # decodes OBSBOT vendor Extension Unit: color_preset + on-camera save/load presets
       guvcview # GTK GUI: sliders + live preview (use between calls — needs exclusive camera stream)
+      ddcutil # monitor controls over DDC/CI; DP monitors sit on the AUX bus, so trust `detect` over sysfs
       gifsicle # gif utility
       gtrash # rm replacement, put deleted files in system trash
       jq # JSON processor

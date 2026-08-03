@@ -19,6 +19,9 @@
   # Improve stability
   hardware.enableRedistributableFirmware = true;
 
+  # DDC/CI monitor control (ddcutil): loads i2c-dev and opens up /dev/i2c-*
+  hardware.i2c.enable = true;
+
 
   # Fix USB devices (mouse/keyboard) going to sleep - AGGRESSIVE FIX
   # Multiple layers of USB power management disabling
