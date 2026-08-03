@@ -98,7 +98,7 @@
          -- Catppuccin Macchiato theme
          config.color_scheme = "Catppuccin Macchiato"
 
-         config.inactive_pane_hsb = { saturation = 0.6, brightness = 0.8 }
+         config.inactive_pane_hsb = { saturation = 0.8, brightness = 0.8 }
          config.colors = { split = "#c6a0f6" }
 
          -- Custom keybindings
