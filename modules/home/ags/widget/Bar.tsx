@@ -2,6 +2,7 @@ import app from "ags/gtk4/app"
 import { Astal, Gdk, Gtk } from "ags/gtk4"
 import Clock from "./Clock"
 import DisplayIndicator from "./Display"
+import Windows from "./Windows"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
   // Anchoring all three edges spans the monitor width; TOP alone would size the
@@ -28,8 +29,9 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
       application={app}
     >
       <centerbox class="bar-inner">
-        {/* start — reserved for workspaces */}
-        <box $type="start" halign={Gtk.Align.START} />
+        <box $type="start" halign={Gtk.Align.START}>
+          <Windows />
+        </box>
 
         <box $type="center">
           <Clock />

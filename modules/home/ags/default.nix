@@ -42,6 +42,7 @@ in
     # to empty. extraPackages is the only channel that survives.
     extraPackages = with agsPkgs; [
       hyprland # workspaces + active window over the Hyprland IPC socket
+      apps # .desktop entry lookup — resolves a window class to a themed icon
       tray # StatusNotifierItem system tray
       wireplumber # audio sinks/sources + volume
       network # NetworkManager
