@@ -4,7 +4,7 @@
     enable = true;
     enableFishIntegration = true;
     defaultCommand = "fd --type f --hidden --follow --exclude .git";
-    fileWidgetCommand = "fd --type f --hidden --follow --exclude .git"; # For CTRL-T
+    fileWidget.command = "fd --type f --hidden --follow --exclude .git"; # For CTRL-T
 
     ## Theme
     # defaultOptions = [
