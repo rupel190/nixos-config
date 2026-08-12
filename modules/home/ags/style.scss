@@ -23,7 +23,7 @@ window.Bar {
   // Geist Sans for labels; Pango falls back per glyph to the Nerd Font for the
   // icons Geist lacks. Both come from gtk.nix; "Geist Mono" is the unpatched
   // degradation path, so a missing package loses icons rather than the typeface.
-  font-family: "Geist", "GeistMono Nerd Font Mono", "Geist Mono", monospace;
+  font-family: "Geist", "MonaspiceXe Nerd Font Mono", "Geist Mono", monospace;
   // Tabular digits: proportional ones reflow the centerbox on minute rollover.
   font-feature-settings: "tnum" 1;
   font-size: 13px;

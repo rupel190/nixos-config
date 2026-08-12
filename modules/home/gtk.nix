@@ -5,13 +5,13 @@
     # <prefer> prepends, so DejaVu/Noto stay behind for scripts Geist lacks
     defaultFonts = {
       sansSerif = [ "Geist" ];
-      monospace = [ "GeistMono Nerd Font Mono" ];
+      monospace = [ "MonaspiceXe Nerd Font Mono" ];
     };
   };
 
   home.packages = with pkgs; [
     geist-font
-    nerd-fonts.geist-mono
+    nerd-fonts.monaspace
   ];
 
   gtk = {

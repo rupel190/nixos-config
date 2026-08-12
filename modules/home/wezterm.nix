@@ -67,9 +67,29 @@
          end)
 
 
-         -- Font: pairs with the Geist Sans UI font; unset = wezterm's built-in
-         -- JetBrains Mono. The Nerd Font patch carries the fastfetch/tabline glyphs.
-         config.font = wezterm.font("GeistMono Nerd Font Mono")
+         -- Font: Monaspace Xenon, the slab-serif cut. The Nerd Font patch carries
+         -- the fastfetch/tabline glyphs.
+         -- Light, not Regular: light-on-dark blooms, worst on the OLED
+         config.font = wezterm.font("MonaspiceXe Nerd Font Mono", { weight = "Light" })
+
+         -- Xenon's slabs crowd the rows when set solid; 1.2 gives them air
+         config.line_height = 1.2
+
+         -- Monaspace gates ligatures behind stylistic sets, not liga, so wezterm's
+         -- default feature list renders none. Setting this replaces the default,
+         -- hence kern/liga/clig.
+         config.harfbuzz_features = {
+           "kern", "liga", "clig", "calt", -- calt = texture healing
+           "ss01", -- equal symbols
+           "ss02", -- comparisons
+           "ss03", -- arrows
+           "ss04", -- html tags
+           "ss06", -- markdown strings
+           "ss09", -- double arrows
+           "ss10", -- other tags
+           -- Skipped: ss05 (F# pipes, unused here), ss07/ss08 (center the colon
+           -- and period globally -- too pervasive for prose)
+         }
 
          -- Window settings
          config.adjust_window_size_when_changing_font_size = false

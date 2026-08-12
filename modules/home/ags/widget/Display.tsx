@@ -14,7 +14,7 @@ import {
 } from "../service/ddc"
 
 // Nerd Font codepoints as escapes rather than literal glyphs, so the source
-// stays readable in an editor without the font. Coverage verified in GeistMono
+// stays readable in an editor without the font. Coverage verified in MonaspiceXe
 // Nerd Font Mono with `fc-list ":charset=f0379"`.
 const ICON_MONITOR = "\u{F0379}" // nf-md-monitor
 
