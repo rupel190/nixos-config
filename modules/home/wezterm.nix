@@ -260,7 +260,11 @@
            claude_markers = ok and markers or {}
          end)
 
-         -- Claude can sit in any pane of the tab, not only the active one
+         -- Claude can sit in any pane of the tab, not only the active one.
+         -- A marker outlives its session when claude dies without firing the clear hook,
+         -- and WEZTERM_PANE is only unique within one mux -- a standalone wezterm numbers
+         -- its panes from 0 again, so markers collide with unrelated panes here. Both
+         -- leave a shell wearing an alert; require the pane to still look like claude.
          local function claude_alert(tab)
            local markers = claude_markers
            if #markers == 0 then return nil end
@@ -269,7 +273,7 @@
            if type(panes) ~= "table" or #panes == 0 then panes = { tab.active_pane } end
            for _, pane in ipairs(panes) do
              local id = pane and pane.pane_id
-             if id then
+             if id and split_status_glyph(pane.title or "") then
                for _, marker in ipairs(markers) do
                  local pane_id, status = marker:match("([^/]+)%.([^.]+)$")
                  if tonumber(pane_id) == id and CLAUDE_ALERTS[status] then
@@ -325,17 +329,20 @@
          -- the FIRST handler registered and takes whatever it returns as final -- nil
          -- included -- so a pre-hook that returns nil doesn't fall through to tabline,
          -- it silently drops you back to wezterm's built-in "index: title" tab bar.
+         --
+         -- Only the inactive slots are ever retinted: colour answers two questions here
+         -- and they must not compete. Fill = where am I (mauve pill), fill = what wants
+         -- me (red/peach) only on tabs I'm not on, icon = which prompt is pending.
          local tab_theme_default
          wezterm.on("format-tab-title", function(tab, _, _, _, hover, _)
            local ok, theme = pcall(tabline.get_theme)
            if ok and type(theme) == "table" and theme.tab then
              tab_theme_default = tab_theme_default or {
-               active = { fg = theme.tab.active.fg, bg = theme.tab.active.bg },
                inactive = { fg = theme.tab.inactive.fg, bg = theme.tab.inactive.bg },
                inactive_hover = { fg = theme.tab.inactive_hover.fg, bg = theme.tab.inactive_hover.bg },
              }
-             local alert = claude_alert(tab)
-             for _, key in ipairs({ "active", "inactive", "inactive_hover" }) do
+             local alert = not tab.is_active and claude_alert(tab) or nil
+             for _, key in ipairs({ "inactive", "inactive_hover" }) do
                local colors = alert or tab_theme_default[key]
                theme.tab[key].fg = colors.fg
                theme.tab[key].bg = colors.bg
@@ -347,6 +354,17 @@
          tabline.setup({
            options = {
              theme = config.color_scheme or "default",
+             -- Stock Catppuccin puts the *brighter* text on inactive tabs and separates
+             -- them from the active one by ~9 L* -- unreadable across a wide bar. Flip
+             -- it: active is a filled mauve pill (also the scheme's own active-tab
+             -- colour, and config.colors.split), idle tabs recede to overlay1.
+             theme_overrides = {
+               tab = {
+                 active = { fg = "#181926", bg = "#c6a0f6" },
+                 inactive = { fg = "#8087a2" },
+                 inactive_hover = { fg = "#cad3f5", bg = "#363a4f" },
+               },
+             },
            },
            sections = {
              tabline_a = { "workspace" },
@@ -359,7 +377,14 @@
              -- so a `tabs = {...}` block is silently ignored and every tab falls back to
              -- the plugin defaults (index + process). That is what happened between
              -- f935941 and now -- the titles below never actually rendered.
-             tab_active = { tab_title },
+             -- A bare table in a section is emitted as a literal format item
+             -- (util.extract_components), so weight is a second, colour-independent
+             -- "you are here" cue; reset it so the trailing separator stays normal.
+             tab_active = {
+               { Attribute = { Intensity = "Bold" } },
+               tab_title,
+               { Attribute = { Intensity = "Normal" } },
+             },
              tab_inactive = {
                tab_title,
                -- Unseen-output cue on backgrounded tabs (e.g. Claude finished / is waiting).
