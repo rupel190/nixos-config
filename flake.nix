@@ -68,6 +68,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # MCP server that shows images in a side WezTerm pane (consumed in
+    # modules/home/claude.nix). Source-only (no flake.nix), so flake = false.
+    # git+ssh (not github:) so fetches go over your SSH key and skip GitHub's
+    # tarball/codeload rate limit (which 429s even when authenticated). Update
+    # with `nix flake update wezterm-image-mcp` after pushing to the repo.
+    wezterm-image-mcp = {
+      url = "git+ssh://git@github.com/rupel190/wezterm-image-mcp";
+      flake = false;
+    };
+
     # Steam Homebrew
     millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
 

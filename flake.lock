@@ -1469,6 +1469,7 @@
         "spicetify-nix": "spicetify-nix",
         "surge": "surge",
         "wezterm": "wezterm",
+        "wezterm-image-mcp": "wezterm-image-mcp",
         "yazi-plugins": "yazi-plugins",
         "zen-browser": "zen-browser"
       }
@@ -1756,6 +1757,22 @@
         "owner": "wez",
         "repo": "wezterm",
         "type": "github"
+      }
+    },
+    "wezterm-image-mcp": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786972518,
+        "narHash": "sha256-M6AANI4+AwbKSrNp+yzAnl3YrjhEJaNPnEEJj4GIrV4=",
+        "ref": "refs/heads/main",
+        "rev": "140b2fec55025e78716448448b24808e56082c3b",
+        "revCount": 1,
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/wezterm-image-mcp"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/wezterm-image-mcp"
       }
     },
     "xdph": {
