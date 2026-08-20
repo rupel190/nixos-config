@@ -134,12 +134,17 @@ async function probeBrightness(bus: number): Promise<boolean> {
   }
 }
 
-async function readBrightness(bus: number) {
+// Returns whether the read landed, so refresh() can tell a stale display list
+// apart from a monitor that merely changed at its OSD.
+async function readBrightness(bus: number): Promise<boolean> {
   try {
     const value = parseContinuous(await ddc(bus, "--terse", "getvcp", BRIGHTNESS))
-    if (value !== null) setBrightness((prev) => ({ ...prev, [bus]: value }))
+    if (value === null) return false
+    setBrightness((prev) => ({ ...prev, [bus]: value }))
+    return true
   } catch (e) {
     console.error(`ddc: brightness read failed on bus ${bus} —`, e)
+    return false
   }
 }
 
@@ -226,7 +231,17 @@ export async function setDisplayProfile(value: number) {
 
 // Wired to a button, never a timer: reconciling costs 0.08–0.4s of serialised
 // I²C per monitor, and an OSD-side change is the only thing it can discover.
+//
+// Escalates to a full re-detect when the list looks wrong. A monitor that was
+// asleep when init() ran is missing from `displays` altogether, and re-reading
+// a list it is not in can never bring it back — which made this button a no-op
+// in exactly the case it exists for.
 export async function refresh() {
-  for (const d of displays.get()) await readBrightness(d.bus)
+  const known = displays.get()
+  let intact = known.length > 0
+  for (const d of known) if (!(await readBrightness(d.bus))) intact = false
+
+  if (!intact) return init()
+
   await readProfile()
 }

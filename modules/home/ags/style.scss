@@ -171,6 +171,11 @@ popover > contents {
   color: $subtext0;
 }
 
+.DisplayPopover .empty {
+  color: $overlay1;
+  font-size: 11px;
+}
+
 // Only the fill colour is overridden; the trough and knob are left to the
 // Catppuccin theme rather than rebuilding GTK4's scale node tree by hand.
 .DisplayPopover scale highlight {

@@ -86,13 +86,27 @@ export default function DisplayIndicator() {
       </box>
       <popover>
         <box class="DisplayPopover" orientation={Gtk.Orientation.VERTICAL} spacing={8}>
-          <label class="heading" label="Gamut" xalign={0} />
-          <GamutToggle />
+          {/* Hidden rather than dead: without the ASUS there is no bus to write
+              0xDC to, and the buttons would silently do nothing. */}
+          <box
+            orientation={Gtk.Orientation.VERTICAL}
+            spacing={8}
+            visible={createComputed(() => gamut() !== undefined)}
+          >
+            <label class="heading" label="Gamut" xalign={0} />
+            <GamutToggle />
+          </box>
 
           <label class="heading" label="Brightness" xalign={0} />
           <For each={displays} id={(d: Display) => d.bus}>
             {(d: Display) => <BrightnessRow {...d} />}
           </For>
+          <label
+            class="empty"
+            label="No monitors responding"
+            xalign={0}
+            visible={createComputed(() => displays().length === 0)}
+          />
 
           {/* DDC/CI has no change notification, so a change made at the monitor's
               own OSD is invisible until something asks. Polling for it would cost
