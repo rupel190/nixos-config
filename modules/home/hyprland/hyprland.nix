@@ -44,10 +44,12 @@ in
   ];
   wayland.windowManager.hyprland = {
     enable = true;
-    # Pin the legacy emitter explicitly. The HM module's default flipped from
-    # "hyprlang" to "lua", but our whole config (settings + layoutmsg binds) is
-    # written in hyprlang syntax, so keep it until we deliberately port to lua.
-    configType = "hyprlang";
+    # Lua, not hyprlang. The hyprlang config parser was deleted upstream in
+    # a9902ea6 (#15539, 2026-07-22) — after the v0.56.0 tag, so it is NOT in any
+    # released 0.56.x, but our flake input tracks main. Hyprland then reads only
+    # hyprland.lua; with none present it silently generates a default and runs
+    # that, which looks like "my config vanished".
+    configType = "lua";
     xwayland = {
       enable = true;
       # hidpi = true;

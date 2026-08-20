@@ -1,455 +1,374 @@
-{ host, ... }:
+{ host, lib, ... }:
 {
   wayland.windowManager.hyprland = {
     settings = {
-      # Main modifier key - must be at top level, not in general block
-      "$mainMod" = "SUPER";
+      # Lua config (Hyprland 0.56+). Section blocks all live under `config`,
+      # which the home-manager module renders as hl.config({ ... }).
+      config = {
+        input = {
+          kb_layout = "us";
+          # kb_layout = "us,de";
 
-      # autostart
-      exec-once = [
-        # "nm-applet &"
-        # "poweralertd &"
-        # "wl-clip-persist --clipboard both &"
-        # "wl-paste --watch cliphist store &"
-        "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
+          numlock_by_default = true;
+          repeat_delay = 240;
+          repeat_rate = 35;
 
-        # No AGS entry here on purpose: the bar runs as a systemd user unit
-        # (programs.ags.systemd.enable in modules/home/ags), bound to
-        # graphical-session.target, so it starts and stops with the compositor.
-        # Reload after editing a widget: systemctl --user restart ags
+          follow_mouse = 1;
 
-        # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
-        # "hyprlock"
-
-        # Set DP-2 (center 240Hz QHD) as the "main" screen: focus it at startup so
-        # ad-hoc app launches land here instead of the leftmost 4K DP-1, which would
-        # otherwise hold startup focus. Apps pinned via windowrule/workspace are
-        # unaffected — this only sets the default focus for unpinned launches.
-        "hyprctl dispatch focusmonitor DP-2"
-        # Auth daemon for GUI apps requesting privilege elevation
-        "vicinae server"
-        "systemctl --user restart hyprpaper"
-        "systemctl --user start hyprpolkitagent"
-        # which to choose?
-        "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        # which to choose?
-        "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
-        "systemctl --user start xdg-desktop-portal-gtk"
-
-        # "hyprsunset" # Blue light & gamma (brightness) filter # Also see for IPC through hyperctl: https://wiki.hypr.land/Hypr-Ecosystem/hyprsunset/#ipc
-#hyprpm reload   # Hypr plugin manager (Mouse cursor etc.)
-        #ianny					# Reminder utility for taking screen breaks
-      ]
-      ++ (
-        if host == "amanita" then
-          [
-            # Application launches for amanita (workspace assignment via windowrulev2)
-            "obsidian"
-            "discord"
-            "zen"
-            "slack"
-            "proton-mail"
-            "keepassxc"
-            # "ticktick"
-            "signal-desktop"
-            "spotify"
-            "wezterm connect unix"
-          ]
-        else
-          [ ]
-      );
-
-      input = {
-        kb_layout = "us";
-        # kb_layout = "us,de";
-        # kb_variant =
-        # kb_model =
-        # kb_options =
-        # kb_rules =
-
-        numlock_by_default = true;
-        repeat_delay = 240;
-        repeat_rate = 35;
-
-        follow_mouse = 1;
-        # follow_mouse = 0; # -> true?
-        # mouse_refocus = 0;
-        # float_switch_override_focus = 0;
-
-        # Desktop input settings (laptop settings are in laptop-only.nix)
-        sensitivity = 1; # -1.0 - 1.0, 0 means no modification
-        accel_profile = "flat"; # Flat for desktop mouse
-        scroll_factor = 1.0;
-        natural_scroll = false;
-      };
-
-      general = {
-        gaps_in = 10;
-        gaps_out = 10;
-        # gaps_out = if host == "cordyceps" then [ 1 1 0 1 ] else [ 5 15 15 15 ];
-
-        border_size = 3;
-        layout = "dwindle";
-
-        # https://wiki.hyprland.org/Configuring/Variables/#variable-types for info about colors
-        # Catppuccin yellow active border — matches the glow + shadow accent.
-        # Previous Macchiato Red (#ed8796) -> Pink (#f5bde6) gradient:
-        # "col.active_border" = "rgba(ed8796ee) rgba(f5bde6ee) 45deg";
-        "col.active_border" = "rgba(f9e2afff)"; # Catppuccin yellow
-        "col.inactive_border" = "rgba(5b6078aa)"; # Catppuccin surface1
-
-        # Set to true enable resizing windows by clicking and dragging on borders and gaps
-        resize_on_border = true;
-
-        # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
-        allow_tearing = true;
-      };
-
-      #TODO: same
-      misc = {
-        force_default_wallpaper = 0; # Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo = true;
-        disable_splash_rendering = true;
-
-        # disable_autoreload = true;
-        # always_follow_on_dnd = true;
-        # layers_hog_keyboard_focus = true;
-        # animate_manual_resizes = false;
-        # enable_swallow = true;
-        # focus_on_activate = true;
-        # new_window_takes_over_fullscreen = 2;
-      };
-
-      dwindle = {
-        # pseudotile option removed in Hyprland 0.55; the `pseudo` dispatcher (mainMod + P) works without a master switch now
-        preserve_split = true;
-
-        # no_gaps_when_only = false;
-        # force_split = 0;
-        # special_scale_factor = 1.0;
-        # split_width_multiplier = 1.0;
-        # use_active_for_splits = true;
-      };
-
-      master = {
-        new_status = "master";
-        mfact = 0.60;
-        # workspace = $layoutopt
-
-        # special_scale_factor = 1;
-        # no_gaps_when_only = false;
-      };
-
-      # Scrolling layout — used on workspaces 7-9 (portrait HDMI-A-2).
-      # https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
-      scrolling = {
-        direction = "down"; # vertical tape; new windows grow downward
-        follow_focus = true; # auto-scroll the focused window into view (default)
-        fullscreen_on_one_column = true; # a lone window still fills the screen
-        # focus_fit_method 1 = fit: the focused column scrolls flush into view, so a
-        # stack reads from the top edge downward.
-        focus_fit_method = 1;
-
-        # On the direction:down tape, column_width / explicit_column_widths are HEIGHT
-        # fractions each window claims (no separate "peek" knob — the peek is leftover
-        # space). explicit_column_widths is the list cycled by meta+,/meta+. (colresize
-        # -conf/+conf); column_width is the size a NEW window spawns at.
-        # Spawn at 0.5 (the 2nd step) so a fresh window is half the screen tall — two
-        # stack to fill the portrait screen, a 3rd peeks below — instead of the cramped
-        # 0.333 (or the old 0.3, which was even smaller than the smallest cycle step).
-        explicit_column_widths = "0.333, 0.5, 0.667, 1.0";
-        column_width = 0.5;
-      };
-
-      decoration = {
-        rounding = 10;
-        rounding_power = 2;
-        # Change transparency of focused and unfocused windows
-        active_opacity = 1.0;
-        inactive_opacity = 1.0;
-        # active_opacity = 0.90;
-        # inactive_opacity = 0.90;
-        # fullscreen_opacity = 1.0;
-
-        blur = {
-          enabled = true;
-          passes = 1;
-          # passes = 2;
-          vibrancy = 0.1696;
-
-          # size = 3;
-          # brightness = 1;
-          # contrast = 1.4;
-          # ignore_opacity = true;
-          # noise = 0;
-          # new_optimizations = true;
-          # xray = true;
+          # Desktop input settings (laptop settings are in laptop-only.nix)
+          sensitivity = 1; # -1.0 - 1.0, 0 means no modification
+          accel_profile = "flat"; # Flat for desktop mouse
+          scroll_factor = 1.0;
+          natural_scroll = false;
         };
 
-        shadow = {
-          enabled = true;
-          range = 5;         # modest; well within the 10px gap
-          render_power = 4;  # fast falloff
-          color = "rgba(f9e2afff)";          # yellow on the active window (2nd focus cue)
-          color_inactive = "rgba(11111baa)"; # Catppuccin crust on inactive windows
-          # offset = "0 2";
-          # ignore_window = true;
+        general = {
+          gaps_in = 10;
+          gaps_out = 10;
+
+          border_size = 3;
+          layout = "dwindle";
+
+          # Catppuccin yellow active border — matches the glow + shadow accent.
+          # Nested table now; the old "col.active_border" flat key was hyprlang.
+          col = {
+            active_border = "rgba(f9e2afff)"; # Catppuccin yellow
+            inactive_border = "rgba(5b6078aa)"; # Catppuccin surface1
+          };
+
+          # Set to true enable resizing windows by clicking and dragging on borders and gaps
+          resize_on_border = true;
+
+          # Please see https://wiki.hyprland.org/Configuring/Tearing/ before you turn this on
+          allow_tearing = true;
         };
 
-        # New in Hyprland 0.55: inner glow on windows (reuses the shadow decoration engine)
-        glow = {
+        misc = {
+          force_default_wallpaper = 0; # Set to 0 or 1 to disable the anime mascot wallpapers
+          disable_hyprland_logo = true;
+          disable_splash_rendering = true;
+        };
+
+        dwindle = {
+          preserve_split = true;
+        };
+
+        master = {
+          new_status = "master";
+          mfact = 0.60;
+        };
+
+        # Scrolling layout — used on workspaces 7-9 (portrait HDMI-A-2).
+        # https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
+        scrolling = {
+          direction = "down"; # vertical tape; new windows grow downward
+          follow_focus = true; # auto-scroll the focused window into view (default)
+          fullscreen_on_one_column = true; # a lone window still fills the screen
+          # focus_fit_method 1 = fit: the focused column scrolls flush into view, so a
+          # stack reads from the top edge downward.
+          focus_fit_method = 1;
+
+          # On the direction:down tape, column_width / explicit_column_widths are HEIGHT
+          # fractions each window claims (no separate "peek" knob — the peek is leftover
+          # space). explicit_column_widths is the list cycled by meta+,/meta+. (colresize
+          # -conf/+conf); column_width is the size a NEW window spawns at.
+          explicit_column_widths = "0.333, 0.5, 0.667, 1.0";
+          column_width = 0.5;
+        };
+
+        decoration = {
+          rounding = 10;
+          rounding_power = 2;
+          active_opacity = 1.0;
+          inactive_opacity = 1.0;
+
+          blur = {
+            enabled = true;
+            passes = 1;
+            vibrancy = 0.1696;
+          };
+
+          shadow = {
+            enabled = true;
+            range = 5; # modest; well within the 10px gap
+            render_power = 4; # fast falloff
+            color = "rgba(f9e2afff)"; # yellow on the active window (2nd focus cue)
+            color_inactive = "rgba(11111baa)"; # Catppuccin crust on inactive windows
+          };
+
+          # Inner glow on windows (reuses the shadow decoration engine)
+          glow = {
+            enabled = true;
+            range = 8; # tight inner rim
+            render_power = 3;
+            color = "rgba(f9e2afff)"; # Catppuccin yellow (active window only)
+            color_inactive = "rgba(f9e2af00)"; # transparent → no glow when unfocused
+          };
+        };
+
+        animations = {
           enabled = true;
-          range = 8;        # tight inner rim
-          render_power = 3;
-          color = "rgba(f9e2afff)";          # Catppuccin yellow (active window only)
-          color_inactive = "rgba(f9e2af00)"; # transparent → no glow when unfocused
+          # Host-specific: workspace wraparound on amanita (multi-monitor desktop)
+          workspace_wraparound = host == "amanita";
+        };
+
+        # Was a raw hyprlang `xwayland { }` block in extraConfig.
+        xwayland = {
+          force_zero_scaling = true;
+        };
+
+        debug = {
+          disable_logs = false;
         };
       };
 
-      animations = {
-        enabled = true;
+      # Animation curves. Was `animations.bezier`; now a top-level hl.curve()
+      # call taking a structured point list instead of a comma string.
+      curve = [
+        {
+          _args = [
+            "easeOutQuint"
+            {
+              type = "bezier";
+              points = [
+                [ 0.23 1 ]
+                [ 0.32 1 ]
+              ];
+            }
+          ];
+        }
+        {
+          _args = [
+            "easeInOutCubic"
+            {
+              type = "bezier";
+              points = [
+                [ 0.65 0.05 ]
+                [ 0.36 1 ]
+              ];
+            }
+          ];
+        }
+        {
+          _args = [
+            "linear"
+            {
+              type = "bezier";
+              points = [
+                [ 0 0 ]
+                [ 1 1 ]
+              ];
+            }
+          ];
+        }
+        {
+          _args = [
+            "almostLinear"
+            {
+              type = "bezier";
+              points = [
+                [ 0.5 0.5 ]
+                [ 0.75 1.0 ]
+              ];
+            }
+          ];
+        }
+        {
+          _args = [
+            "quick"
+            {
+              type = "bezier";
+              points = [
+                [ 0.15 0 ]
+                [ 0.1 1 ]
+              ];
+            }
+          ];
+        }
+      ];
 
-        # hyprfocus plugin
-        # animation = hyprfocusIn, 1, 0.8, default
-        # animation = hyprfocusOut, 1, 2.7, default
+      # Was `animations.animation` comma strings; now one table per leaf.
+      animation = [
+        { leaf = "global"; enabled = true; speed = 10; bezier = "default"; }
+        { leaf = "border"; enabled = true; speed = 5.39; bezier = "easeOutQuint"; }
+        { leaf = "windows"; enabled = true; speed = 4.79; bezier = "easeOutQuint"; }
+        { leaf = "windowsIn"; enabled = true; speed = 4.1; bezier = "easeOutQuint"; style = "popin 87%"; }
+        { leaf = "windowsOut"; enabled = true; speed = 1.49; bezier = "linear"; style = "popin 87%"; }
+        { leaf = "fadeIn"; enabled = true; speed = 1.73; bezier = "almostLinear"; }
+        { leaf = "fadeOut"; enabled = true; speed = 1.46; bezier = "almostLinear"; }
+        { leaf = "fade"; enabled = true; speed = 3.03; bezier = "quick"; }
+        { leaf = "layers"; enabled = true; speed = 3.81; bezier = "easeOutQuint"; }
+        { leaf = "layersIn"; enabled = true; speed = 4; bezier = "easeOutQuint"; style = "fade"; }
+        { leaf = "layersOut"; enabled = true; speed = 1.5; bezier = "linear"; style = "fade"; }
+        { leaf = "fadeLayersIn"; enabled = true; speed = 1.79; bezier = "almostLinear"; }
+        { leaf = "fadeLayersOut"; enabled = true; speed = 1.39; bezier = "almostLinear"; }
+        { leaf = "workspaces"; enabled = true; speed = 1.94; bezier = "almostLinear"; style = "fade"; }
+        { leaf = "workspacesIn"; enabled = true; speed = 1.21; bezier = "almostLinear"; style = "fade"; }
+        { leaf = "workspacesOut"; enabled = true; speed = 1.94; bezier = "almostLinear"; style = "fade"; }
+      ];
 
-        # Default animations, see https://wiki.hyprland.org/Configuring/Animations/ for more
+      # autostart — was `exec-once`.
+      #
+      # MUST be an hl.on("hyprland.start") hook, NOT a top-level hl.exec_cmd():
+      # the Lua config is executed during config *parsing*, which happens before
+      # the Wayland backend exists — every [executor] line lands ~40 log lines
+      # before "Creating an Aquamarine backend!", so GUI apps find no Wayland
+      # socket and die instantly. The hook also restores exec-once semantics;
+      # a top-level exec re-fires on every `hyprctl reload`.
+      on =
+        let
+        autostart = [
+          "hyprctl setcursor catppuccin-macchiato-teal-cursors 24 &"
 
-        # Host-specific: enable workspace wraparound on amanita (desktop with multiple monitors)
-        workspace_wraparound = host == "amanita";
+          # No AGS entry here on purpose: the bar runs as a systemd user unit
+          # (programs.ags.systemd.enable in modules/home/ags), bound to
+          # graphical-session.target, so it starts and stops with the compositor.
+          # Reload after editing a widget: systemctl --user restart ags
 
-        bezier = [
-          "easeOutQuint,0.23,1,0.32,1"
-          "easeInOutCubic,0.65,0.05,0.36,1"
-          "linear,0,0,1,1"
-          "almostLinear,0.5,0.5,0.75,1.0"
-          "quick,0.15,0,0.1,1"
-        ];
-        # maybe add later
-        # "fade_curve, 0, 0.55, 0.45, 1"
-        # "fluent_decel, 0, 0.2, 0.4, 1"
+          # NOTE: Don't start hyprlock on boot! hypridle will lock when needed
 
-        # name, enable, speed, curve, style
-        animation = [
-          "global, 1, 10, default"
-          "border, 1, 5.39, easeOutQuint"
-          "windows, 1, 4.79, easeOutQuint"
-          "windowsIn, 1, 4.1, easeOutQuint, popin 87%"
-          "windowsOut, 1, 1.49, linear, popin 87%"
-          "fadeIn, 1, 1.73, almostLinear"
-          "fadeOut, 1, 1.46, almostLinear"
-          "fade, 1, 3.03, quick"
-          "layers, 1, 3.81, easeOutQuint"
-          "layersIn, 1, 4, easeOutQuint, fade"
-          "layersOut, 1, 1.5, linear, fade"
-          "fadeLayersIn, 1, 1.79, almostLinear"
-          "fadeLayersOut, 1, 1.39, almostLinear"
-          "workspaces, 1, 1.94, almostLinear, fade"
-          "workspacesIn, 1, 1.21, almostLinear, fade"
-          "workspacesOut, 1, 1.94, almostLinear, fade"
-        ];
-
-        #
-        # animation = [
-        #
-        #   # Windows
-        #   "windowsIn,   0, 4, easeOutCubic,  popin 20%" # window open
-        #   "windowsOut,  0, 4, fluent_decel,  popin 80%" # window close.
-        #   "windowsMove, 1, 2, fluent_decel, slide" # everything in between, moving, dragging, resizing.
-        #
-        #   # Fade
-        #   "fadeIn,      1, 3,   fade_curve" # fade in (open) -> layers and windows
-        #   "fadeOut,     1, 3,   fade_curve" # fade out (close) -> layers and windows
-        #   "fadeSwitch,  0, 1,   easeOutCirc" # fade on changing activewindow and its opacity
-        #   "fadeShadow,  1, 10,  easeOutCirc" # fade on changing activewindow for shadows
-        #   "fadeDim,     1, 4,   fluent_decel" # the easing of the dimming of inactive windows
-        #   # "border,      1, 2.7, easeOutCirc"  # for animating the border's color switch speed
-        #   # "borderangle, 1, 30,  fluent_decel, once" # for animating the border's gradient angle - styles: once (default), loop
-        #   "workspaces,  1, 4,   easeOutCubic, fade" # styles: slide, slidevert, fade, slidefade, slidefadevert
-        # ];
-      };
+          # Set DP-2 (center 240Hz QHD) as the "main" screen: focus it at startup so
+          # ad-hoc app launches land here instead of the leftmost 4K DP-1, which would
+          # otherwise hold startup focus.
+          "hyprctl dispatch focusmonitor DP-2"
+          # Auth daemon for GUI apps requesting privilege elevation
+          "vicinae server"
+          "systemctl --user restart hyprpaper"
+          "systemctl --user start hyprpolkitagent"
+          "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+          "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+          "dbus-update-activation-environment --all --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+          "systemctl --user start xdg-desktop-portal-gtk"
+        ]
+        ++ (
+          if host == "amanita" then
+            [
+              # Application launches for amanita (workspace assignment via window_rule)
+              "obsidian"
+              "discord"
+              "zen"
+              "steam"
+              "proton-mail"
+              "keepassxc"
+              "signal-desktop"
+              "spotify"
+              "wezterm connect unix"
+            ]
+          else
+            [ ]
+        );
+        in
+        {
+          _args = [
+            "hyprland.start"
+            (lib.generators.mkLuaInline ''
+              function()
+              ${lib.concatMapStrings (c: "  hl.exec_cmd(${builtins.toJSON c})\n") autostart}end
+            '')
+          ];
+        };
 
       # Frost whatever sits behind the AGS bar. The namespace is set on the
       # Astal window in modules/home/ags/widget/Bar.tsx and is shared by all
       # three bars, so one rule covers every monitor.
       #
-      # Syntax note: 0.55 rejects the `layerrule = blur, ags-bar` form that every
-      # older guide shows — effects need an explicit value and matchers need the
-      # `match:` prefix, same as the windowrule list below. The bare form fails
-      # with "invalid field blur: missing a value".
-      #
-      # ignore_alpha (underscore — `ignorealpha` is rejected as an invalid field)
-      # keeps the blur from bleeding through the fully transparent part of the
-      # layer surface; the bar paints its own translucent background in
-      # style.scss and only that should be frosted.
-      layerrule = [
-        "blur on, match:namespace ^(ags-bar)$"
-        "ignore_alpha 0.3, match:namespace ^(ags-bar)$"
+      # ignore_alpha keeps the blur from bleeding through the fully transparent
+      # part of the layer surface; the bar paints its own translucent background
+      # in style.scss and only that should be frosted.
+      layer_rule = [
+        {
+          match.namespace = "^ags-bar$";
+          blur = true;
+        }
+        {
+          match.namespace = "^ags-bar$";
+          ignore_alpha = 0.3;
+        }
       ];
 
-      windowrule = [
+      window_rule = [
         # See https://wiki.hypr.land/Configuring/Window-Rules/
 
         # Prevent invisible XWayland helper windows (Steam, Wine/Proton) from stealing focus on spawn.
         # Symptom without this: clicks don't register in CS2 / sticky keys.
         # Use no_initial_focus (not no_focus): no_focus breaks interactive popups (color pickers,
         # dialogs) that share this same empty-class/title pattern — they'd float but be unclickable.
-        # CS2 focus is further hardened by stay_focused below.
-        "no_initial_focus on, match:class ^()$, match:title ^()$, match:xwayland true"
+        {
+          match = { class = "^$"; title = "^$"; xwayland = true; };
+          no_initial_focus = true;
+        }
 
-        # Keep CS2 focused — prevent any window from stealing focus away from the game
-        "stay_focused on, match:class ^(cs2)$"
-
-        # Ignore maximize requests from apps. TODO: Good idea?
-        # "suppressevent maximize on, match:class .*"
-
-        # CS2: enable tearing for lower input latency, https://wiki.hypr.land/Configuring/Tearing/#enabling-tearing
-        "immediate on, match:class ^(cs2)$"
-        # "float on, match:class ^(Viewnior)$"
-        # "float on, match:class ^(imv)$"
-        # "float on, match:class ^(mpv)$"
-        # "tile on, match:class ^(Aseprite)$"
-        # "float on, match:class ^(audacious)$"
-        # "tile on, match:class ^(neovide)$"
-        # "idleinhibit focus on, match:class ^(mpv)$" # removed: not a valid field in Hyprland config v2; mpv inhibits idle natively via Wayland protocol
-        # "float on, match:class ^(udiskie)$"
-        # "float on, match:title ^(Transmission)$"
-        # "float on, match:title ^(Volume Control)$"
-        # "float on, match:title ^(Firefox — Sharing Indicator)$"
-        # "move 0 0 on, match:title ^(Firefox — Sharing Indicator)$"
-        # "size 700 450 on, match:title ^(Volume Control)$"
-        # "move 40 55% on, match:title ^(Volume Control)$"
+        # CS2: enable tearing for lower input latency
+        {
+          match.class = "^cs2$";
+          immediate = true;
+        }
 
         # Wine/Proton popups (color pickers, dialogs) under XWayland have empty class and title.
         # Without this, Hyprland tiles them at 0,0 behind the main window while they hold focus,
         # causing the "invisible popup / UI unresponsive" symptom seen in Plasticity.
-        "float on, match:class ^()$, match:title ^()$, match:xwayland true"
-        # Plasticity material popup (XWayland child window, empty title)
-        "float on, match:class ^(steam_app_0)$, match:title ^()$"
-        "no_initial_focus on, match:class ^(steam_app_0)$, match:title ^()$"
-        "no_follow_mouse on, match:class ^(steam_app_0)$, match:title ^()$"
+        {
+          match = { class = "^$"; title = "^$"; xwayland = true; };
+          float = true;
+        }
 
-        #
+        # Plasticity material popup (XWayland child window, empty title)
+        {
+          match = { class = "^steam_app_0$"; title = "^$"; };
+          float = true;
+        }
+        {
+          match = { class = "^steam_app_0$"; title = "^$"; };
+          no_initial_focus = true;
+        }
+        {
+          match = { class = "^steam_app_0$"; title = "^$"; };
+          no_follow_mouse = true;
+        }
+
         # Workspace assignments for amanita
         # DP-1 (left 4K monitor): Workspaces 1-3
-        "match:class ^(obsidian)$, workspace 1 silent"
-        "match:class ^(discord)$, workspace 2 silent"
+        { match.class = "^(md\\.)?[Oo]bsidian$"; workspace = "1 silent"; }
+        { match.class = "^discord$"; workspace = "2 silent"; }
 
         # DP-2 (center 240Hz monitor): Workspaces 4-6
-        "match:class ^(zen)$, workspace 4"
+        { match.class = "^zen$"; workspace = "4"; }
 
         # HDMI-A-2 (right vertical monitor): Workspaces 7-9
-        "match:class ^(Slack)$, workspace 7 silent"
-        "match:class ^(proton-mail)$, workspace 7 silent"
-        "match:class ^(org.keepassxc.KeePassXC)$, workspace 7 silent"
-        "match:class ^(signal)$, workspace 8 silent"
-        "match:class ^(spotify)$, workspace 9 silent"
-        "match:class ^(org.wezfurlong.wezterm)$, match:title ^(pulsemixer)$, workspace 9 silent"
+        { match.class = "^Slack$"; workspace = "7 silent"; }
+        { match.class = "^proton-mail$"; workspace = "7 silent"; }
+        { match.class = "^(org\\.keepassxc\\.)?KeePassXC$"; workspace = "7 silent"; }
+        { match.class = "^signal$"; workspace = "8 silent"; }
+        # Steam client (not games — those match ^steam_app_ below and go to DP-2)
+        { match.class = "^steam$"; workspace = "8 silent"; }
+        { match.class = "^[Ss]potify$"; workspace = "9 silent"; }
+        {
+          match = { class = "^org.wezfurlong.wezterm$"; title = "^pulsemixer$"; };
+          workspace = "9 silent";
+        }
 
         # Disable resize animation for wezterm only. Hyprland's window-resize animation
         # emits a configure event per frame; TUIs (claude, btop) repaint the whole screen
         # each frame through the mux round-trip and fall behind, causing oscillation and
         # leftover gaps while resizing. no_anim collapses the resize to a single event.
-        "no_anim on, match:class ^(org.wezfurlong.wezterm)$"
+        {
+          match.class = "^org.wezfurlong.wezterm$";
+          no_anim = true;
+        }
 
         # Force all games to DP-2 (main 240Hz monitor)
         # Steam games: class is steam_app_APPID (e.g. steam_app_730 for CS2)
-        "monitor DP-2, match:class ^steam_app_"
+        {
+          match.class = "^steam_app_";
+          monitor = "DP-2";
+        }
 
         # Gamescope-wrapped games
-        "monitor DP-2, match:class ^gamescope"
-
-        # "match:title ^(.*Unity.*)$, monitor DP-2"
-        # "match:title ^(.*Unreal.*)$, monitor DP-2"
-
-        # Enable tearing for better FPS in games
-        # "match:class ^(steam_app_).*, immediate on"
-        # "match:class ^(gamescope).*, immediate on"
-
-        # Disable blur and animations for games (performance)
-        # "match:class ^(steam_app_).*, noblur on"
-        # "match:class ^(gamescope).*, noblur on"
-        # "match:class ^(steam_app_).*, noshadow on"
-
-        # Prevent idle when gaming
-        # "match:class ^(steam_app_).*, idleinhibit focus"
-        # "match:class ^(gamescope).*, idleinhibit focus"
-
-        # Specific game rules (add your games here)
-        # Example: "match:title ^(Abiotic Factor).*, monitor DP-2"
+        {
+          match.class = "^gamescope";
+          monitor = "DP-2";
+        }
       ];
-      #
-      # windowrulev2 = [
-      #
-      #   # "float, title:^(Picture-in-Picture)$"
-      #   # "opacity 1.0 override 1.0 override, title:^(Picture-in-Picture)$"
-      #   # "pin, title:^(Picture-in-Picture)$"
-      #   # "opacity 1.0 override 1.0 override, title:^(.*imv.*)$"
-      #   # "opacity 1.0 override 1.0 override, title:^(.*mpv.*)$"
-      #   # "opacity 1.0 override 1.0 override, class:(Aseprite)"
-      #   # "opacity 1.0 override 1.0 override, class:(Unity)"
-      #   # "opacity 1.0 override 1.0 override, class:(zen)"
-      #   # "opacity 1.0 override 1.0 override, class:(evince)"
-      #   # "idleinhibit focus, class:^(mpv)$"
-      #   # "idleinhibit fullscreen, class:^(firefox)$"
-      #   # "float,class:^(org.gnome.Calculator)$"
-      #   # "float,class:^(waypaper)$"
-      #   # "float,class:^(zenity)$"
-      #   # "float,class:^(SoundWireServer)$"
-      #   # "float,class:^(.sameboy-wrapped)$"
-      #   # "float,class:^(file_progress)$"
-      #   # "float,class:^(confirm)$"
-      #   # "float,class:^(dialog)$"
-      #   # "float,class:^(download)$"
-      #   # "float,class:^(notification)$"
-      #   # "float,class:^(error)$"
-      #   # "float,class:^(confirmreset)$"
-      #   # "float,title:^(Open File)$"
-      #   # "float,title:^(File Upload)$"
-      #   # "float,title:^(branchdialog)$"
-      #   # "float,title:^(Confirm to replace files)$"
-      #   # "float,title:^(File Operation Progress)$"
-      #   #
-      #   # "opacity 0.0 override,class:^(xwaylandvideobridge)$"
-      #   # "noanim,class:^(xwaylandvideobridge)$"
-      #   # "noinitialfocus,class:^(xwaylandvideobridge)$"
-      #   # "maxsize 1 1,class:^(xwaylandvideobridge)$"
-      #   # "noblur,class:^(xwaylandvideobridge)$"
-      #   #
-      #   # No gaps when only
-      #   # "bordersize 0, floating:0, onworkspace:w[t1]"
-      #   # "rounding 0, floating:0, onworkspace:w[t1]"
-      #   # "bordersize 0, floating:0, onworkspace:w[tg1]"
-      #   # "rounding 0, floating:0, onworkspace:w[tg1]"
-      #   # "bordersize 0, floating:0, onworkspace:f[1]"
-      #   # "rounding 0, floating:0, onworkspace:f[1]"
-      #   #
-      #   # "maxsize 1111 700, floating: 1"
-      #   # "center, floating: 1"
-      #
-      #   # Remove context menu transparency in chromium based apps
-      #   # "opaque,class:^()$,title:^()$"
-      #   # "noshadow,class:^()$,title:^()$"
-      #   # "noblur,class:^()$,title:^()$"
-      # ];
-      #
-      # No gaps when only
-      # workspace = [
-      #   "w[t1], gapsout:0, gapsin:0"
-      #   "w[tg1], gapsout:0, gapsin:0"
-      #   "f[1], gapsout:0, gapsin:0"
-      # ];
-
-      debug = {
-        disable_logs = false;
-      };
     };
-
-    extraConfig = "
-      xwayland {
-        force_zero_scaling = true
-      }
-    ";
   };
 }
