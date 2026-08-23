@@ -155,6 +155,12 @@
             url = "*.stp";
             use = "plasticity";
           }
+          # Only the native format opens from argv; .step/.stp just launch the app
+          # (Plasticity ignores STEP paths on the command line — import in-app).
+          {
+            url = "*.plasticity";
+            use = "plasticity";
+          }
           {
             mime = "image/*";
             use = "image";
