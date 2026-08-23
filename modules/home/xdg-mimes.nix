@@ -79,7 +79,7 @@ let
     # ];
     discord = [ "x-scheme-handler/discord" ];
     bambustudio = [ "x-scheme-handler/bambustudio" "model/3mf" "application/vnd.ms-3mfdocument" "model/stl" ];
-    plasticity = [ "model/step" "application/x-step" ];
+    plasticity = [ "application/x-plasticity" "model/step" "application/x-step" ];
   };
 
   associations =
@@ -104,6 +104,21 @@ in
         <glob pattern="*.stp"/>
         <magic priority="50">
           <match type="string" offset="0" value="ISO-10303-21;"/>
+        </magic>
+      </mime-type>
+    </mime-info>
+  '';
+
+  # Plasticity's native format — no registered type, so .plasticity files are
+  # detected as application/octet-stream. Magic matches the literal header.
+  xdg.dataFile."mime/packages/plasticity.xml".text = ''
+    <?xml version="1.0" encoding="UTF-8"?>
+    <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+      <mime-type type="application/x-plasticity">
+        <comment>Plasticity 3D model</comment>
+        <glob pattern="*.plasticity"/>
+        <magic priority="50">
+          <match type="string" offset="0" value="plasticity"/>
         </magic>
       </mime-type>
     </mime-info>
