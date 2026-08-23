@@ -9,7 +9,7 @@
       mgr.prepend_keymap = [
         {
           on = [ "<C-n>" ];
-          run = ''shell 'ripdrag "$@" -x 2>/dev/null &' --confirm'';
+          run = "shell 'ripdrag %s -x 2>/dev/null &'";
           desc = "Drag & Drop with ripdrag";
         }
         # Swap tab/space
@@ -34,7 +34,8 @@
         }
         {
           on = [ "Z" ];
-          run = ''shell 'ya pub dds-cd --str "$(fd -td | fzf)"' --confirm'';
+          # --block hands fzf the tty; non-blocking children get setsid()'d, so /dev/tty is gone
+          run = "shell --block 'd=\"$(fd -td | fzf)\" && ya emit cd \"$d\"'";
           desc = "Jump to directory with fzf";
         }
       ];
@@ -75,42 +76,42 @@
       opener = {
         image = [
           {
-            run = ''imv "$@"'';
+            run = ''imv %s'';
             orphan = true;
             desc = "Open in imv";
           }
         ];
         video = [
           {
-            run = ''mpv "$@"'';
+            run = ''mpv %s'';
             orphan = true;
             desc = "Play in mpv";
           }
         ];
         audio = [
           {
-            run = ''mpv "$@"'';
+            run = ''mpv %s'';
             orphan = true;
             desc = "Play in mpv";
           }
         ];
         pdf = [
           {
-            run = ''evince "$@"'';
+            run = ''evince %s'';
             orphan = true;
             desc = "Open in Evince";
           }
         ];
         browser = [
           {
-            run = ''zen "$@"'';
+            run = ''zen %s'';
             orphan = true;
             desc = "Open in Zen";
           }
         ];
         edit = [
           {
-            run = ''$EDITOR "$@"'';
+            run = ''$EDITOR %s'';
             block = true;
             desc = "Edit in $EDITOR";
           }
@@ -121,14 +122,14 @@
             # env PATH=/usr/bin:...: glycin loader sub-sandbox needs /usr/bin on PATH for `prlimit`
             #   (NixOS has none) or the GNOME 50 runtime GTK "Bail out!"s on the first SVG icon.
             #   Full writeup in modules/home/xdg-mimes.nix.
-            run = ''env PATH=/usr/bin:/run/current-system/sw/bin flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 com.bambulab.BambuStudio "$@"'';
+            run = ''env PATH=/usr/bin:/run/current-system/sw/bin flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 com.bambulab.BambuStudio %s'';
             orphan = true;
             desc = "Open in Bambu Studio";
           }
         ];
         plasticity = [
           {
-            run = ''plasticity "$@"'';
+            run = ''plasticity %s'';
             orphan = true;
             desc = "Open in Plasticity";
           }
