@@ -2,13 +2,13 @@
 let
   plasticity-unwrapped = inputs.plasticityAppImage.packages.${pkgs.stdenv.hostPlatform.system}.plasticity;
 
-  # gfx1201 (RX 9070 XT) workaround: Chromium's default ANGLE path mistypes WebGL
-  # vertex attributes on this GPU's non-conformant RADV Vulkan, so every draw is
-  # rejected and the viewport renders nothing ("won't load projects"). Forcing
-  # native desktop GL (radeonsi 4.6, which is conformant) bypasses ANGLE and
-  # restores GPU-accelerated rendering. Both the launcher (.desktop Exec=plasticity)
-  # and the yazi opener call `plasticity` from PATH, so wrapping the binary covers
-  # every launch path. Drop once Mesa fixes RADV/ANGLE on gfx1201.
+  # Upstream's AppRun is `exec "$PWD/usr/bin/plasticity"` with no "$@", so the
+  # AppImage silently discards every argument — flags never reach Electron, and
+  # neither does a file path from yazi or xdg-open. A `--use-gl=desktop` wrapper
+  # lived here as the gfx1201 blank-viewport fix; it was inert for that reason,
+  # and Chrome 116 (Electron 26) rejects the value anyway, so actually delivering
+  # it would drop us to software rendering. Blank viewport = stale ANGLE program
+  # binaries: clear ~/.config/Plasticity/{GPUCache,DawnCache}.
   # The upstream AppImage package ships plasticity.desktop (Icon=plasticity) but
   # never installs the icon: its install step does
   #   find $out/share/plasticity -name plasticity.png | xargs install ...
@@ -24,11 +24,9 @@ let
   };
 
   plasticity = pkgs.symlinkJoin {
-    name = "plasticity-gldesktop";
+    name = "plasticity-with-icon";
     paths = [ plasticity-unwrapped ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
-      wrapProgram $out/bin/plasticity --add-flags "--use-gl=desktop"
       install -Dm444 ${appDir}/plasticity.png \
         $out/share/icons/hicolor/256x256/apps/plasticity.png
     '';
