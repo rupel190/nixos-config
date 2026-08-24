@@ -21,9 +21,6 @@ in
     # GENERAL
     general {
       hide_cursor = true
-      no_fade_in = false
-      grace = 0
-      disable_loading_bar = false
       ignore_empty_input = true
       fractional_scaling = 0
     }
@@ -31,7 +28,7 @@ in
     # Time
     label {
       monitor = 
-      text = cmd[update:1000] echo "$(date +"%k:%M")"
+      text = cmd[update:10000] echo "$(date +"%k:%M")"
       color = rgba(235, 219, 178, .9)
       font_size = 115
       font_family = MonaspiceXe Nerd Font Mono Bold
@@ -44,7 +41,7 @@ in
     # Day
     label {
       monitor =
-      text = cmd[update:1000] echo "- $(date +"%A, %B %d") -"
+      text = cmd[update:60000] echo "- $(date +"%A, %B %d") -"
       color = rgba(235, 219, 178, .9)
       font_size = 18
       font_family = MonaspiceXe Nerd Font Mono
@@ -93,9 +90,7 @@ in
       dots_center = true
       outer_color = rgba(102, 92, 84, .33)
       inner_color = rgba(102, 92, 84, .33)
-      color = rgba(235, 219, 178, .9)
       font_color = rgba(235, 219, 178, .9)
-      font_size = 14
       font_family = MonaspiceXe Nerd Font Mono Bold
       fade_on_empty = false
       placeholder_text = <i><span foreground="##fbf1c7">Enter Password</span></i>
