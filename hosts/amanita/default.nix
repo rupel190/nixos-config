@@ -29,6 +29,9 @@
   hardware.openrazer.enable = true;
   hardware.openrazer.users = [ "rupel" ];
 
+  # Gaming mice onboard config: DPI/polling/buttons (piper GUI, ratbagctl CLI)
+  services.ratbagd.enable = true;
+
   # Logitech G29 wheel (oversteer) + Wooting keyboard hidraw access.
   # Must be packages, not extraRules: extraRules lands in 99-local.rules, but
   # systemd's 73-seat-late.rules is what turns TAG+="uaccess" into an ACL —

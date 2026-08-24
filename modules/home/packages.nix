@@ -10,6 +10,7 @@
       obs-studio # streaming
       oversteer # racing wheel
       wootility # Wooting keyboard configuration
+      piper # gaming mouse onboard config (needs services.ratbagd)
       songrec # shazam-like music recognition
       digikam # photo organizer
       bitwig-studio # audio daw
