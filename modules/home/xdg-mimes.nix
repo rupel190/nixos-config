@@ -15,6 +15,7 @@ let
     discord = [ "discord.desktop" ];
     bambustudio = [ "bambu-studio.desktop" ];
     plasticity = [ "plasticity.desktop" ];
+    qbz = [ "qbz.desktop" ];
   };
 
   mimeMap = {
@@ -80,6 +81,7 @@ let
     discord = [ "x-scheme-handler/discord" ];
     bambustudio = [ "x-scheme-handler/bambustudio" "model/3mf" "application/vnd.ms-3mfdocument" "model/stl" ];
     plasticity = [ "application/x-plasticity" "model/step" "application/x-step" ];
+    qbz = [ "x-scheme-handler/qobuzapp" ];
   };
 
   associations =
@@ -188,10 +190,14 @@ in
     genericName = "File Manager";
     icon = "yazi";
     comment = "Terminal file manager in WezTerm";
-    exec = "wezterm start -- yazi %u";
+    # Own app_id, same as the SUPER+E bind: SUPER+T scans for the bare wezterm
+    # class to find the mux client, and must not land on a yazi window.
+    exec = "wezterm start --class org.wezfurlong.wezterm.yazi -- yazi %u";
     terminal = false;
     type = "Application";
     categories = [ "Utility" "Core" "System" "FileTools" "FileManager" ];
     mimeType = [ "inode/directory" "x-scheme-handler/file" ];
+    # Keeps the icon association working now that the app_id isn't the default.
+    settings.StartupWMClass = "org.wezfurlong.wezterm.yazi";
   };
 }

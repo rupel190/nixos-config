@@ -1,8 +1,11 @@
-{ lib, ... }:
+{ lib, host, ... }:
 let
   inherit (lib.generators) mkLuaInline;
 
   mod = "SUPER";
+  # Deep-system actions (inhibit / lock / blank) share CTRL+SUPER+ALT so they are
+  # awkward enough to never fire by accident. Nothing else uses that modmask.
+  sysMod = "CTRL + ${mod} + ALT";
 
   # Lua config (Hyprland 0.56+): a bind is hl.bind(key, dispatcher, flags?).
   # The dispatcher is a real Lua call, not the old "exec, foo" comma string, so
@@ -26,7 +29,13 @@ let
   moveDir = d: dsp ''hl.dsp.window.move({ direction = "${d}" })'';
   toWorkspace = ws: dsp ''hl.dsp.focus({ workspace = "${ws}" })'';
   moveToWorkspace = ws: dsp ''hl.dsp.window.move({ workspace = "${ws}" })'';
-  layoutmsg = msg: dsp ''hl.dsp.layout("${msg}")'';
+  # layoutmsg is layout-scoped and the Lua API now toasts a runtime error when the
+  # active layout doesn't know the message, so gate every one by layout name.
+  layoutmsgIn = layout: msg: dsp ''
+    function()
+      local ws = hl.get_active_workspace()
+      if ws and ws.tiled_layout == "${layout}" then hl.dispatch(hl.dsp.layout("${msg}")) end
+    end'';
   resizeActive =
     x: y: dsp "hl.dsp.window.resize({ x = ${toString x}, y = ${toString y}, relative = true })";
 
@@ -38,14 +47,35 @@ in
       bind = [
         # Apps
         (bind "${mod} + F5" (exec "hyprctl reload"))
-        (bind "${mod} + T" (exec "wezterm connect unix"))
+        # Reattach to the mux. A second `connect unix` client would just mirror the
+        # one mux window, so focus the existing terminal instead of spawning another.
+        (bind "${mod} + T" (dsp ''
+          function()
+            local ws = hl.get_windows()
+            for i = 1, #ws do
+              if ws[i].class == "org.wezfurlong.wezterm" then
+                hl.dispatch(hl.dsp.focus({ window = ws[i] }))
+                return
+              end
+            end
+            hl.dispatch(hl.dsp.exec_cmd("wezterm connect unix"))
+          end''))
+        # Throwaway terminal. Not `connect unix`: a second client attaches to the
+        # same workspace and mirrors, and a unique --workspace leaks a shell that
+        # outlives the window in the mux server. Own process = closes for good.
+        # Distinct app_id so the SUPER+T reattach never grabs a scratch window.
+        (bind "${mod} + W" (
+          exec "wezterm start --always-new-process --class org.wezfurlong.wezterm.scratch"
+        ))
         (bind "${mod} + RETURN" (exec "vicinae toggle"))
         (bind "${mod} + R" (exec "vicinae toggle"))
-        (bind "${mod} + E" (exec "wezterm start --always-new-process yazi"))
+        (bind "${mod} + E" (
+          exec "wezterm start --always-new-process --class org.wezfurlong.wezterm.yazi yazi"
+        ))
         (bind "${mod} + C" (dsp "hl.dsp.window.close()"))
         (bind "${mod} + F" (dsp ''hl.dsp.window.float({ action = "toggle" })''))
         (bind "${mod} + P" (dsp "hl.dsp.window.pseudo()")) # dwindle
-        (bind "${mod} + V" (layoutmsg "togglesplit")) # dwindle
+        (bind "${mod} + V" (layoutmsgIn "dwindle" "togglesplit"))
 
         # Notifications
         (bind "${mod} + N" (exec "swaync-client -t"))
@@ -53,9 +83,23 @@ in
         # Idle inhibit toggle (caffeine) — holds a Wayland idle inhibitor via
         # wlinhibit so hypridle won't blank/lock. Stateless toggle: pkill's exit
         # code IS the state (killed something = it was on → now off).
-        (bind "${mod} + SHIFT + I" (
+        (bind "${sysMod} + I" (
           exec ''pkill -x wlinhibit && notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit OFF" || (wlinhibit & notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit ON")''
         ))
+
+        # Lock now. Goes through loginctl (not hyprlock directly) so hypridle's
+        # lock_cmd applies — that carries the `pidof hyprlock` single-instance
+        # guard and --grace 0.
+        (bind "${sysMod} + L" (exec "loginctl lock-session"))
+
+        # Monitors off. Delayed ~400ms so the modifier releases from this very
+        # chord land before dpms goes down, otherwise key_press_enables_dpms
+        # wakes the screens right back up.
+        (bind "${sysMod} + M" (dsp ''
+          function()
+            hl.timer(function() hl.dispatch(hl.dsp.dpms("off")) end,
+                     { timeout = 400, type = "oneshot" })
+          end''))
 
         # Read the clipboard aloud (read-along aid for dense prose). Spelled out
         # rather than bare "say-clip" because ~/.local/bin is on PATH for
@@ -103,9 +147,9 @@ in
         # window onto the target workspace, so a second bind on the same key promotes
         # it into its own full-width column instead of letting it stack side-by-side.
         # Hyprland fires all binds matching a key, in order, so move-then-promote runs
-        # as one press. promote is a no-op on the dwindle monitors, so this is safe.
-        (bind "${mod} + ALT + O" (layoutmsg "promote"))
-        (bind "${mod} + ALT + I" (layoutmsg "promote"))
+        # as one press. The guard skips promote when the destination is dwindle.
+        (bind "${mod} + ALT + O" (layoutmsgIn "scrolling" "promote"))
+        (bind "${mod} + ALT + I" (layoutmsgIn "scrolling" "promote"))
 
         # Mouse workspace navigation
         (bind "${mod} + mouse:275" (toWorkspace "m+1"))
@@ -113,37 +157,32 @@ in
         (bind "${mod} + ALT + mouse:275" (moveToWorkspace "m+1"))
         (bind "${mod} + ALT + mouse:276" (moveToWorkspace "m-1"))
         # Same auto-correct for the side-button window moves.
-        (bind "${mod} + ALT + mouse:275" (layoutmsg "promote"))
-        (bind "${mod} + ALT + mouse:276" (layoutmsg "promote"))
-
-        # Alt-Tab workspace cycling
-        (bind "ALT_L + TAB" (toWorkspace "m+1"))
-        (bind "ALT_L + SHIFT + TAB" (toWorkspace "m-1"))
+        (bind "${mod} + ALT + mouse:275" (layoutmsgIn "scrolling" "promote"))
+        (bind "${mod} + ALT + mouse:276" (layoutmsgIn "scrolling" "promote"))
 
         # Special workspace (scratchpad)
         (bind "${mod} + SPACE" (dsp ''hl.dsp.workspace.toggle_special("magic")''))
         (bind "${mod} + SHIFT + SPACE" (moveToWorkspace "special:magic"))
 
-        # Scrolling layout (workspaces 7-9) — layoutmsg is layout-scoped, so these
-        # are no-ops on dwindle workspaces. mouse_up/down = scroll wheel (free: the
+        # Scrolling layout (workspaces 7-9). mouse_up/down = scroll wheel (free: the
         # existing mouse workspace binds use the side buttons mouse:275/276).
         # NOTE: tried 'move +200/-200' (pixel pan of the tape) — reverted: the wheel
         # event still reaches the focused app, so it panned the tape AND scrolled app
         # content at once. 'move +col' jumps in discrete column steps instead.
-        (bind "${mod} + mouse_down" (layoutmsg "move +col")) # wheel: scroll tape toward next window
-        (bind "${mod} + mouse_up" (layoutmsg "move -col")) # wheel: scroll tape toward previous window
-        (bind "${mod} + ALT + mouse_down" (layoutmsg "swapcol r")) # move focused window down the tape
-        (bind "${mod} + ALT + mouse_up" (layoutmsg "swapcol l")) # move focused window up the tape
-        (bind "${mod} + comma" (layoutmsg "colresize -conf")) # cycle column width down
-        (bind "${mod} + period" (layoutmsg "colresize +conf")) # cycle column width up
+        (bind "${mod} + mouse_down" (layoutmsgIn "scrolling" "move +col")) # wheel: scroll tape toward next window
+        (bind "${mod} + mouse_up" (layoutmsgIn "scrolling" "move -col")) # wheel: scroll tape toward previous window
+        (bind "${mod} + ALT + mouse_down" (layoutmsgIn "scrolling" "swapcol r")) # move focused window down the tape
+        (bind "${mod} + ALT + mouse_up" (layoutmsgIn "scrolling" "swapcol l")) # move focused window up the tape
+        (bind "${mod} + comma" (layoutmsgIn "scrolling" "colresize -conf")) # cycle column width down
+        (bind "${mod} + period" (layoutmsgIn "scrolling" "colresize +conf")) # cycle column width up
         # promote = give the active window its OWN full-width column (row) on the tape.
         # Bound to home-row ';' because the bracket consume/expel keys below are an
         # awkward reach when tidying up windows moved over to the vertical screen.
-        (bind "${mod} + semicolon" (layoutmsg "promote"))
+        (bind "${mod} + semicolon" (layoutmsgIn "scrolling" "promote"))
         # NOTE: 'fit expand' removed — on the vertical (direction:down) tape it computed a
         # negative window height and made the window vanish.
-        (bind "${mod} + bracketleft" (layoutmsg "consume_or_expel prev")) # merge into previous column
-        (bind "${mod} + bracketright" (layoutmsg "consume_or_expel next")) # split out to next column
+        (bind "${mod} + bracketleft" (layoutmsgIn "scrolling" "consume_or_expel prev")) # merge into previous column
+        (bind "${mod} + bracketright" (layoutmsgIn "scrolling" "consume_or_expel next")) # split out to next column
       ]
       # Switch workspaces with mainMod + [0-9]; move with mainMod + ALT + [0-9].
       # 0 maps to workspace 10.
@@ -176,6 +215,13 @@ in
           exec "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"
         ) lockedRepeat)
         (bindWith "XF86AudioMute" (exec "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle") lockedRepeat)
+      ]
+
+      # Alt-Tab workspace cycling. Not on amanita: Hyprland grabs ALT globally,
+      # so CS2 never sees the key and behaves as if Alt is stuck.
+      ++ lib.optionals (host != "amanita") [
+        (bind "ALT_L + TAB" (toWorkspace "m+1"))
+        (bind "ALT_L + SHIFT + TAB" (toWorkspace "m-1"))
       ]
 
       # Mouse bindings

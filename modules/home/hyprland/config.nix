@@ -44,6 +44,10 @@
         };
 
         misc = {
+          # Default is false, which would strand a manually blanked screen: only
+          # hypridle's on-resume restores dpms, and that never fires for a blank
+          # it didn't start. Any keystroke now wakes them (and is swallowed).
+          key_press_enables_dpms = true;
           force_default_wallpaper = 0; # Set to 0 or 1 to disable the anime mascot wallpapers
           disable_hyprland_logo = true;
           disable_splash_rendering = true;
@@ -230,7 +234,7 @@
           # Set DP-2 (center 240Hz QHD) as the "main" screen: focus it at startup so
           # ad-hoc app launches land here instead of the leftmost 4K DP-1, which would
           # otherwise hold startup focus.
-          "hyprctl dispatch focusmonitor DP-2"
+          "hyprctl dispatch 'hl.dsp.focus({ monitor = \"DP-2\" })'"
           # Auth daemon for GUI apps requesting privilege elevation
           "vicinae server"
           "systemctl --user restart hyprpaper"
@@ -304,6 +308,12 @@
           immediate = true;
         }
 
+        # CS2: keep focus pinned to the game so nothing can steal it mid-round.
+        {
+          match.class = "^cs2$";
+          stay_focused = true;
+        }
+
         # Wine/Proton popups (color pickers, dialogs) under XWayland have empty class and title.
         # Without this, Hyprland tiles them at 0,0 behind the main window while they hold focus,
         # causing the "invisible popup / UI unresponsive" symptom seen in Plasticity.
@@ -352,7 +362,8 @@
         # each frame through the mux round-trip and fall behind, causing oscillation and
         # leftover gaps while resizing. no_anim collapses the resize to a single event.
         {
-          match.class = "^org.wezfurlong.wezterm$";
+          # Unanchored: also covers the SUPER+W scratch class (…wezterm.scratch).
+          match.class = "^org.wezfurlong.wezterm";
           no_anim = true;
         }
 

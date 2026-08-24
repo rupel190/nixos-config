@@ -23,6 +23,7 @@
     ./lazygit.nix
     ./claude.nix # AI coding assistant
     ./spicetify.nix # spotify client
+    ./qbz.nix # qobuz hi-fi client (AppImage)
     ./mpv.nix # media player
     ./tera.nix # terminal radio player
     ./pulsemixer.nix # audio mixer (patched selection highlight)
