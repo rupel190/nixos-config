@@ -106,7 +106,7 @@
          config.tiling_desktop_environments = { "Hyprland" }
          config.enable_scroll_bar = true
          config.scrollback_lines = 200000
-         config.window_background_opacity = 0.9
+         config.window_background_opacity = 0.95
          config.enable_wayland = true -- Force native Wayland (not XWayland)
          config.front_end = "WebGpu" -- Use Vulkan backend on RDNA 4 (avoids OpenGL flicker)
          -- Note: window_decorations set after tabline.apply_to_config() at bottom
