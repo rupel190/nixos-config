@@ -33,6 +33,17 @@
   # Disable USB autosuspend entirely via kernel module
   boot.extraModprobeConfig = ''
     options usbcore autosuspend=-1
+
+    # Novation Circuit Tracks pack uploads via Novation Components (WebMIDI in Chromium,
+    # which speaks the ALSA *sequencer* API, so this is the seq pool — not snd_rawmidi).
+    # The 4096 B kernel default is large enough for the SysEx device-inquiry handshake,
+    # so Components *finds* the Tracks and then fails to send: a pack is megabytes.
+    # Circuit firmware >1.02 widens this gap on purpose, sending bigger chunks to speed
+    # transfers up, so being up to date makes it worse rather than better.
+    # snd_seq_midi reads these in its probe path, so the port has to be re-created —
+    # replug the device after changing them; a live write alone won't touch open ports.
+    # Verified 2026-08-31: 4096 -> 65536 made a failing pack upload succeed immediately.
+    options snd_seq_midi output_buffer_size=65536 input_buffer_size=65536
   '';
 
   # Comprehensive udev rules to keep ALL USB devices awake
