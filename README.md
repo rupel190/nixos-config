@@ -26,6 +26,8 @@ specialArg rather than split into separate trees, so both machines share one mod
 └── modules/
     ├── core/              # System-level modules
     │   ├── bootloader.nix
+    │   ├── comfyui.nix        # amanita only: ComfyUI on ROCm + model fetcher
+    │   ├── comfy-edit.py      # headless driver for comfyui.nix
     │   ├── greetd.nix         # greetd + tuigreet TTY login
     │   ├── hardware.nix
     │   ├── network.nix
@@ -86,6 +88,7 @@ specialArg rather than split into separate trees, so both machines share one mod
 - Three outputs: `DP-2` (main, 240 Hz), `DP-1`, `HDMI-A-2`
 - Multiple filesystem mounts for storage and backups
 - Weekly Raspberry Pi backup pull (`pi-backup.nix`)
+- Local image generation via `comfyui.nix` (host-gated in `modules/core/default.nix`)
 
 ### cordyceps (Laptop)
 
