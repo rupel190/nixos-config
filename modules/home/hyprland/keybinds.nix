@@ -14,16 +14,31 @@ let
   exec = cmd: mkLuaInline "hl.dsp.exec_cmd(${builtins.toJSON cmd})";
   dsp = expr: mkLuaInline expr;
 
-  bind = key: action: { _args = [ key action ]; };
-  bindWith = key: action: flags: { _args = [ key action flags ]; };
+  bind = key: action: {
+    _args = [
+      key
+      action
+    ];
+  };
+  bindWith = key: action: flags: {
+    _args = [
+      key
+      action
+      flags
+    ];
+  };
 
   # Old bind flag lists map onto per-bind option tables.
-  repeating = { repeating = true; }; # was binde
+  repeating = {
+    repeating = true;
+  }; # was binde
   lockedRepeat = {
     locked = true;
     repeating = true;
   }; # was bindel
-  mouse = { mouse = true; }; # was bindm
+  mouse = {
+    mouse = true;
+  }; # was bindm
 
   focusDir = d: dsp ''hl.dsp.focus({ direction = "${d}" })'';
   moveDir = d: dsp ''hl.dsp.window.move({ direction = "${d}" })'';
@@ -31,15 +46,27 @@ let
   moveToWorkspace = ws: dsp ''hl.dsp.window.move({ workspace = "${ws}" })'';
   # layoutmsg is layout-scoped and the Lua API now toasts a runtime error when the
   # active layout doesn't know the message, so gate every one by layout name.
-  layoutmsgIn = layout: msg: dsp ''
-    function()
-      local ws = hl.get_active_workspace()
-      if ws and ws.tiled_layout == "${layout}" then hl.dispatch(hl.dsp.layout("${msg}")) end
-    end'';
+  layoutmsgIn =
+    layout: msg:
+    dsp ''
+      function()
+        local ws = hl.get_active_workspace()
+        if ws and ws.tiled_layout == "${layout}" then hl.dispatch(hl.dsp.layout("${msg}")) end
+      end'';
   resizeActive =
     x: y: dsp "hl.dsp.window.resize({ x = ${toString x}, y = ${toString y}, relative = true })";
 
-  digits = [ "1" "2" "3" "4" "5" "6" "7" "8" "9" ];
+  digits = [
+    "1"
+    "2"
+    "3"
+    "4"
+    "5"
+    "6"
+    "7"
+    "8"
+    "9"
+  ];
 in
 {
   wayland.windowManager.hyprland = {
@@ -49,7 +76,7 @@ in
         (bind "${mod} + F5" (exec "hyprctl reload"))
         # Reattach to the mux. A second `connect unix` client would just mirror the
         # one mux window, so focus the existing terminal instead of spawning another.
-        (bind "${mod} + T" (dsp ''
+        (bind "${mod} + W" (dsp ''
           function()
             local ws = hl.get_windows()
             for i = 1, #ws do
@@ -64,7 +91,7 @@ in
         # same workspace and mirrors, and a unique --workspace leaks a shell that
         # outlives the window in the mux server. Own process = closes for good.
         # Distinct app_id so the SUPER+T reattach never grabs a scratch window.
-        (bind "${mod} + W" (
+        (bind "${mod} + T" (
           exec "wezterm start --always-new-process --class org.wezfurlong.wezterm.scratch"
         ))
         (bind "${mod} + RETURN" (exec "vicinae toggle"))
@@ -82,9 +109,12 @@ in
 
         # Idle inhibit toggle (caffeine) — holds a Wayland idle inhibitor via
         # wlinhibit so hypridle won't blank/lock. Stateless toggle: pkill's exit
-        # code IS the state (killed something = it was on → now off).
+        # code IS the state (killed something = it was on → now off). if/else,
+        # not && ||: a failing notify would otherwise relaunch what pkill just
+        # killed. Feedback is hyprctl notify (drawn by Hyprland, so it survives
+        # swaync's do-not-disturb) — notify-send toasts were silently dropped.
         (bind "${sysMod} + I" (
-          exec ''pkill -x wlinhibit && notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit OFF" || (wlinhibit & notify-send -a wlinhibit -h string:x-canonical-private-synchronous:idleinhibit "Idle inhibit ON")''
+          exec ''if pkill -x wlinhibit; then hyprctl notify -1 2000 "rgb(9399b2)" "Idle inhibit OFF"; else wlinhibit & hyprctl notify -1 2000 "rgb(f9e2af)" "Idle inhibit ON"; fi''
         ))
 
         # Lock now. Goes through loginctl (not hyprlock directly) so hypridle's
@@ -120,7 +150,7 @@ in
 
         # Screen recording (portal picker: choose monitor/window/region)
         (bind "${mod} + ALT + S" (
-          exec ''gpu-screen-recorder -w portal -a default_output -f 60 -o ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4''
+          exec "gpu-screen-recorder -w portal -a default_output -f 60 -o ~/Videos/screenrec/$(date +%F_%H-%M-%S).mp4"
         ))
         (bind "${mod} + ALT + SHIFT + S" (
           exec ''pkill -SIGINT -f gpu-screen-recorder && hyprctl notify 1 2000 "rgb(a6da95)" "Recording saved to ~/Videos/screenrec/"''
@@ -208,12 +238,10 @@ in
       # Audio control (repeat when held, and work while locked).
       # Note: laptop-specific keybinds (brightness) are in laptop-only.nix
       ++ [
-        (bindWith "XF86AudioRaiseVolume" (
-          exec "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 2%+"
-        ) lockedRepeat)
-        (bindWith "XF86AudioLowerVolume" (
-          exec "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-"
-        ) lockedRepeat)
+        (bindWith "XF86AudioRaiseVolume" (exec "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 2%+")
+          lockedRepeat
+        )
+        (bindWith "XF86AudioLowerVolume" (exec "wpctl set-volume @DEFAULT_AUDIO_SINK@ 2%-") lockedRepeat)
         (bindWith "XF86AudioMute" (exec "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle") lockedRepeat)
       ]
 
