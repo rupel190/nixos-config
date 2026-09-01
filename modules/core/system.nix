@@ -3,6 +3,7 @@
   pkgs,
   lib,
   inputs,
+  host,
   ...
 }:
 {
@@ -10,96 +11,18 @@
     inputs.millennium.overlays.default
     inputs.affinity-nix.overlays.default
 
-    # catppuccin (python) 2.5.0 sweeps its optional matplotlib integration into
-    # nativeCheckInputs + pythonImportsCheck, so `import catppuccin` runs at build
-    # time and calls the now-removed matplotlib.style.core API → build crash, which
-    # breaks catppuccin-gtk (used in modules/home/gtk.nix). matplotlib is only an
-    # extra (never a runtime dep, and catppuccin-gtk doesn't use it), so drop it.
-    (final: prev: {
-      pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
-        (pyfinal: pyprev: {
-          catppuccin = pyprev.catppuccin.overridePythonAttrs (_: {
-            # Skip the check phase: catppuccin 2.5.0's tests/test_matplotlib.py
-            # hard-imports matplotlib, and its integration calls the removed
-            # matplotlib.style.core API. matplotlib is only a check input (never a
-            # runtime dep), so dropping checks lets catppuccin-gtk build cleanly.
-            doCheck = false;
+    # Hyprland with the mirror-hotplug SEGV patched out (still unfixed in 0.56.0).
+    # damageMirrorsWith() derefs m_mirrors entries — weak refs — without checking
+    # expiry, so unplugging a mirrored output kills the whole session on the next
+    # frame. Consumed by modules/core/wayland.nix and modules/home/hyprland.
+    # NOTE: patching defeats the hyprland.cachix.org hit below, so Hyprland is a
+    # local compile until upstream lands the guard and this can be dropped.
+    (_final: prev: {
+      hyprland-mirrorfix =
+        inputs.hyprland.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
+          (old: {
+            patches = (old.patches or [ ]) ++ [ ../../patches/hyprland-mirror-weakptr.patch ];
           });
-        })
-      ];
-    })
-
-    # gdal 3.13.1's autotest suite has one failing test in this nixpkgs pin:
-    # gdrivers/zarr_driver.py::test_zarr_read_simple_sharding asserts that a
-    # `zarr.json.gmac` tile-presence cache sidecar is written after opening a
-    # sharded Zarr with CACHE_TILE_PRESENCE=YES — it isn't, so pytestCheckHook
-    # fails the whole build. gdal fails identically on Hydra, so gdal-minimal is
-    # never cached and gets rebuilt (and re-fails) locally, blocking the closure
-    # pdal -> vtk -> freecad -> home-manager -> system. Append the one test to the
-    # existing `disabledTests` allowlist (idiomatic, keeps the other ~18.7k tests).
-    # Overriding base `gdal` propagates through the fixed point into `gdalMinimal`
-    # (= gdal.override { useMinimalFeatures = true; }) and vtk's inline minimal
-    # override, so this single entry covers every path. Drop on the next bump that
-    # fixes the test upstream.
-    (final: prev: {
-      gdal = prev.gdal.overrideAttrs (old: {
-        disabledTests = (old.disabledTests or [ ]) ++ [
-          "test_zarr_read_simple_sharding"
-        ];
-      });
-    })
-
-    # Same gdal 3.13.1 CSLConstList break, third victim: vtk 9.5.2's GDAL raster
-    # reader assigns GDALGetMetadata() (now returns CSLConstList = const char* const*)
-    # to char** at two spots in IO/GDAL/vtkGDALRasterReader.cxx (lines 185, 881),
-    # both read-only (CSLCount + iterate). vtk's IO/GDAL failure is what actually
-    # sank the build — it was hidden behind FiltersCore in the parallel-make output.
-    # Retype both to CSLConstList (NOT line 733's GetCategoryNames(), which still
-    # returns char** and compiles fine). Overriding base `vtk` propagates through the
-    # fixed point into the Qt/python variants freecad pulls. Remove on the bump that
-    # const-corrects vtk upstream (--replace-fail will error to remind us).
-    (final: prev: {
-      vtk = prev.vtk.overrideAttrs (old: {
-        postPatch = (old.postPatch or "") + ''
-          substituteInPlace IO/GDAL/vtkGDALRasterReader.cxx \
-            --replace-fail \
-              "char** papszMetaData = GDALGetMetadata(this->GDALData, nullptr);" \
-              "CSLConstList papszMetaData = GDALGetMetadata(this->GDALData, nullptr);" \
-            --replace-fail \
-              "char** papszMetadata = GDALGetMetadata(this->Impl->GDALData, domain.c_str());" \
-              "CSLConstList papszMetadata = GDALGetMetadata(this->Impl->GDALData, domain.c_str());"
-        '';
-      });
-    })
-
-    # openscad-unstable fails to link on the 2026-07-19 nixpkgs bump. openscad embeds a
-    # `.debug_gdb_scripts` section (gdb pretty-printer autoload) marked SHF_MERGE|STRINGS
-    # whose content leads with a non-string type byte, so the stricter merged-string
-    # validation in BOTH lld 21.1.8 and mold 2.41 rejects it ("string is not null
-    # terminated") and the final link dies -> sinks home-manager -> system. Only the old
-    # GNU linkers (bfd/gold) are lax enough to accept it. NOT an LTO or openscad bug.
-    # openscad hard-codes -fuse-ld=lld in a clang stdenv (LLVM bintools, no GNU ld on
-    # PATH), so: add GNU binutils and link with bfd, and disable IPO so LTO doesn't
-    # interact with the swapped linker. Remove all three once lld accepts the section
-    # again (the maps no-op if these exact flags disappear from the upstream cmakeFlags).
-    # Also skip the check phase: with bfd the link succeeds, but 4 echo-recursion /
-    # stack-exhaust ctests then fail on the clang 21 toolchain (stack-frame sizes shifted
-    # so the hard-coded recursion-depth expectations no longer hold). openscad is a leaf
-    # GUI app — launching it is the real test — so drop the self-tests to unblock.
-    (final: prev: {
-      openscad-unstable = prev.openscad-unstable.overrideAttrs (old: {
-        doCheck = false;
-        nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ final.binutils ];
-        cmakeFlags = map (
-          f:
-          if f == "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON" then
-            "-DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF"
-          else if f == "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld" then
-            "-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=bfd"
-          else
-            f
-        ) (old.cmakeFlags or [ ]);
-      });
     })
   ];
 
@@ -115,21 +38,31 @@
         "https://cache.nixos.org"
         "https://nix-gaming.cachix.org"
         "https://cache.garnix.io" # affinity-nix prebuilt wine prefix
+        # Hyprland, hyprland-plugins and xdph come from git inputs, which nixpkgs
+        # never builds. An input flake's own nixConfig does NOT apply to us, so
+        # without this every Hyprland bump is a local C++ compile on both hosts.
+        "https://hyprland.cachix.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
         "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
+        "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       ];
     };
   };
 
-  environment.systemPackages = with pkgs; [
-    wget
-    git
-    pkgs.ragenix
-    affinity-v3 # unified Affinity suite via affinity-nix (wine); needs your own installer on first run
-  ];
+  environment.systemPackages =
+    (with pkgs; [
+      wget
+      git
+      pkgs.ragenix
+    ])
+    # amanita only: a 2.8 GB Wine prefix + 1.5 GB of sources, and cache.garnix.io
+    # is not resolving, so it builds locally rather than substituting.
+    ++ lib.optionals (host == "amanita") [
+      pkgs.affinity-v3 # unified Affinity suite via affinity-nix (wine); needs your own installer on first run
+    ];
 
   time.timeZone = "Europe/Berlin";
   i18n.defaultLocale = "en_US.UTF-8";

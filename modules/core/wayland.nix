@@ -7,7 +7,9 @@
 
   programs.hyprland = {
     enable = true;
-    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    # The flake package + the damageMirrorsWith weakptr patch (overlay in system.nix).
+    # This is the compositor greetd actually launches, via start-hyprland.
+    package = pkgs.hyprland-mirrorfix;
     portalPackage =
       inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
   };

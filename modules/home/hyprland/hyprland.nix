@@ -44,6 +44,10 @@ in
   ];
   wayland.windowManager.hyprland = {
     enable = true;
+    # Must match programs.hyprland.package in modules/core/wayland.nix — the HM
+    # module otherwise defaults to the unpatched flake package, which means a
+    # second full Hyprland compile in the closure and a hyprctl/compositor split.
+    package = pkgs.hyprland-mirrorfix;
     # Lua, not hyprlang. The hyprlang config parser was deleted upstream in
     # a9902ea6 (#15539, 2026-07-22) — after the v0.56.0 tag, so it is NOT in any
     # released 0.56.x, but our flake input tracks main. Hyprland then reads only

@@ -1,0 +1,53 @@
+renderer: don't deref expired mirror weakptrs in damageMirrorsWith
+
+CMonitor::m_mirrors is a std::vector<PHLMONITORREF> — weak references. When a
+mirrored output goes away (DRM hotplug) the ref expires, but damageMirrorsWith
+dereferences it unconditionally at the top of the loop:
+
+    auto   monitor = mirror;
+    double scale   = std::min(monitor->m_transformedSize.x / ..., ...);
+
+so the next frame after the unplug faults on a null deref and takes the whole
+session down. Confirmed against Hyprland 0.55.0 by disassembly:
+damageMirrorsWith+0x338 is `movsd 0x60,%xmm0` (absolute-address load = null
+plus the m_transformedSize offset) followed by `ud2`, i.e. GCC's codegen for a
+path it proved was UB. Backtrace is always
+damageMirrorsWith() <- renderMonitor() <- CMonitorFrameScheduler::onFrame().
+
+The tail of the same loop already guards with `if (auto m = mirror.lock())`,
+added upstream for 0.56.0 — but that is six lines past the fault, so the crash
+survived. Lock once at the top and skip the mirror if it is gone.
+
+Applies to Hyprland 52b368f1d7fdee1b0e96ef3dc655b5a577df4fdb (v0.56.0).
+
+--- a/src/render/Renderer.cpp
++++ b/src/render/Renderer.cpp
+@@ -2812,9 +2812,13 @@
+ void IHyprRenderer::damageMirrorsWith(PHLMONITOR pMonitor, const CRegion& pRegion) {
+     for (auto const& mirror : pMonitor->m_mirrors) {
+ 
+-        // transform the damage here, so it won't get clipped by the monitor damage ring
+-        auto    monitor = mirror;
++        // m_mirrors holds weak refs, so the mirror may already be gone (e.g. unplugged
++        // mid-frame on a hotplug). Dereferencing it below would be a null deref.
++        auto monitor = mirror.lock();
++        if (!monitor)
++            continue;
+ 
++        // transform the damage here, so it won't get clipped by the monitor damage ring
+         CRegion transformed{pRegion};
+ 
+         // we want to transform to the same box as in CHyprOpenGLImpl::renderMirrored
+@@ -2826,10 +2830,8 @@
+         transformed.scale(scale);
+         transformed.translate(Vector2D(monbox.x, monbox.y));
+ 
+-        mirror->addDamage(transformed);
+-
+-        if (auto m = mirror.lock())
+-            m->scheduleFrame(Aquamarine::IOutput::AQ_SCHEDULE_DAMAGE);
++        monitor->addDamage(transformed);
++        monitor->scheduleFrame(Aquamarine::IOutput::AQ_SCHEDULE_DAMAGE);
+     }
+ }
+ 
