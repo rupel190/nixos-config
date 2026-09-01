@@ -13,13 +13,9 @@
       # TODO: Explicit definition required?
       extraCompatPackages = [ pkgs.proton-ge-bin ];
 
-      # TEMP (2026-07-02): reverted from pkgs.millennium-steam to vanilla pkgs.steam.
-      # Steam auto-updated its client (buildid 1782866176 / Chrome 126) and Millennium
-      # 3.3.0-beta.7's cef_browser_host_create_browser hook deadlocks the new webhelper
-      # → UI hangs at 100% CPU on every launch. No injection = no hook = no hang.
-      # Restore `pkgs.millennium-steam.override` once a Millennium build supports this
-      # Steam client (the flake.lock already stages a newer rev to try first).
-      package = pkgs.steam.override {
+      # Millennium 3.4.1 (2026-08-18), re-enabled after the 3.3.0-beta.7 client-hook
+      # deadlock. Its wrapper forwards every arg below to the upstream steam.override.
+      package = pkgs.millennium-steam.override {
         # gfx1201 (RDNA4): Steam's CEF UI (steamwebhelper) defaults to
         # ANGLE-over-Vulkan (RADV), which isn't conformant on this GPU → the CEF
         # GPU process crashes, Steam auto-disables CEF GPU, and the UI falls back
