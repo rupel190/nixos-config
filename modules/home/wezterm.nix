@@ -19,6 +19,11 @@
 
          -- Define workspaces (runs on the mux server, not the GUI client)
          wezterm.on('mux-startup', function()
+           -- The term-image MCP opens a throwaway viewer window with its own mux, so
+           -- this handler fires there too and would spawn the whole layout beside the
+           -- image. It sets WEZTERM_IMAGE_MCP=1 for exactly this check.
+           if os.getenv('WEZTERM_IMAGE_MCP') then return end
+
            local tab, default_pane, window = mux.spawn_window {
              workspace = 'default',
            }
@@ -196,14 +201,29 @@
            end) },
         }
 
-         -- Tab titles. Panes live on the `unix` mux domain, where the GUI cannot see a
-         -- pane's foreground process, so tabline's `process` component silently falls
-         -- back to the pane's OSC title -- a full cwd path, or Claude's entire
-         -- conversation title. Derive a short title instead.
+         -- Tab titles. Neither raw input is good alone: the OSC title is often a full
+         -- cwd path or Claude's entire conversation title, and the exe is a Nix
+         -- `.foo-wrapped` or a bare interpreter. Derive a short title from whichever
+         -- of the two is more specific.
          local TAB_TITLE_WIDTH = 24
 
          local function basename(path)
            return path:gsub("/+$", ""):match("([^/]+)$") or path
+         end
+
+         -- What a pane's exe is worth as a title. Nix hands us `.tera-wrapped`, and an
+         -- interpreted TUI reports its interpreter (`python3.14`) -- both are noise the
+         -- program's own OSC title beats, so return nil and let the caller fall through.
+         local USELESS_EXE = {
+           python = true, node = true, ruby = true, perl = true, sh = true, env = true,
+           fish = true, bash = true,
+         }
+
+         local function exe_name(path)
+           local name = basename(path):gsub("^%.(.+)%-wrapped$", "%1")
+           local stem = name:match("^(%a+)[%d.]+$") or name -- python3.14 -> python
+           if USELESS_EXE[stem] then return nil end
+           return name
          end
 
          local function cwd_name(pane)
@@ -297,11 +317,11 @@
              return (alert and "" or glyph .. " ") .. shorten(rest, TAB_TITLE_WIDTH)
            end
 
-           -- Local (non-mux) panes still report a real process name
+           -- The real process name, when it is more specific than the OSC title
            local proc = pane.foreground_process_name
            if proc and #proc > 0 then
-             proc = basename(proc)
-             if proc ~= "fish" and proc ~= "bash" then return proc end
+             proc = exe_name(proc)
+             if proc then return proc end
            end
 
            -- A path-ish or empty title is worth no more than its leaf directory
@@ -356,11 +376,13 @@
              theme = config.color_scheme or "default",
              -- Stock Catppuccin puts the *brighter* text on inactive tabs and separates
              -- them from the active one by ~9 L* -- unreadable across a wide bar. Flip
-             -- it: active is a filled mauve pill (also the scheme's own active-tab
-             -- colour, and config.colors.split), idle tabs recede to overlay1.
+             -- it, and keep the active tab *achromatic*: the alert fills are hues, so a
+             -- fourth hue reads as one of the set -- the brightest neutral chip does not.
+             -- (Bold can't carry this: config.font is Light, so wezterm's relative bold
+             -- resolves to Medium, and forcing Bold needs font_rules = all terminal text.)
              theme_overrides = {
                tab = {
-                 active = { fg = "#181926", bg = "#c6a0f6" },
+                 active = { fg = "#181926", bg = "#cad3f5" },
                  inactive = { fg = "#8087a2" },
                  inactive_hover = { fg = "#cad3f5", bg = "#363a4f" },
                },
