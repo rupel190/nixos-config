@@ -12,7 +12,7 @@ let
     pdf = [ "org.gnome.Evince.desktop" ];
     terminal = [ "org.wezfurlong.wezterm.desktop" ];
     # archive - using terminal tools
-    discord = [ "discord.desktop" ];
+    discord = [ "vesktop.desktop" ]; # official client removed; vesktop declares the same scheme
     bambustudio = [ "bambu-studio.desktop" ];
     plasticity = [ "plasticity.desktop" ];
     qbz = [ "qbz.desktop" ];

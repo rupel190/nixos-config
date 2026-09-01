@@ -18,7 +18,7 @@
     ./fastfetch.nix # fetch tool
     # swaync notification center (service enabled in packages.nix)
     ./wezterm.nix # terminal
-    ./discord/discord.nix # discord with gruvbox
+    ./discord/discord.nix # vesktop (discord web + vencord)
     ./git.nix # version control
     ./lazygit.nix
     ./claude.nix # AI coding assistant

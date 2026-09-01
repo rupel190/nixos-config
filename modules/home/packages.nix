@@ -55,9 +55,6 @@
       zerotierone # virtual ethernet for external access
       gamescope # Gaming compositor
 
-      # Tweaks
-      betterdiscordctl
-
       # Android MTP
       gvfs # Virtual filesystem
       glib # GLib library

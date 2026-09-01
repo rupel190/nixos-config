@@ -249,7 +249,7 @@
             [
               # Application launches for amanita (workspace assignment via window_rule)
               "obsidian"
-              "vesktop" # official discord stays installed as a fallback, just not autostarted
+              "vesktop" # replaced the official discord client entirely
               "zen"
               "steam"
               "proton-mail"
