@@ -249,7 +249,7 @@
             [
               # Application launches for amanita (workspace assignment via window_rule)
               "obsidian"
-              "discord"
+              "vesktop" # official discord stays installed as a fallback, just not autostarted
               "zen"
               "steam"
               "proton-mail"
@@ -339,7 +339,7 @@
         # Workspace assignments for amanita
         # DP-1 (left 4K monitor): Workspaces 1-3
         { match.class = "^(md\\.)?[Oo]bsidian$"; workspace = "1 silent"; }
-        { match.class = "^discord$"; workspace = "2 silent"; }
+        { match.class = "^(discord|vesktop)$"; workspace = "2 silent"; }
 
         # DP-2 (center 240Hz monitor): Workspaces 4-6
         { match.class = "^zen$"; workspace = "4"; }

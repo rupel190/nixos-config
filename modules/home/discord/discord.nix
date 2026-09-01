@@ -1,11 +1,10 @@
 { pkgs, ... }:
 {
   home.packages = with pkgs; [
-    discord
-    # (discord.override {
-    #  withVencord = true;
-    # })
-    # webcord-vencord
+    discord # official client, kept vanilla as a fallback
   ];
-  # xdg.configFile."Vencord/themes/gruvbox.theme.css".source = ./gruvbox.css;
+
+  # Vesktop: Discord web + Vencord, own config dir. Settings deliberately left mutable —
+  # declaring them writes /nix/store symlinks and the in-app toggles stop saving.
+  programs.vesktop.enable = true;
 }
