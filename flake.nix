@@ -55,7 +55,7 @@
     # (bun, no npm deps); consumed in modules/home/spicetify.nix. Update with
     # `nix flake update singify` after pushing changes to the singify repo.
     singify = {
-      url = "github:rupel190/singify/feat/playlist-sessions";
+      url = "github:rupel190/singify";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

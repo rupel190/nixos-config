@@ -1522,16 +1522,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1785075944,
-        "narHash": "sha256-4QPapHBfciN42Rj5MP7+fFvO4eZpA/0bdmwvX/YxIi4=",
+        "lastModified": 1788269792,
+        "narHash": "sha256-eq6Z7teGhXSBmm/Kn8O60ovYo/E3ptbsk3QaS9vtukw=",
         "owner": "rupel190",
         "repo": "singify",
-        "rev": "e3b7a85b72ed54dc05e8a35ba081ae98cf3662c9",
+        "rev": "d4d19ad4469ae1f8a57fadc16866d3a4958894be",
         "type": "github"
       },
       "original": {
         "owner": "rupel190",
-        "ref": "feat/playlist-sessions",
         "repo": "singify",
         "type": "github"
       }
@@ -1744,11 +1743,11 @@
     "wezterm-image-mcp": {
       "flake": false,
       "locked": {
-        "lastModified": 1786972518,
-        "narHash": "sha256-M6AANI4+AwbKSrNp+yzAnl3YrjhEJaNPnEEJj4GIrV4=",
+        "lastModified": 1787843032,
+        "narHash": "sha256-oCvd+FlbQx71IKvBtKz/5Tl8Mo2WZoePG081oD5rKEI=",
         "ref": "refs/heads/main",
-        "rev": "140b2fec55025e78716448448b24808e56082c3b",
-        "revCount": 1,
+        "rev": "288ed6fe2617ea42a5e4466c30bedb6b90a2eafc",
+        "revCount": 7,
         "type": "git",
         "url": "ssh://git@github.com/rupel190/wezterm-image-mcp"
       },
