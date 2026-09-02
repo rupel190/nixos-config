@@ -6,16 +6,6 @@
     inputs.nix-flatpak.nixosModules.nix-flatpak
   ];
 
-  # Cloudflare Pages deploy token — decrypted to /run/agenix/cloudflare-api-token,
-  # readable by rupel. Loaded by the stitching-pipeline repo's .envrc for wrangler.
-  # NOTE: create the .age first (`ragenix -e secrets/cloudflare-api-token.age`) or this
-  # host won't rebuild — the referenced file must exist.
-  age.secrets.cloudflare-api-token = {
-    file = ../../secrets/cloudflare-api-token.age;
-    owner = "rupel";
-    mode = "0400";
-  };
-
   # Flatpak
   services.flatpak.enable = true;
   services.flatpak.packages = [

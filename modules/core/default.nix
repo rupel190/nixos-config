@@ -17,6 +17,7 @@
     ./nh.nix
     ./pipewire.nix
     ./program.nix
+    ./secrets.nix
     ./security.nix
     ./services.nix
     ./steam.nix

@@ -252,13 +252,23 @@ nh clean all
 Secrets live in `secrets/` as age-encrypted files, managed with **ragenix** and readable by the
 host keys listed in `secrets/secrets.nix`:
 
+`RULES` must be set: ragenix defaults to `./secrets.nix`, but the manifest lives in
+`secrets/`. The identity is `id_ed25519_fresh` — that is the key listed as `amanita-rupel`,
+not the default `~/.ssh/id_ed25519` (which is `rupel@level-8` and is not a recipient).
+
 ```bash
 # Edit a secret in place
-ragenix -e secrets/my-secret.age
+RULES=secrets/secrets.nix ragenix -e secrets/claude-sync-r2.age -i ~/.ssh/id_ed25519_fresh
 
-# Re-key everything after adding a host or key
-ragenix --rekey
+# Re-key everything after adding a host or key. Rewrites EVERY secret, not just
+# the ones whose recipients changed, so expect the whole secrets/ dir to show as
+# modified — identical plaintext always re-encrypts to different bytes.
+RULES=secrets/secrets.nix ragenix --rekey -i ~/.ssh/id_ed25519_fresh
 ```
+
+Adding a machine: append its **host** key (`/etc/ssh/ssh_host_ed25519_key.pub`, not a user
+key) to `secrets/secrets.nix`, list it on the secrets it should read, then `--rekey` from a
+machine that can already decrypt.
 
 ## Customization
 
