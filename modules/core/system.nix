@@ -11,17 +11,26 @@
     inputs.millennium.overlays.default
     inputs.affinity-nix.overlays.default
 
-    # Hyprland with the mirror-hotplug SEGV patched out (still unfixed in 0.56.0).
-    # damageMirrorsWith() derefs m_mirrors entries — weak refs — without checking
-    # expiry, so unplugging a mirrored output kills the whole session on the next
-    # frame. Consumed by modules/core/wayland.nix and modules/home/hyprland.
+    # Hyprland carrying our local fixes (both still unfixed in 0.56.0). Kept under
+    # the -mirrorfix name because two modules consume it; see patches/ for the why.
+    #   mirror-weakptr:         damageMirrorsWith() derefs m_mirrors entries — weak
+    #                           refs — without checking expiry, so unplugging a
+    #                           mirrored output kills the session on the next frame.
+    #   idle-inhibit-noop-reset: setInhibit() resets every idle notification even
+    #                           when the inhibit state is unchanged, so any window
+    #                           map/unmap/focus rewinds the idle clock — Steam toasts
+    #                           relight a blanked, locked session hours later.
+    # Consumed by modules/core/wayland.nix and modules/home/hyprland.
     # NOTE: patching defeats the hyprland.cachix.org hit below, so Hyprland is a
-    # local compile until upstream lands the guard and this can be dropped.
+    # local compile until upstream lands these and they can be dropped.
     (_final: prev: {
       hyprland-mirrorfix =
         inputs.hyprland.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
           (old: {
-            patches = (old.patches or [ ]) ++ [ ../../patches/hyprland-mirror-weakptr.patch ];
+            patches = (old.patches or [ ]) ++ [
+              ../../patches/hyprland-mirror-weakptr.patch
+              ../../patches/hyprland-idle-inhibit-noop-reset.patch
+            ];
           });
     })
   ];
@@ -74,8 +83,22 @@
     # normal 0-7 then bright 8-15. Index 0 (base #24273a) doubles as the console
     # background, giving the dark Catppuccin backdrop.
     colors = [
-      "24273a" "ed8796" "a6da95" "eed49f" "8aadf4" "f5bde6" "8bd5ca" "b8c0e0"
-      "5b6078" "ed8796" "a6da95" "eed49f" "8aadf4" "f5bde6" "8bd5ca" "a5adcb"
+      "24273a"
+      "ed8796"
+      "a6da95"
+      "eed49f"
+      "8aadf4"
+      "f5bde6"
+      "8bd5ca"
+      "b8c0e0"
+      "5b6078"
+      "ed8796"
+      "a6da95"
+      "eed49f"
+      "8aadf4"
+      "f5bde6"
+      "8bd5ca"
+      "a5adcb"
     ];
   };
 

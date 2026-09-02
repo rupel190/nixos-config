@@ -1,0 +1,42 @@
+idle: don't reset the idle clock when setInhibit changes nothing
+
+recheckIdleInhibitorStatus() runs on every window map (Window.cpp:1494),
+unmap (:1687), focus change (FocusState.cpp:151, :220) and fullscreen toggle
+(FullscreenController.cpp:501). With no idle inhibitors and no `idleinhibit`
+window rules it always falls through to setInhibit(false) — which then calls
+update() on every ext-idle-notification regardless of whether the inhibit
+state actually changed. update(0) calls reset() (sending `resumed`) and rearms
+the full timeout, so a false → false recheck silently rewinds the idle clock.
+
+Consequence: any background window that opens, closes or takes focus resets
+the compositor's idle timer. A Steam notification toast (an unmanaged X11
+window, class steam, title notificationtoasts_NN_desktop) is enough — hypridle
+receives `resumed` and runs its on-resume, so a locked, DPMS-off session lights
+its panels back up hours later with the lock screen on them. The other half is
+worse and invisible: while such popups arrive faster than the lock timeout, the
+idle lock can never fire at all.
+
+Measured on this machine: 81 Steam popups over two days; 11 of 11 spontaneous
+DPMS-on events each land 220-880ms after a PopupHTMLWindow, while every wake
+caused by real input has no popup near it.
+
+A genuine true → false transition still rearms the timers, so releasing a real
+inhibitor is unaffected.
+
+Applies to Hyprland 52b368f1d7fdee1b0e96ef3dc655b5a577df4fdb (v0.56.0).
+
+--- a/src/protocols/IdleNotify.cpp
++++ b/src/protocols/IdleNotify.cpp
+@@ -116,6 +116,12 @@
+ }
+ 
+ void CIdleNotifyProtocol::setInhibit(bool inhibited) {
++    // A recheck that changes nothing must not touch the notifications: update()
++    // resets them and rearms the full timeout, so a no-op false -> false call
++    // would rewind the idle clock on every window map/unmap/focus change.
++    if (isInhibited == inhibited)
++        return;
++
+     isInhibited = inhibited;
+     for (auto const& n : m_notifications) {
+         if (n->inhibitorsAreObeyed())
