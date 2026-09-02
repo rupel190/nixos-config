@@ -22,6 +22,7 @@
     ./git.nix # version control
     ./lazygit.nix
     ./claude.nix # AI coding assistant
+    ./opencode.nix # AI coding assistant (model-agnostic alternative)
     ./spicetify.nix # spotify client
     ./qbz.nix # qobuz hi-fi client (AppImage)
     ./mpv.nix # media player
