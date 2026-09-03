@@ -1,5 +1,6 @@
 import { createPoll } from "ags/time"
 import { execAsync } from "ags/process"
+import { Gdk, Gtk } from "ags/gtk4"
 import GLib from "gi://GLib"
 
 const CALENDAR_URL = "https://calendar.proton.me/"
@@ -9,15 +10,33 @@ const CALENDAR_URL = "https://calendar.proton.me/"
 // the same string in-process for free.
 const fmt = (pattern: string) => GLib.DateTime.new_now_local().format(pattern)!
 
-function openCalendar() {
-  // Handed to the compositor rather than run as execAsync("zen …") directly: AGS
-  // runs as a systemd user unit with KillMode=mixed, so anything it forks sits in
-  // that unit's cgroup and dies on `systemctl --user restart ags` — which is the
-  // normal edit loop for this config. `dispatch exec` spawns from Hyprland
-  // instead, so the browser outlives the bar and still picks up window rules.
-  execAsync(["hyprctl", "dispatch", "exec", `zen ${CALENDAR_URL}`]).catch((e) =>
-    console.error("Clock: could not open calendar —", e),
-  )
+// Handed to the compositor rather than run as execAsync directly: AGS runs as a
+// systemd user unit with KillMode=mixed, so anything it forks sits in that unit's
+// cgroup and dies on `systemctl --user restart ags` — the normal edit loop here.
+// That kills a browser, and it kills the wl-copy daemon still holding the
+// selection. Spawning from Hyprland puts both outside the unit.
+//
+// The payload is a Lua expression, not a dispatcher line: Hyprland's IPC parser
+// is Lua-only on main, so the old `dispatch exec <cmd>` form is a silent syntax
+// error. JSON.stringify doubles as a Lua string literal, same as keybinds.nix.
+function hyprExec(cmd: string) {
+  return execAsync([
+    "hyprctl",
+    "dispatch",
+    `hl.dsp.exec_cmd(${JSON.stringify(cmd)})`,
+  ]).catch((e) => console.error(`Clock: could not run \`${cmd}\` —`, e))
+}
+
+const openCalendar = () => hyprExec(`zen ${CALENDAR_URL}`)
+const copy = (text: string) => hyprExec(`wl-copy -- ${text}`)
+
+// Works because GtkButton binds its own click gesture to the primary button
+// only, so a secondary press is never claimed on the way up and the label — the
+// pick target, since GtkWidget:can-target is true by default — keeps it.
+function onSecondaryClick(self: Gtk.Widget, handler: () => void) {
+  const gesture = new Gtk.GestureClick({ button: Gdk.BUTTON_SECONDARY })
+  gesture.connect("pressed", handler)
+  self.add_controller(gesture)
 }
 
 export default function Clock() {
@@ -37,12 +56,22 @@ export default function Clock() {
       class="Clock"
       focusable={false}
       onClicked={openCalendar}
-      tooltipText="Open Proton Calendar"
+      tooltipText="Click for Proton Calendar · right-click the time or date to copy it"
     >
       <box>
-        <label class="hm" label={hm} />
+        <label
+          class="hm"
+          label={hm}
+          $={(self) => onSecondaryClick(self, () => copy(hm.get()))}
+        />
         <label class="sep" label="·" />
-        <label class="date" label={date} />
+        {/* Copied as ISO 8601 rather than the `%a %d %b` on screen — the bar
+            wants a glanceable date, a paste target wants a sortable one. */}
+        <label
+          class="date"
+          label={date}
+          $={(self) => onSecondaryClick(self, () => copy(fmt("%Y-%m-%d")))}
+        />
       </box>
     </button>
   )
