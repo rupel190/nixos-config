@@ -56,6 +56,21 @@ let
   resizeActive =
     x: y: dsp "hl.dsp.window.resize({ x = ${toString x}, y = ${toString y}, relative = true })";
 
+  # Blank outputs; null = all of them. dpms wants its target as a table field —
+  # a positional dpms("off", "DP-2") is accepted silently and blanks everything.
+  # The 400ms delay lets this chord's own key events land first, otherwise
+  # key_press_enables_dpms lights the screens straight back up.
+  dpmsOff =
+    monitor:
+    let
+      target = lib.optionalString (monitor != null) ", monitor = \"${monitor}\"";
+    in
+    dsp ''
+      function()
+        hl.timer(function() hl.dispatch(hl.dsp.dpms({ state = "off"${target} })) end,
+                 { timeout = 400, type = "oneshot" })
+      end'';
+
   digits = [
     "1"
     "2"
@@ -122,14 +137,8 @@ in
         # guard and --grace 0.
         (bind "${sysMod} + L" (exec "loginctl lock-session"))
 
-        # Monitors off. Delayed ~400ms so the modifier releases from this very
-        # chord land before dpms goes down, otherwise key_press_enables_dpms
-        # wakes the screens right back up.
-        (bind "${sysMod} + M" (dsp ''
-          function()
-            hl.timer(function() hl.dispatch(hl.dsp.dpms("off")) end,
-                     { timeout = 400, type = "oneshot" })
-          end''))
+        # All monitors off.
+        (bind "${sysMod} + M" (dpmsOff null))
 
         # Read the clipboard aloud (read-along aid for dense prose). Spelled out
         # rather than bare "say-clip" because ~/.local/bin is on PATH for
@@ -213,6 +222,14 @@ in
         # negative window height and made the window vanish.
         (bind "${mod} + bracketleft" (layoutmsgIn "scrolling" "consume_or_expel prev")) # merge into previous column
         (bind "${mod} + bracketright" (layoutmsgIn "scrolling" "consume_or_expel next")) # split out to next column
+      ]
+
+      # Blank one screen at a time, left to right: 1 = DP-1, 2 = DP-2 (OLED),
+      # 3 = HDMI-A-2. Panel names are amanita's, hence the host gate.
+      ++ lib.optionals (host == "amanita") [
+        (bind "${sysMod} + 1" (dpmsOff "DP-1"))
+        (bind "${sysMod} + 2" (dpmsOff "DP-2"))
+        (bind "${sysMod} + 3" (dpmsOff "HDMI-A-2"))
       ]
       # Switch workspaces with mainMod + [0-9]; move with mainMod + ALT + [0-9].
       # 0 maps to workspace 10.
