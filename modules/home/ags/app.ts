@@ -4,6 +4,8 @@ import type { Gdk, Gtk } from "ags/gtk4"
 import style from "./style.scss"
 import Bar from "./widget/Bar"
 import { init as initDdc } from "./service/ddc"
+import { init as initPeripherals } from "./service/peripherals"
+import { init as initSysMon } from "./service/sysmon"
 import { init as initWindows } from "./service/windows"
 
 app.start({
@@ -16,6 +18,15 @@ app.start({
     // Synchronous — reads the current client list straight off the Hyprland IPC
     // socket, then keeps itself current from its `event` signal.
     initWindows()
+
+    // Started once for the whole app, not per Bar: the CPU figure is a delta
+    // between consecutive /proc/stat reads, and rival samplers would split the
+    // elapsed jiffies between them.
+    initSysMon()
+
+    // Peripheral batteries — scanned from sysfs, so this costs nothing when
+    // there is nothing paired and picks up a device the moment it appears.
+    initPeripherals()
 
     // One bar per connected monitor, rebuilt whenever that set changes.
     //

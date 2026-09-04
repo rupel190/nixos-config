@@ -226,3 +226,47 @@ popover > contents {
 .refresh:hover {
   background-color: $surface1;
 }
+
+// ── CPU / memory ─────────────────────────────────────────────────────────────
+// Moved off the WezTerm tabline, where these two numbers were spending ~23 of a
+// 124-column tab bar. See the note above `tabline_z` in modules/home/wezterm.nix.
+
+.SysMon .icon {
+  color: $teal;
+  font-size: 14px;
+}
+
+.SysMon .value {
+  color: $subtext0;
+  // tnum keeps digits the same width, but not the string the same length — 9%
+  // to 10% would still shift the icon beside it. A floor wide enough for "100%"
+  // pins the cluster; the labels are xalign 0 so they grow rightward into it.
+  min-width: 36px;
+}
+
+// ── Peripheral batteries ─────────────────────────────────────────────────────
+// Device-scope power supplies only (the mouse); a laptop's own battery is scope
+// System and stays in the WezTerm tabline. See service/peripherals.ts.
+
+.Peripherals .icon {
+  color: $teal;
+  font-size: 14px;
+}
+
+.Peripherals .value {
+  color: $subtext0;
+  // Room for "100%" so the icon beside it does not step sideways at 9% → 10%.
+  min-width: 36px;
+}
+
+.Peripherals .charging {
+  color: $teal;
+  font-size: 11px;
+}
+
+// The one state on this bar worth raising your eyes for, so it gets the only
+// warm colour in the palette rather than another teal.
+.Peripherals .stat.low .icon,
+.Peripherals .stat.low .value {
+  color: #ee99a0;
+}

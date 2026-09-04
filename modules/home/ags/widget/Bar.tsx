@@ -2,6 +2,8 @@ import app from "ags/gtk4/app"
 import { Astal, Gdk, Gtk } from "ags/gtk4"
 import Clock from "./Clock"
 import DisplayIndicator from "./Display"
+import Peripherals from "./Peripherals"
+import SysMon from "./SysMon"
 import Windows from "./Windows"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
@@ -37,8 +39,12 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Clock />
         </box>
 
-        {/* end — DDC monitor controls; tray still to come */}
-        <box $type="end" halign={Gtk.Align.END}>
+        {/* end — system stats then DDC monitor controls; tray still to come.
+            halign END pins the cluster to the right edge, so a widening stat
+            grows leftward instead of shoving the DDC button around. */}
+        <box $type="end" halign={Gtk.Align.END} spacing={14}>
+          <SysMon />
+          <Peripherals />
           <DisplayIndicator />
         </box>
       </centerbox>

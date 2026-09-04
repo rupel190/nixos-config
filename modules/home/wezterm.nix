@@ -205,6 +205,10 @@
          -- cwd path or Claude's entire conversation title, and the exe is a Nix
          -- `.foo-wrapped` or a bare interpreter. Derive a short title from whichever
          -- of the two is more specific.
+         -- 24 + 6 cells of chip (2 separators, trailing space, output icon) clears
+         -- wezterm's tab_max_width of 32; past 26 the chip gets truncated instead.
+         -- Only binds when the bar has slack -- when it is full, wezterm's own
+         -- balancing (available_cells / tab_count) cuts far below this first.
          local TAB_TITLE_WIDTH = 24
 
          local function basename(path)
@@ -394,7 +398,11 @@
              tabline_c = { " " },
              tabline_x = {},
              tabline_y = {},
-             tabline_z = { "cpu", "ram", { "datetime", style = "%Y-%m-%d %H:%M" }, "battery" },
+             -- cpu/ram/clock moved to the AGS bar; they cost ~44 columns here.
+             -- battery returns "" (not nil) with no battery, so only `cond` drops it.
+             tabline_z = {
+               { "battery", cond = function() return #wezterm.battery_info() > 0 end },
+             },
              -- These live under `sections`, NOT a `tabs` key: tabline has no such key,
              -- so a `tabs = {...}` block is silently ignored and every tab falls back to
              -- the plugin defaults (index + process). That is what happened between
