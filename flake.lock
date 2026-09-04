@@ -1522,11 +1522,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788269792,
-        "narHash": "sha256-eq6Z7teGhXSBmm/Kn8O60ovYo/E3ptbsk3QaS9vtukw=",
+        "lastModified": 1788461294,
+        "narHash": "sha256-8dXc4sF0Gg1iDf2jdkJ/F0ZohRx8JgStibOXJNQzemg=",
         "owner": "rupel190",
         "repo": "singify",
-        "rev": "d4d19ad4469ae1f8a57fadc16866d3a4958894be",
+        "rev": "80b3c6c9123df28dcea208a5a522cc455cc97185",
         "type": "github"
       },
       "original": {
