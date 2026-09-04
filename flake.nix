@@ -78,9 +78,6 @@
       flake = false;
     };
 
-    # Steam Homebrew
-    millennium.url = "github:SteamClientHomebrew/Millennium?dir=packages/nix";
-
     ragenix = {
       url = "github:yaxitech/ragenix";
       inputs.nixpkgs.follows = "nixpkgs";

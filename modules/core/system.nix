@@ -8,7 +8,6 @@
 }:
 {
   nixpkgs.overlays = [
-    inputs.millennium.overlays.default
     inputs.affinity-nix.overlays.default
 
     # Hyprland carrying our local fixes (both still unfixed in 0.56.0). Kept under

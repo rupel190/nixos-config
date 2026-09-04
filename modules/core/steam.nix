@@ -13,9 +13,9 @@
       # TODO: Explicit definition required?
       extraCompatPackages = [ pkgs.proton-ge-bin ];
 
-      # Millennium 3.4.1 (2026-08-18), re-enabled after the 3.3.0-beta.7 client-hook
-      # deadlock. Its wrapper forwards every arg below to the upstream steam.override.
-      package = pkgs.millennium-steam.override {
+      # Millennium removed 2026-09-03 after repeated UI wedges; it also deadlocked the
+      # client once on 3.3.0-beta.7. Vanilla override takes every arg below unchanged.
+      package = pkgs.steam.override {
         # gfx1201 (RDNA4): Steam's CEF UI (steamwebhelper) defaults to
         # ANGLE-over-Vulkan (RADV), which isn't conformant on this GPU → the CEF
         # GPU process crashes, Steam auto-disables CEF GPU, and the UI falls back
