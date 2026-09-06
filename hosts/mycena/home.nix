@@ -49,10 +49,21 @@
   # tap rather than typing a URL on an on-screen keyboard. Points at localhost
   # because the server runs on this machine (see ../homeassistant.nix); change
   # the host here if HA later moves to a Pi.
+  #
+  # --kiosk is what makes it read as an app rather than a browser: fullscreen,
+  # no tabs, no URL bar, no back button. Home Assistant has no native Linux
+  # client — its frontend IS a web app — so this is as close to one as exists.
+  # Leave the window via Phosh's app switcher, since kiosk mode removes the
+  # browser's own navigation.
+  #
+  # Deliberately no -P/--profile: a named profile that does not exist yet makes
+  # Firefox open the Profile Manager instead of the page, which on a touch-only
+  # panel is a dead end. Shares the default profile, which is fine on a machine
+  # dedicated to this.
   xdg.desktopEntries.home-assistant = {
     name = "Home Assistant";
     comment = "Local Home Assistant server";
-    exec = "${pkgs.firefox}/bin/firefox --new-window http://localhost:8123";
+    exec = "${pkgs.firefox}/bin/firefox --kiosk http://localhost:8123";
     icon = "web-browser";
     terminal = false;
     categories = [ "Network" ];
