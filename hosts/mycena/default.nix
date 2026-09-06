@@ -38,6 +38,7 @@ in
   imports = [
     inputs.disko.nixosModules.disko
     ./disko.nix
+    ./wall.nix # phosh session, autologin, HiDPI — the wall-panel half
 
     # nixos-hardware has no Surface Book profile. The Book shares the Skylake
     # platform and the IPTS touch stack with the Pro 4 era, so this profile is
