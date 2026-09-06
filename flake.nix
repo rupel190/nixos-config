@@ -7,6 +7,19 @@
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    # Declarative disk partitioning. Consumed by hosts/mycena so the layout is
+    # version-controlled instead of a one-off parted run, and it is also what
+    # nixos-anywhere invokes to format the target before installing.
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # linux-surface patched kernel + IPTS touch/stylus stack for hosts/mycena
+    # (Surface Book 1). Deliberately no nixpkgs.follows: nixos-hardware uses its
+    # own nixpkgs only for CI checks, so overriding it buys nothing.
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+
     hyprland.url = "github:hyprwm/Hyprland";
     hyprland-plugins = {
       url = "github:hyprwm/hyprland-plugins";
@@ -132,6 +145,21 @@
         modules = [
           ./hosts/cordyceps
           inputs.ragenix.nixosModules.default
+        ];
+      };
+
+      # Wall tablet (Surface Book 1). Intentionally leaner than the other two:
+      # hosts/mycena imports neither modules/core nor modules/home, and skips
+      # ragenix since it holds no secrets. See hosts/mycena/default.nix.
+      nixosConfigurations.mycena = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs self;
+          username = "rupel";
+          host = "mycena";
+        };
+        modules = [
+          ./hosts/mycena
         ];
       };
     };
