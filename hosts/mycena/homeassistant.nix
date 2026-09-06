@@ -27,7 +27,11 @@
       # Found by discovery on this LAN, 2026-09-06:
       "hue" # Philips Hue bridge      (needed aiohue)
       "samsungtv" # Samsung TV               (needed getmac)
-      "heos" # Denon/Marantz HEOS       (needed pyheos)
+      # The Marantz announces itself twice. denonavr is receiver control
+      # (power/volume/inputs) over SSDP; heos is Denon's multiroom streaming
+      # platform. Different feature sets, so both.
+      "denonavr"
+      "heos"
       # "hue_ble"   # only for driving Hue bulbs over Bluetooth directly,
       #             # rather than through the bridge above
 
