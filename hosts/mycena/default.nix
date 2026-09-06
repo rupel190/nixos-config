@@ -39,6 +39,7 @@ in
     inputs.disko.nixosModules.disko
     ./disko.nix
     ./wall.nix # phosh session, autologin, HiDPI — the wall-panel half
+    ./homeassistant.nix # HA server on :8123; lift this out if it moves to a Pi
 
     # nixos-hardware has no Surface Book profile. The Book shares the Skylake
     # platform and the IPTS touch stack with the Pro 4 era, so this profile is

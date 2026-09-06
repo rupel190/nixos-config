@@ -45,6 +45,19 @@
     settings.main.font = "monospace:size=12";
   };
 
+  # Gives Home Assistant its own icon in Phosh's app grid, so reaching it is a
+  # tap rather than typing a URL on an on-screen keyboard. Points at localhost
+  # because the server runs on this machine (see ../homeassistant.nix); change
+  # the host here if HA later moves to a Pi.
+  xdg.desktopEntries.home-assistant = {
+    name = "Home Assistant";
+    comment = "Local Home Assistant server";
+    exec = "${pkgs.firefox}/bin/firefox --new-window http://localhost:8123";
+    icon = "web-browser";
+    terminal = false;
+    categories = [ "Network" ];
+  };
+
   # No PIN on a wall panel. Physical access is already the security boundary
   # here, and a keypad between you and the screen defeats the point of mounting
   # it on a wall.
@@ -60,6 +73,13 @@
   dconf.settings = {
     "sm/puri/phosh/lockscreen".require-unlock = false;
     "org/gnome/desktop/screensaver".lock-enabled = false;
+
+    # THE on-screen keyboard switch. stevia (phosh-osk-stevia) is started by the
+    # session regardless, but it stays hidden forever unless this is true —
+    # Phosh gates the OSK on GNOME's accessibility key, not on a Phosh-specific
+    # one. Default is false, which on a machine with no physical keyboard means
+    # no text input at all and no error anywhere to explain it.
+    "org/gnome/desktop/a11y/applications".screen-keyboard-enabled = true;
   };
 
   # Same reasoning as the system stateVersion: a frozen record of when this
