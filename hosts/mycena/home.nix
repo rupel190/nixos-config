@@ -45,6 +45,23 @@
     settings.main.font = "monospace:size=12";
   };
 
+  # No PIN on a wall panel. Physical access is already the security boundary
+  # here, and a keypad between you and the screen defeats the point of mounting
+  # it on a wall.
+  #
+  # require-unlock=false does NOT remove the lockscreen — per its own schema
+  # description, it "allows unlocking without entering the PIN or password by
+  # simply swiping up". So the screen still exists, it just never authenticates.
+  # lock-enabled=false stops GNOME re-locking when the panel blanks on idle.
+  #
+  # Screen blanking itself is left at its default. To keep the panel lit
+  # permanently instead, add:
+  #   "org/gnome/desktop/session".idle-delay = lib.hm.gvariant.mkUint32 0;
+  dconf.settings = {
+    "sm/puri/phosh/lockscreen".require-unlock = false;
+    "org/gnome/desktop/screensaver".lock-enabled = false;
+  };
+
   # Same reasoning as the system stateVersion: a frozen record of when this
   # profile was created, not a version to keep current.
   home.stateVersion = "26.05";
