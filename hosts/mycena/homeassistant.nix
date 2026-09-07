@@ -55,28 +55,18 @@
 
   };
 
-  # Local text-to-speech, as an alternative to the "gtts" component HA keeps
-  # offering. gtts is Google Translate's TTS: every phrase HA speaks would be
-  # sent to Google. Piper runs a small neural voice model on this machine, so
-  # nothing leaves the LAN and it works with the internet down.
+  # Local TTS instead of the "gtts" component onboarding defaults to, which
+  # ships every spoken phrase to Google. Costs a 2.8 GiB closure (it pulls the
+  # pytorch training stack, not just onnx inference) -- viable only because the
+  # bluetooth coexistence fix below took wifi from 28 KB/s to 4 MB/s.
   #
-  # Bound to loopback only — HA is the sole client and it runs on this host, so
-  # there is no reason to expose the port. Voice samples to pick from:
-  # https://rhasspy.github.io/piper-samples/  (de_DE-thorsten-medium for German)
-  #
-  # Wire it up afterwards in HA: Settings > Devices > Add Integration >
-  # Wyoming Protocol, host 127.0.0.1, port 10200.
-  # DISABLED: wyoming-piper drags a 2.8 GiB closure (the pytorch TRAINING stack
-  # -- torch, triton, numba, scikit-learn, librosa -- not just onnx inference).
-  # mycena's wifi sustains ~32 KB/s, measured with plain curl against both the
-  # LAN and the internet, so that closure needs ~18 hours and stalled six
-  # separate deploy attempts. Re-enable once the radio is fixed, or run Piper on
-  # amanita and point HA's wyoming integration at it over the LAN instead.
-  # services.wyoming.piper.servers.main = {
-  #   enable = true;
-  #   voice = "en-us-ryan-medium";
-  #   uri = "tcp://127.0.0.1:10200";
-  # };
+  # Wire it up in HA: Settings > Devices > Add Integration > Wyoming Protocol,
+  # host 127.0.0.1, port 10200.
+  services.wyoming.piper.servers.main = {
+    enable = true;
+    voice = "en-us-ryan-medium";
+    uri = "tcp://127.0.0.1:10200";
+  };
 
   # services.home-assistant.openFirewall is gone — it now fails an assertion,
   # because HA no longer takes its frontend port from configuration.yaml, so

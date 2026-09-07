@@ -18,6 +18,7 @@
 # the Wayland frontend, without which stevia does not raise on text fields.
 {
   pkgs,
+  lib,
   username,
   ...
 }:
@@ -45,6 +46,18 @@
   };
 
   hardware.graphics.enable = true; # Intel HD 520
+
+  # Bluetooth OFF, and this is not cosmetic. The Marvell 88W8897 is a COMBO
+  # chip: wifi and bluetooth share one radio, and their coexistence on this
+  # part is broken (linux-surface#78). Measured on this machine, same file,
+  # same server, seconds apart:
+  #   bluetooth active  :    28,343 B/s
+  #   bluetooth blocked : 4,013,643 B/s   <- 142x
+  # Home Assistant's bluetooth integration scans BLE continuously, which pinned
+  # the radio permanently busy and made every large deploy fail. Nothing else
+  # here needs bluetooth.
+  # mkForce because nixos-hardware's surface profile enables it.
+  hardware.bluetooth.enable = lib.mkForce false;
 
   fonts.packages = with pkgs; [
     dejavu_fonts
