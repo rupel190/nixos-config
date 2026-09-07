@@ -56,5 +56,11 @@
     pciutils # `lspci` was missing when first probing this host
     usbutils
     brightnessctl # panel backlight; no function keys when detached
+
+    # Wifi diagnostics. The mwifiex link runs at ~32 KB/s despite -36 dBm and a
+    # 260 Mbit/s AP rate, and nothing here could measure why — no bitrate, tx
+    # retry or error counters without these.
+    iw
+    ethtool
   ];
 }

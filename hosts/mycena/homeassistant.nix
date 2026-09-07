@@ -66,11 +66,17 @@
   #
   # Wire it up afterwards in HA: Settings > Devices > Add Integration >
   # Wyoming Protocol, host 127.0.0.1, port 10200.
-  services.wyoming.piper.servers.main = {
-    enable = true;
-    voice = "en-us-ryan-medium";
-    uri = "tcp://127.0.0.1:10200";
-  };
+  # DISABLED: wyoming-piper drags a 2.8 GiB closure (the pytorch TRAINING stack
+  # -- torch, triton, numba, scikit-learn, librosa -- not just onnx inference).
+  # mycena's wifi sustains ~32 KB/s, measured with plain curl against both the
+  # LAN and the internet, so that closure needs ~18 hours and stalled six
+  # separate deploy attempts. Re-enable once the radio is fixed, or run Piper on
+  # amanita and point HA's wyoming integration at it over the LAN instead.
+  # services.wyoming.piper.servers.main = {
+  #   enable = true;
+  #   voice = "en-us-ryan-medium";
+  #   uri = "tcp://127.0.0.1:10200";
+  # };
 
   # services.home-assistant.openFirewall is gone — it now fails an assertion,
   # because HA no longer takes its frontend port from configuration.yaml, so
