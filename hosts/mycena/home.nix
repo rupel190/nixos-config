@@ -7,6 +7,7 @@
 # file is only user identity plus the apps that should appear in that grid.
 {
   pkgs,
+  lib,
   username,
   ...
 }:
@@ -91,6 +92,18 @@
     # one. Default is false, which on a machine with no physical keyboard means
     # no text input at all and no error anywhere to explain it.
     "org/gnome/desktop/a11y/applications".screen-keyboard-enabled = true;
+
+    # Blank the panel after 5 min, but NEVER suspend on AC. A wall-mounted
+    # machine that suspends drops its wifi and disappears from the network --
+    # that is what kept killing deploys mid-transfer. On battery it may still
+    # suspend, since detached it is a tablet.
+    "org/gnome/desktop/session".idle-delay = lib.hm.gvariant.mkUint32 300;
+    "org/gnome/settings-daemon/plugins/power" = {
+      sleep-inactive-ac-type = "nothing";
+      sleep-inactive-battery-type = "suspend";
+      sleep-inactive-battery-timeout = 1800;
+      idle-dim = true;
+    };
   };
 
   # Same reasoning as the system stateVersion: a frozen record of when this
