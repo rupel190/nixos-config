@@ -64,7 +64,7 @@
   xdg.desktopEntries.home-assistant = {
     name = "Home Assistant";
     comment = "Local Home Assistant server";
-    exec = "${pkgs.firefox}/bin/firefox --kiosk http://localhost:8123";
+    exec = "${pkgs.firefox}/bin/firefox --kiosk http://localhost:8123/rupels-manly-dashboard/";
     icon = "web-browser";
     terminal = false;
     categories = [ "Network" ];
