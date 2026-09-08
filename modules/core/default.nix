@@ -26,6 +26,8 @@
     ./wayland.nix
     ./virtualization.nix
   ]
-  # amanita only: 16 GB RX 9070 XT + the nvme950 model store.
-  ++ lib.optionals (host == "amanita") [ ./comfyui.nix ];
+  ++ lib.optionals (host == "amanita") [
+    ./comfyui.nix # 16 GB RX 9070 XT + the nvme950 model store
+    ./printing.nix # Brother PT-P710BT label printer
+  ];
 }
