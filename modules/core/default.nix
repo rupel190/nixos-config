@@ -20,14 +20,13 @@
     ./secrets.nix
     ./security.nix
     ./services.nix
+    ./printing.nix
     ./steam.nix
     ./system.nix
     ./user.nix
     ./wayland.nix
     ./virtualization.nix
   ]
-  ++ lib.optionals (host == "amanita") [
-    ./comfyui.nix # 16 GB RX 9070 XT + the nvme950 model store
-    ./printing.nix # Brother PT-P710BT label printer
-  ];
+  # amanita only: 16 GB RX 9070 XT + the nvme950 model store.
+  ++ lib.optionals (host == "amanita") [ ./comfyui.nix ];
 }
