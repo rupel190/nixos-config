@@ -6,7 +6,6 @@ Going through CUPS instead forces every label to the PPD's fixed 100mm page and
 drags the job through a PDF/PostScript chain this printer's PPD renders badly.
 """
 import argparse
-import math
 import os
 import socket
 import subprocess
