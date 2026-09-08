@@ -84,7 +84,17 @@ in
   # line. Verified: without this, evaluated params were
   # ["root=fstab","loglevel=4","lsm=landlock,yama,bpf"]. Declaring it at normal
   # priority makes it merge instead of lose.
-  boot.kernelParams = [ "mem_sleep_default=deep" ];
+  # mitigations=off: this is a Skylake i5-6300U where retbleed and spectre_v2
+  # are mitigated with IBRS, one of the most expensive options on this
+  # microarchitecture. Acceptable here specifically because mycena is a kiosk
+  # rendering its own Home Assistant dashboard over loopback, not a general
+  # browsing machine -- and browsers keep their own Spectre defences (reduced
+  # timer precision, no SharedArrayBuffer, site isolation) regardless of this.
+  # Revisit if this box ever becomes something people browse the web on.
+  boot.kernelParams = [
+    "mem_sleep_default=deep"
+    "mitigations=off"
+  ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.configurationLimit = 10;

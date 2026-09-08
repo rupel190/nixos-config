@@ -47,6 +47,10 @@
 
   hardware.graphics.enable = true; # Intel HD 520
 
+  # Permanently on AC on a wall, so there is nothing to save. Default governor
+  # was powersave, holding the CPU at 2199 of 3000 MHz.
+  powerManagement.cpuFreqGovernor = "performance";
+
   # Bluetooth OFF, and this is not cosmetic. The Marvell 88W8897 is a COMBO
   # chip: wifi and bluetooth share one radio, and their coexistence on this
   # part is broken (linux-surface#78). Measured on this machine, same file,
