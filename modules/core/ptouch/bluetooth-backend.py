@@ -18,7 +18,6 @@ BLUETOOTHCTL = "bluetoothctl"
 CONNECT_ATTEMPTS = 15
 CONNECT_BACKOFF = 3.0
 CONNECT_TIMEOUT = 25.0
-DRAIN_TIMEOUT = 30.0
 
 
 def log(level, msg):
@@ -66,16 +65,25 @@ def connect(mac, channel):
         except Exception as exc:
             last = exc
             sock.close()
-            log("DEBUG", f"attempt {attempt}/{CONNECT_ATTEMPTS} failed: {exc}")
+            # INFO, not DEBUG: cupsd's default LogLevel drops DEBUG, which made a
+            # sleeping printer look like a silently hung job.
+            log("INFO", f"waiting for printer (attempt {attempt}/{CONNECT_ATTEMPTS}): {exc}")
             time.sleep(CONNECT_BACKOFF)
     log("ERROR", f"cannot reach printer at {mac}: {last}")
     return None
 
 
-def drain(sock):
-    """Read PT-CBP status replies until the printer reports done or goes quiet."""
-    sock.settimeout(5.0)
-    deadline = time.time() + DRAIN_TIMEOUT
+def drain(sock, payload_len):
+    """Hold the socket open while the printer consumes the job.
+
+    The P710BT never sends an unsolicited "printing done" frame, so waiting for
+    one burned the full timeout on every job (~74s for a short label). Each
+    raster line is 20 bytes on the wire and the printer runs at ~20mm/s, so
+    bound the wait by the job's own size instead.
+    """
+    est_mm = (payload_len / 20.0) / 180.0 * 25.4
+    sock.settimeout(1.0)
+    deadline = time.time() + est_mm / 20.0 + 4.0
     while time.time() < deadline:
         try:
             data = sock.recv(32)
@@ -90,7 +98,7 @@ def drain(sock):
             if err1 or err2:
                 log("ERROR", f"printer error flags {err1:#04x}/{err2:#04x}")
                 return
-            if stype == 0x01:
+            if stype == 0x01:  # any other type is a phase change, not completion
                 log("INFO", "printing completed")
                 return
 
@@ -120,7 +128,7 @@ def main():
     try:
         log("INFO", f"sending {len(payload)} bytes")
         sock.sendall(payload)
-        drain(sock)
+        drain(sock, len(payload))
     except Exception as exc:
         log("ERROR", f"send failed: {exc}")
         return CUPS_RETRY

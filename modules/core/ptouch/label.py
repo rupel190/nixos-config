@@ -32,6 +32,22 @@ PACKBITS = b"M\x02"
 RASTER_MODE = b"\x1b\x69\x52\x01"
 PRECUT = b"\x1b\x69\x4d\x40"
 PRINT_FEED = b"\x1a"
+
+
+def margin_cmd(dots):
+    """ESC i d {n1}{n2} - feed/margin amount, uint16 LE.
+
+    5 bytes only. ptouch-print's D460BT blob appends 4D 00, but that is a
+    separate command meaning *disable compression*, which would corrupt a
+    PackBits raster - so PackBits is re-asserted after this.
+
+    The P710BT honours this even though ptouch-print only sends it to the
+    D460BT family. Measured on 12mm tape: no command and 14 both give a 24mm
+    leader, 1 gives 22mm. That 13-dot saving is 13/180in = 1.83mm, so the
+    remaining ~22mm is the mechanical head-to-cutter offset and is not
+    reachable by any command - use --chain to amortise it over a batch.
+    """
+    return b"\x1b\x69\x64" + dots.to_bytes(2, "little")
 PRINT_CHAIN = b"\x0c"
 
 
@@ -51,13 +67,18 @@ def die(msg):
     sys.exit(f"label: {msg}")
 
 
-def connect(mac, attempts=15, backoff=3.0):
-    """RFCOMM connect. The printer sleeps aggressively and refuses the first
-    attempts while the baseband link comes up, so retry instead of failing."""
+def connect(mac, attempts=10, backoff=2.0):
+    """RFCOMM connect. The printer refuses the first attempts while the baseband
+    link comes up - three were needed in practice - so retry.
+
+    Budgeted for an interactive command: ~80s worst case. A printer that is
+    simply off should report that quickly rather than retrying for minutes; the
+    CUPS backend is the one that waits a long time, since queued jobs can.
+    """
     last = None
     for n in range(1, attempts + 1):
         sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-        sock.settimeout(20)
+        sock.settimeout(6)
         try:
             sock.connect((mac, CHANNEL))
             return sock
@@ -66,6 +87,9 @@ def connect(mac, attempts=15, backoff=3.0):
             sock.close()
             if n == 1:
                 print("waiting for printer...", file=sys.stderr)
+            elif n == 4:
+                print("still nothing - is it switched on? it auto-powers-off when idle.",
+                      file=sys.stderr)
             time.sleep(backoff)
     print(f"label: cannot reach printer at {mac}: {last}", file=sys.stderr)
     return None
@@ -90,6 +114,34 @@ def read_status(sock):
     if buf[8] or buf[9]:
         die(f"printer reports error flags {buf[8]:#04x}/{buf[9]:#04x} (tape jam? cover open?)")
     return buf[10]
+
+
+def wait_done(sock, mm_long):
+    """Hold the socket open long enough for the printer to consume the job.
+
+    Two things had to be ruled out: closing a fixed 1s after sendall() truncated
+    back-to-back jobs, but the P710BT also never sends an unsolicited
+    "printing done" frame, so waiting for one just blocks until timeout. The
+    printer runs at ~20mm/s, so bound the wait by the label's own length and
+    exit early if a status frame does turn up.
+    """
+    deadline = time.time() + mm_long / 20.0 + 4.0
+    sock.settimeout(1.0)
+    while time.time() < deadline:
+        try:
+            d = sock.recv(32)
+        except socket.timeout:
+            continue
+        except Exception:
+            return
+        if not d:
+            return
+        if len(d) >= 20 and d[0] == 0x80:
+            if d[8] or d[9]:
+                print(f"label: printer error flags {d[8]:#04x}/{d[9]:#04x}", file=sys.stderr)
+                return
+            if d[18] == 0x01:  # printing completed; any other type is just a phase change
+                return
 
 
 def render(lines, font, text_px, pad, invert):
@@ -171,6 +223,9 @@ def main():
     ap.add_argument("--font", default="DejaVu Sans")
     ap.add_argument("--pad", type=int, default=8,
                     help="blank tape at each end, in pixels (180dpi: 8px is about 1mm)")
+    ap.add_argument("--margin", type=int, default=1, metavar="DOTS",
+                    help="feed margin in dots (default 1 = 0.14mm; the printer's own "
+                         "default is 14 = 2mm). The other ~22mm of leader is mechanical.")
     ap.add_argument("--fontsize", type=int, metavar="PX",
                     help="text height in pixels; defaults to filling the tape (12mm tape = 76px)")
     ap.add_argument("--copies", type=int, default=1)
@@ -247,6 +302,9 @@ def main():
 
     body = raster(w, h, rows, tape_px)
     job = bytearray(PACKBITS + RASTER_MODE)
+    if not 0 <= args.margin <= 0xFFFF:
+        die("--margin must be 0..65535")
+    job += margin_cmd(args.margin) + PACKBITS
     if args.precut:
         job += PRECUT
     for c in range(args.copies):
@@ -254,7 +312,7 @@ def main():
         job += body
         job += PRINT_CHAIN if (args.chain or not last) else PRINT_FEED
     sock.sendall(bytes(job))
-    time.sleep(1.0)
+    wait_done(sock, mm_long)
     sock.close()
     print("sent", file=sys.stderr)
 
