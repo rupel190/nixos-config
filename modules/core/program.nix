@@ -13,9 +13,15 @@
   programs.appimage.enable = true;
   programs.appimage.binfmt = true;
 
-  # Gamescope: grant CAP_SYS_NICE for real-time thread priority (works from terminal/non-Steam launches)
+  # Gamescope. capSysNice stays false deliberately: the NixOS module's setcap wrapper
+  # REPLACES the plain binary rather than adding to it (gamescope.nix has
+  # environment.systemPackages = mkIf (!capSysNice) [ gamescope ]), and that wrapper
+  # hard-exits on capset() under no_new_privs -- which is every Steam, Flatpak and
+  # bwrap launch. All cap_sys_nice buys is realtime compositor thread priority
+  # (without it: "No CAP_SYS_NICE, falling back to regular-priority compute and
+  # threads"), which is not worth losing sandboxed use of gamescope entirely.
   programs.gamescope.enable = true;
-  programs.gamescope.capSysNice = true;
+  programs.gamescope.capSysNice = false;
 
   # gamescope-steam: wrapper that bypasses the NixOS setcap wrapper for Steam use.
   # Steam sets NoNewPrivs=1 + empty bounding set on itself, so the setcap wrapper's
