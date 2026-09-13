@@ -30,6 +30,7 @@
     ./tera.nix # terminal radio player
     ./pulsemixer.nix # audio mixer (patched selection highlight)
     ./plasticity.nix # plasticity CAD (AppImage)
+    ./say-clip.nix # read-aloud aid (kokoro TTS via a warm daemon)
     ./packages.nix # additional packages
     ./browser.nix # zen browser
     ./vicinae.nix # launcher + browser tab integration (native messaging host)

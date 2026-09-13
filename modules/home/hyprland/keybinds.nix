@@ -140,10 +140,9 @@ in
         # All monitors off.
         (bind "${sysMod} + M" (dpmsOff null))
 
-        # Read the clipboard aloud (read-along aid for dense prose). Spelled out
-        # rather than bare "say-clip" because ~/.local/bin is on PATH for
-        # interactive shells, not for Hyprland's exec.
-        (bind "${mod} + SHIFT + R" (exec "~/.local/bin/say-clip"))
+        # Read the clipboard aloud (read-along aid for dense prose). Now a Nix
+        # package, so it lands in the profile bin that Hyprland's exec sees.
+        (bind "${mod} + SHIFT + R" (exec "say-clip"))
 
         # Screenshots
         (bind "${mod} + S" (exec "slurp | grim -g - - | wl-copy"))
