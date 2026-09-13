@@ -368,9 +368,17 @@
         }
 
         # Force all games to DP-2 (main 240Hz monitor)
-        # Steam games: class is steam_app_APPID (e.g. steam_app_730 for CS2)
+        # Proton titles: Steam sets the class to steam_app_APPID.
         {
           match.class = "^steam_app_";
+          monitor = "DP-2";
+        }
+
+        # Native Linux titles get no steam_app_ class -- they keep whatever app_id the
+        # binary sets for itself (cs2, LEGO_Bricktales.x86_64), so each has to be named.
+        # Check a new one with: hyprctl clients -j | jq -r '.[].class'
+        {
+          match.class = "^(cs2|LEGO_Bricktales\\.x86_64)$";
           monitor = "DP-2";
         }
 
