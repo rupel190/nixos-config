@@ -27,11 +27,19 @@ let
     command = "${pkgs.uv}/bin/uv";
     args = [ "run" "--python" "${pkgs.python3}/bin/python3" "${inputs.wezterm-image-mcp}/server.py" ];
   };
+
+  # Statusline for Claude Code. claude-sync syncs settings.json to cordyceps, so
+  # it may only reference this by BARE NAME — a /nix/store path would dangle
+  # there. home.packages resolves it via /etc/profiles/per-user, stable across
+  # generations and identical on both hosts.
+  claude-statusline = pkgs.writers.writePython3Bin "claude-statusline"
+    { flakeIgnore = [ "E501" ]; } (builtins.readFile ./claude-statusline.py);
 in
 {
   home.packages = [
     inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.claude-monitor
+    claude-statusline
     pkgs.sox # /voice audio recording (provides `rec`)
     claude-desktop-with-fhs
   ];
@@ -49,6 +57,24 @@ in
       ${pkgs.jq}/bin/jq --argjson e "$entry" '.mcpServers."term-image" = $e' "$cfg" > "$cfg.hm-tmp"
     else
       ${pkgs.jq}/bin/jq -n --argjson e "$entry" '{mcpServers:{"term-image":$e}}' > "$cfg.hm-tmp"
+    fi
+    $DRY_RUN_CMD mv "$cfg.hm-tmp" "$cfg"
+  '';
+
+  # settings.json is Claude-owned and rewritten in place, so home.file would make
+  # it read-only. Merge just our one key, same approach as termImageMcp above.
+  home.activation.claudeStatusLine = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    cfg="$HOME/.claude/settings.json"
+    entry=${lib.escapeShellArg (builtins.toJSON {
+      type = "command";
+      command = "claude-statusline";
+      padding = 0;
+    })}
+    mkdir -p "$HOME/.claude"
+    if [ -e "$cfg" ]; then
+      ${pkgs.jq}/bin/jq --argjson e "$entry" '.statusLine = $e' "$cfg" > "$cfg.hm-tmp"
+    else
+      ${pkgs.jq}/bin/jq -n --argjson e "$entry" '{statusLine:$e}' > "$cfg.hm-tmp"
     fi
     $DRY_RUN_CMD mv "$cfg.hm-tmp" "$cfg"
   '';
