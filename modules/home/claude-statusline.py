@@ -10,10 +10,25 @@ import time
 
 DIM, OFF = "\033[2m", "\033[0m"
 GREEN, YELLOW, ORANGE, RED = "\033[32m", "\033[33m", "\033[38;5;208m", "\033[31m"
+BAR_WIDTH = 8
+EIGHTHS = "\u258f\u258e\u258d\u258c\u258b\u258a\u2589"  # 1/8 .. 7/8 of a cell
 
 
 def hue(pct):
     return GREEN if pct < 50 else YELLOW if pct < 75 else ORANGE if pct < 90 else RED
+
+
+def bar(pct):
+    """Eighth-block meter: 8 cells addressed at 1/8 each, so low values stay distinct."""
+    cells = max(0.0, min(pct, 100.0)) / 100 * BAR_WIDTH
+    full = int(cells)
+    rem = round((cells - full) * 8)
+    if rem == 8:
+        full, rem = full + 1, 0
+    filled = "\u2588" * min(full, BAR_WIDTH)
+    if rem and full < BAR_WIDTH:
+        filled += EIGHTHS[rem - 1]
+    return f"{hue(pct)}{filled}{OFF}{DIM}{'\u00b7' * (BAR_WIDTH - len(filled))}{OFF}"
 
 
 def until(epoch):
@@ -74,7 +89,7 @@ def main():
 
     used = (data.get("context_window") or {}).get("used_percentage")
     if isinstance(used, (int, float)) and not isinstance(used, bool):
-        segments.append(f"{DIM}ctx{OFF} {hue(used)}{used:.0f}%{OFF}")
+        segments.append(f"{DIM}ctx{OFF} {bar(used)} {hue(used)}{used:.0f}%{OFF}")
 
     limits = data.get("rate_limits") or {}
     for key, label in (("five_hour", "5h"), ("seven_day", "7d")):
@@ -83,7 +98,7 @@ def main():
         # Guard upstream bug #52326, where used_percentage can carry the reset epoch.
         if not isinstance(pct, (int, float)) or isinstance(pct, bool) or not 0 <= pct <= 101:
             continue
-        seg = f"{DIM}{label}{OFF} {hue(pct)}{min(pct, 100):.0f}%{OFF}"
+        seg = f"{DIM}{label}{OFF} {bar(pct)} {hue(pct)}{min(pct, 100):.0f}%{OFF}"
         if isinstance(reset, (int, float)) and not isinstance(reset, bool) and reset > time.time():
             seg += f"{DIM} ↻{until(reset)}{OFF}"
         segments.append(seg)
