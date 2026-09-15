@@ -91,6 +91,21 @@
       flake = false;
     };
 
+    # Agent-facing skills that live in their own repos, consumed as
+    # ~/.claude/skills/<name> in modules/home/claude.nix. Source-only (plain
+    # markdown, no flake.nix), so flake = false. git+ssh for the same reason as
+    # wezterm-image-mcp above. Update with `nix flake update <input>` after
+    # pushing. claude-sync EXCLUDES both paths — see modules/home/claude-sync.nix.
+    claude-skill-interaction-tests = {
+      url = "git+ssh://git@github.com/rupel190/claude-interaction-tests";
+      flake = false;
+    };
+
+    claude-skill-beamng-vehicle-values = {
+      url = "git+ssh://git@github.com/rupel190/beamng-vehicle-values";
+      flake = false;
+    };
+
     ragenix = {
       url = "github:yaxitech/ragenix";
       inputs.nixpkgs.follows = "nixpkgs";

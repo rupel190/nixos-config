@@ -50,25 +50,24 @@ let
 
     # Full scope minus `plugins` (regenerable marketplace cache, 2.9M, incl. 56
     # PID-named .in_use lockfiles; only the 3.2K installed_plugins.json is real
-    # state). `hooks` is not a claude-sync built-in path, but settings.json
-    # references ~/.claude/hooks/{notify,wezterm-status}.sh by absolute path and
-    # those are hand-written plain files — they must travel together.
+    # state). `hooks` is gone as of the writeShellApplication conversion: the
+    # scripts are nix packages now and settings.json calls them by BARE NAME, so
+    # there is nothing left in ~/.claude/hooks to carry.
     # settings.local.json is omitted deliberately: per-machine by definition.
     sync_paths:
       - CLAUDE.md
       - settings.json
-      - hooks
       - skills
       - projects
       - tasks
       - history.jsonl
 
     exclude:
-      # Both of these are git repos that travel via git, not via claude-sync.
-      # interaction-tests is a symlink into ~/projects; beamng-vehicle-values is
-      # a real checkout of github.com/rupel190/beamng-vehicle-values (260K of
-      # .git wrapping 52K of content). Syncing either would put a divergent,
-      # remote-less copy on the other machine. Clone them there instead.
+      # Both are nix-managed now (home.file in claude.nix), so the path here is
+      # a symlink: to /nix/store on cordyceps, to ~/projects on amanita. Syncing
+      # either direction lands a path the other machine cannot resolve, and a
+      # store symlink is read-only besides. The content travels as a pinned
+      # flake input instead — no clone step on a new machine.
       - skills/interaction-tests
       - skills/beamng-vehicle-values
       # Safety net: any skill that later becomes a repo should not drag .git

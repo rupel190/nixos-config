@@ -200,6 +200,38 @@
         "type": "github"
       }
     },
+    "claude-skill-beamng-vehicle-values": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1779358909,
+        "narHash": "sha256-BNZbtyABx0yhZF7Jtylv7tmo4NrOpFpUfbNcdA+Xl+w=",
+        "ref": "refs/heads/main",
+        "rev": "eb213225fd2dc7b208370b2268da36ad93aaccb4",
+        "revCount": 2,
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/beamng-vehicle-values"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/beamng-vehicle-values"
+      }
+    },
+    "claude-skill-interaction-tests": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789493139,
+        "narHash": "sha256-57uhox5a9E2OAxwsKdvIuWt/78kwiXijCZwm4Gj6cn4=",
+        "ref": "refs/heads/main",
+        "rev": "9f810129a4347a684188783da77356dbec682775",
+        "revCount": 19,
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/claude-interaction-tests"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/claude-interaction-tests"
+      }
+    },
     "corefonts": {
       "flake": false,
       "locked": {
@@ -1434,6 +1466,8 @@
         "ags": "ags",
         "claude-code": "claude-code",
         "claude-desktop": "claude-desktop",
+        "claude-skill-beamng-vehicle-values": "claude-skill-beamng-vehicle-values",
+        "claude-skill-interaction-tests": "claude-skill-interaction-tests",
         "disko": "disko",
         "home-manager": "home-manager",
         "hyprgrass": "hyprgrass",
