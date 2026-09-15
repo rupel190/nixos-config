@@ -168,6 +168,44 @@ def render(lines, font, text_px, pad, invert):
     return parse_pbm(out)
 
 
+def _image_pbm(path, text_px, pad, invert, flatten):
+    cmd = [MAGICK, path]
+    if flatten:
+        cmd += ["-background", "white", "-alpha", "remove", "-alpha", "off"]
+    else:
+        cmd += ["-alpha", "off"]
+    cmd += ["-resize", f"x{text_px}"]
+    if pad:
+        cmd += ["-bordercolor", "white", "-border", f"{pad}x0"]
+    if invert:
+        cmd += ["-negate"]
+    cmd += ["-colorspace", "Gray", "-threshold", "60%", "-depth", "1", "pbm:-"]
+    out = subprocess.run(cmd, capture_output=True).stdout
+    return out if out.startswith(b"P4") else b""
+
+
+def render_image(path, text_px, pad, invert):
+    """Any image file -> 1-bit PBM at the tape's printable height.
+
+    Alpha has to be flattened onto white or a transparent icon thresholds to a
+    solid black block. But ImageMagick's alpha metadata lies: a plain bilevel
+    PNG can report a blend alpha it does not really have, and flattening it
+    yields a blank image. %[opaque] and mean.a both fail to tell the two apart,
+    so decide on the result instead - flatten, and fall back to ignoring alpha
+    if that produced no ink at all.
+    """
+    if not os.path.exists(path):
+        die(f"no such image: {path}")
+    for flatten in (True, False):
+        data = _image_pbm(path, text_px, pad, invert, flatten)
+        if not data:
+            continue
+        w, h, rows = parse_pbm(data)
+        if any(any(r) for r in rows):
+            return w, h, rows
+    die(f"{path} rendered with no ink - is it blank, or all transparent?")
+
+
 def parse_pbm(data):
     """Minimal binary PBM (P4) reader -> (width, height, rows of bytes)."""
     fields, pos = [], 2
@@ -216,6 +254,8 @@ def raster(w, h, rows, tape_px):
 def main():
     ap = argparse.ArgumentParser(prog="label", description="Print a text label on the PT-P710BT over Bluetooth.")
     ap.add_argument("text", nargs="*", help="label text; each argument is a line")
+    ap.add_argument("--image", metavar="FILE",
+                    help="print an image instead of text, scaled to the tape height")
     ap.add_argument("--list-fonts", nargs="?", const="", metavar="PATTERN",
                     help="list installed font families, optionally filtered, and exit")
     ap.add_argument("--mac", default=os.environ.get("PTOUCH_MAC", DEFAULT_MAC))
@@ -238,8 +278,8 @@ def main():
     if args.list_fonts is not None:
         list_fonts(args.list_fonts)
         return
-    if not args.text:
-        ap.error("no text given")
+    if not args.text and not args.image:
+        ap.error("give some text, or --image FILE")
 
     font = args.font
     if not os.path.exists(font):
@@ -275,7 +315,10 @@ def main():
     text_px = args.fontsize or tape_px
     if text_px > tape_px:
         die(f"--fontsize {text_px} exceeds the {mm}mm tape's {tape_px}px printable width")
-    w, h, rows = render(args.text, font, text_px, args.pad, args.invert)
+    if args.image:
+        w, h, rows = render_image(args.image, text_px, args.pad, args.invert)
+    else:
+        w, h, rows = render(args.text, font, text_px, args.pad, args.invert)
     mm_long = w / DPI * 25.4
     print(f"{mm}mm tape, {w}x{h}px -> {mm_long:.0f}mm label", file=sys.stderr)
 
