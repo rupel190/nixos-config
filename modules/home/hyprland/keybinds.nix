@@ -71,6 +71,29 @@ let
                  { timeout = 400, type = "oneshot" })
       end'';
 
+  # Flip the AVR (HDMI-A-1) between duplicating DP-1 and standing on its own.
+  # hl.monitor MERGES into the live output config, so the mirror needs an explicit
+  # "" to clear — omitting the field leaves it mirroring. State reads DP-1's mirrors
+  # list (HL.Monitor has no mirror-of field) so it tracks config, not cable.
+  # No `icon`: create() rejects -1, and that error bypasses pcall.
+  mirrorToggle = dsp ''
+    function()
+      local dp1 = hl.get_monitor("DP-1")
+      local mirroring = dp1 ~= nil and #dp1.mirrors > 0
+      hl.monitor({
+        output = "HDMI-A-1",
+        mode = "preferred",
+        position = "auto",
+        scale = 1,
+        mirror = mirroring and "" or "DP-1",
+      })
+      hl.notification.create({
+        text = mirroring and "HDMI-A-1: extend" or "HDMI-A-1: duplicate DP-1",
+        time = 2000,
+        color = mirroring and "rgb(a6da95)" or "rgb(f9e2af)",
+      })
+    end'';
+
   digits = [
     "1"
     "2"
@@ -229,6 +252,8 @@ in
         (bind "${sysMod} + 1" (dpmsOff "DP-1"))
         (bind "${sysMod} + 2" (dpmsOff "DP-2"))
         (bind "${sysMod} + 3" (dpmsOff "HDMI-A-2"))
+        # AVR/HDMI-A-1: duplicate DP-1 <-> extend.
+        (bind "${sysMod} + 4" mirrorToggle)
       ]
       # Switch workspaces with mainMod + [0-9]; move with mainMod + ALT + [0-9].
       # 0 maps to workspace 10.
