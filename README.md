@@ -46,6 +46,7 @@ specialArg rather than split into separate trees, so both machines share one mod
         ├── hyprland/          # config, keybinds, workspaces, variables,
         │                      # hypridle, hyprlock
         ├── ags/               # Status bar (AGS 3 / Astal, GTK4)
+        ├── audio-switch/      # Default-output ring (bar click + CTRL+SUPER+ALT+A)
         ├── btop/              # Resource monitor
         ├── cava/              # Audio visualizer
         ├── discord/           # Discord with theming
@@ -148,6 +149,8 @@ and `SUPER+E` deliberately spawn standalone processes with their own app_ids
 - **btop** / **darya** — resource and disk-usage monitors
 - **bat**, **fzf**, **fastfetch**
 - **pulsemixer** — audio mixer
+- **audio-switch** — cycles the default output around a declared ring (Marantz ⇄ BlackShark);
+  same binary behind the bar's speaker icon and `CTRL+SUPER+ALT+A`
 - **Surge** — download manager TUI
 - **tera** — terminal radio player
 

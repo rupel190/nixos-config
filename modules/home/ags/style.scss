@@ -270,3 +270,53 @@ popover > contents {
 .Peripherals .stat.low .value {
   color: #ee99a0;
 }
+
+// ── Audio output ─────────────────────────────────────────────────────────────
+// Click cycles the default sink through the ring in
+// modules/home/audio-switch/default.nix; the wheel sets its volume.
+
+button.Audio {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  // Same zeroing as button.Clock — GTK4 buttons carry a themed min-height that
+  // otherwise fights the bar height.
+  min-height: 0;
+  min-width: 0;
+  padding: 3px 10px;
+  border-radius: $radius;
+  transition: background-color 160ms ease;
+}
+
+button.Audio:hover {
+  background-color: rgba(73, 77, 100, 0.5);
+}
+
+button.Audio:active {
+  background-color: rgba(73, 77, 100, 0.75);
+}
+
+.Audio .icon {
+  color: $teal;
+  font-size: 14px;
+}
+
+.Audio .name {
+  color: $subtext0;
+}
+
+.Audio .pct {
+  color: $subtext0;
+  // Wide enough for "100%" so a wheel notch changes the number without shoving
+  // the DDC button beside it sideways.
+  min-width: 38px;
+}
+
+// Muted is a state you can create by accident with the wheel and then spend a
+// minute not understanding, so it desaturates the whole cluster rather than
+// only swapping the glyph.
+button.Audio.muted .icon,
+button.Audio.muted .name,
+button.Audio.muted .pct {
+  color: $overlay1;
+}

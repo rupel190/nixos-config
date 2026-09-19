@@ -30,6 +30,7 @@
     ./mpv.nix # media player
     ./tera.nix # terminal radio player
     ./pulsemixer.nix # audio mixer (patched selection highlight)
+    ./audio-switch # default-output ring, shared by the bar and CTRL+SUPER+ALT+A
     ./plasticity.nix # plasticity CAD (AppImage)
     ./say-clip.nix # read-aloud aid (kokoro TTS via a warm daemon)
     ./packages.nix # additional packages

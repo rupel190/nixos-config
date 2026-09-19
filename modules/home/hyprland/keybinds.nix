@@ -163,6 +163,13 @@ in
         # All monitors off.
         (bind "${sysMod} + M" (dpmsOff null))
 
+        # Cycle the audio output — Marantz <-> BlackShark. The ring and the
+        # switching both live in `audio-switch` (modules/home/audio-switch), which
+        # the AGS speaker icon also calls, so the bar and this key can never
+        # disagree about what comes next. It draws its own toast, because the bar
+        # is a layer surface that a fullscreen game covers.
+        (bind "${sysMod} + A" (exec "audio-switch"))
+
         # Read the clipboard aloud (read-along aid for dense prose). Now a Nix
         # package, so it lands in the profile bin that Hyprland's exec sees.
         (bind "${mod} + SHIFT + R" (exec "say-clip"))

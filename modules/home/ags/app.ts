@@ -3,6 +3,7 @@ import { createBinding, For } from "ags"
 import type { Gdk, Gtk } from "ags/gtk4"
 import style from "./style.scss"
 import Bar from "./widget/Bar"
+import { init as initAudio } from "./service/audio"
 import { init as initDdc } from "./service/ddc"
 import { init as initPeripherals } from "./service/peripherals"
 import { init as initSysMon } from "./service/sysmon"
@@ -27,6 +28,11 @@ app.start({
     // Peripheral batteries — scanned from sysfs, so this costs nothing when
     // there is nothing paired and picks up a device the moment it appears.
     initPeripherals()
+
+    // Default audio output. Subscribes to WirePlumber over AstalWp; no polling,
+    // and no window into which the bar could show a stale device, because an
+    // external `wpctl set-default` notifies exactly as the bar's own click does.
+    initAudio()
 
     // One bar per connected monitor, rebuilt whenever that set changes.
     //
