@@ -143,6 +143,14 @@ in
       set -gx EDITOR nvim
       set -gx TERMINAL wezterm
 
+      # wezterm exports nixpkgs' "0-unstable-<date>" version verbatim, and every
+      # consumer parses that as major 0 — Claude Code then believes wezterm
+      # predates OSC 8 and prints links as bare text. Restate it in wezterm's
+      # real YYYYMMDD-HHMMSS-hash shape; no-op once nixpkgs ships one that parses.
+      if test "$TERM_PROGRAM" = WezTerm; and string match -qr '^0-unstable-' -- "$TERM_PROGRAM_VERSION"
+          set -gx TERM_PROGRAM_VERSION (string replace -a -- - "" (string replace -- 0-unstable- "" $TERM_PROGRAM_VERSION))-000000-nixpkgs
+      end
+
       # Catppuccin Macchiato color palette
       set -l rosewater 'f4dbd6'
       set -l flamingo 'f0c6c6'
