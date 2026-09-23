@@ -24,8 +24,19 @@
            -- image. It sets WEZTERM_IMAGE_MCP=1 for exactly this check.
            if os.getenv('WEZTERM_IMAGE_MCP') then return end
 
+           -- default: a `claude --resume` tab per active project, plus a scratch tab.
+           -- cwd is set explicitly -- an omitted cwd inherits the mux server's, not $HOME.
            local tab, default_pane, window = mux.spawn_window {
              workspace = 'default',
+             cwd = '/home/rupel/projects/recustomize/stitching-pipeline/',
+             args = { 'claude', '--resume' },
+           }
+           window:spawn_tab {
+             cwd = '/home/rupel/projects/rieder/rieder-quotation-suite/',
+             args = { 'claude', '--resume' },
+           }
+           window:spawn_tab {
+             cwd = '/home/rupel',
            }
 
            local tab, pulsemixer_pane, window = mux.spawn_window {
@@ -41,34 +52,6 @@
              args = { 'btop' },
            }
 
-           local tab, claude_pane, window = mux.spawn_window {
-             workspace = 'recustomize',
-             args = { 'claude' },
-             cwd = '/home/rupel/projects/recustomize/stitching-pipeline/',
-           }
-           window:spawn_tab {
-             cwd = '/home/rupel/projects/recustomize/stitching-pipeline/',
-           }
-
-           local tab, claude_pane, window = mux.spawn_window {
-             workspace = 'nixos',
-             args = { 'claude' },
-             cwd = '/home/rupel/projects/nixos-config/',
-           }
-           claude_pane:split {
-             direction = 'Bottom',
-             size = 0.15,
-           }
-
-           local tab, beamng_pane, window = mux.spawn_window {
-             workspace = 'beamng',
-             cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
-             args = { 'yazi' },
-           }
-           window:spawn_tab {
-             cwd = '/home/rupel/.local/share/Steam/steamapps/common/BeamNG.drive',
-             args = { 'claude' },
-           }
          end)
 
 

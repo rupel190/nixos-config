@@ -159,8 +159,9 @@ Full list in `modules/home/hyprland/keybinds.nix`.
 
 Idle: monitors blank after 10 minutes, the session locks after 20.
 
-WezTerm runs a mux server with named workspaces (one per project), so closing a window keeps
-the session alive — `SUPER+T` walks back into it. `SUPER+W` and `SUPER+E` deliberately spawn
+WezTerm runs a mux server that starts two workspaces: `default`, with a `claude --resume` tab
+per active project plus a scratch tab, and `system`, with pulsemixer, tera and btop. Closing a
+window keeps the session alive — `SUPER+T` walks back into it. `SUPER+W` and `SUPER+E` deliberately spawn
 standalone processes with their own app_ids (`org.wezfurlong.wezterm.scratch` / `.yazi`) so the
 reattach never grabs the wrong window.
 
