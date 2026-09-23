@@ -15,7 +15,6 @@ let
     discord = [ "vesktop.desktop" ]; # official client removed; vesktop declares the same scheme
     bambustudio = [ "bambu-studio.desktop" ];
     plasticity = [ "plasticity.desktop" ];
-    qbz = [ "qbz.desktop" ];
   };
 
   mimeMap = {
@@ -81,7 +80,6 @@ let
     discord = [ "x-scheme-handler/discord" ];
     bambustudio = [ "x-scheme-handler/bambustudio" "model/3mf" "application/vnd.ms-3mfdocument" "model/stl" ];
     plasticity = [ "application/x-plasticity" "model/step" "application/x-step" ];
-    qbz = [ "x-scheme-handler/qobuzapp" ];
   };
 
   associations =

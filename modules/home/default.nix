@@ -26,7 +26,6 @@
     ./claude-sync.nix # sync ~/.claude across machines (R2 + age)
     ./projects # ~/projects checkout manifest + drift audit
     ./spicetify.nix # spotify client
-    ./qbz.nix # qobuz hi-fi client (AppImage)
     ./mpv.nix # media player
     ./tera.nix # terminal radio player
     ./pulsemixer.nix # audio mixer (patched selection highlight)
