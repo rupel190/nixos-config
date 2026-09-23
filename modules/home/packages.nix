@@ -56,9 +56,8 @@
       gamescope # Gaming compositor
 
       # Android MTP
-      gvfs # Virtual filesystem
+      gvfs # Virtual filesystem, provides the mtp:// backend
       glib # GLib library
-      simple-mtpfs # MTP filesystem
 
       # AMD GPU util
       radeontop # AMD GPU monitor
