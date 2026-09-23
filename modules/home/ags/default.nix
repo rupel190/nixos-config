@@ -56,6 +56,13 @@ in
     # bus, which would fight swaync (enabled in packages.nix) for ownership.
   };
 
+  # The bar hosts the StatusNotifierWatcher (AstalTray), so it is what brings up
+  # tray.target — which udiskie's tray mode Requires, and nothing else starts.
+  systemd.user.services.ags.Unit = {
+    Wants = [ "tray.target" ];
+    Before = [ "tray.target" ];
+  };
+
   # Point ~/.config/ags straight at the working tree instead of the store, so a
   # .tsx or .scss edit only needs `systemctl --user restart ags`.
   xdg.configFile."ags".source = config.lib.file.mkOutOfStoreSymlink configSrc;

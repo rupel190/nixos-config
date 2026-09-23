@@ -27,7 +27,6 @@
   # Multiple layers of USB power management disabling
   boot.kernelParams = [
     "usbcore.autosuspend=-1"     # Disable USB autosuspend at kernel level
-    "usb-storage.quirks=:u"      # Disable USB storage autosuspend
   ];
 
   # Disable USB autosuspend entirely via kernel module

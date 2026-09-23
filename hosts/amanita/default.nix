@@ -87,15 +87,6 @@
     ]; # SSD
   };
 
-  fileSystems."/mnt/bak-ntfs" = {
-    device = "/dev/disk/by-uuid/44FA3809FA37F5B0";
-    fsType = "ntfs";
-    options = [
-      "defaults"
-      "nofail"
-    ];
-  };
-
   fileSystems."/mnt/nvme950" = {
     device = "/dev/disk/by-uuid/836d4a09-5b71-46d1-9433-b52713b3cb14";
     fsType = "ext4";
@@ -107,25 +98,32 @@
     ]; # SSD
   };
 
-  fileSystems."/mnt/bak-internal" = {
-    device = "/dev/disk/by-uuid/6FFF-FCF9";
-    fsType = "exfat";
+  fileSystems."/mnt/supersilo" = {
+    device = "/dev/disk/by-label/supersilo"; # 12TB HDD, ext4 made with -m 0
+    fsType = "ext4";
     options = [
-      "defaults"
+      "noatime"
       "nofail"
     ];
   };
 
-  # Temporarily commented out due to systemd unit generation issue
-  # fileSystems."/mnt/bak-external" = {
-  #   device = "/dev/disk/by-uuid/1787c6c5-6ad8-4051-8d45-f61609e8c732";
-  #   fsType = "ext4";
-  #   options = [
-  #     "defaults"
-  #     "nofail"
-  #     "x-systemd.automount"  # Use automount instead of regular mount
-  #     "x-systemd.device-timeout=5"  # Wait only 5 seconds instead of 90
-  #   ];
-  # };
+  # Anything else (USB sticks, old drives on the SATA adapter) goes through udisks → /run/media/rupel
 
+  # Disk health for every SATA + NVMe drive; warnings reach swaync the same way earlyoom's do
+  services.smartd = {
+    enable = true;
+    # full checks, never wake a sleeping disk, short self-test Sundays 13:00, warn via systembus
+    defaults.autodetected = "-a -n standby,q -s (S/../../7/13) -m <nomailer> -M exec ${
+      pkgs.writeShellScript "smartd-notify" ''
+        ${pkgs.dbus}/bin/dbus-send --system / net.nuetzlich.SystemNotifications.Notify \
+          "string:Disk problem: $SMARTD_DEVICESTRING" "string:$SMARTD_MESSAGE"
+      ''
+    }";
+    # the module's systembus option never adds -M exec on its own (it only checks mail/wall/x11)
+    notifications = {
+      wall.enable = false; # wall prints into every open terminal, TUIs included
+      x11.enable = false;
+    };
+  };
+  services.systembus-notify.enable = true;
 }

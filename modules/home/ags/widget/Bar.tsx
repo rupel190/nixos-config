@@ -5,6 +5,7 @@ import Clock from "./Clock"
 import DisplayIndicator from "./Display"
 import Peripherals from "./Peripherals"
 import SysMon from "./SysMon"
+import Tray from "./Tray"
 import Windows from "./Windows"
 
 export default function Bar(gdkmonitor: Gdk.Monitor) {
@@ -40,12 +41,13 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Clock />
         </box>
 
-        {/* end — system stats, then the two hardware controls; tray still to
-            come. halign END pins the cluster to the right edge, so a widening
+        {/* end — tray, system stats, then the two hardware controls.
+            halign END pins the cluster to the right edge, so a widening
             stat grows leftward instead of shoving the buttons around. Audio sits
             inside Display so the outermost thing stays the one whose popover
             wants the screen corner. */}
         <box $type="end" halign={Gtk.Align.END} spacing={14}>
+          <Tray />
           <SysMon />
           <Peripherals />
           <AudioIndicator />

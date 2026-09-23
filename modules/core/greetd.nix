@@ -37,8 +37,8 @@ in
     enable = true;
     # greetd is hardwired to tty1 (the old services.greetd.vt option was removed
     # upstream). With no `console=`/`quiet` kernel param, systemd's [ OK ] status
-    # lines default to tty0 = tty1, so late services (docker, flatpak, the
-    # /mnt/bak-internal mount) repaint over the tuigreet form. This flag adds the
+    # lines default to tty0 = tty1, so late services (docker, flatpak) repaint
+    # over the tuigreet form. This flag adds the
     # TTY hygiene (StandardError→journal, TTYReset/TTYVHangup/TTYVTDisallocate)
     # that resets the VT before tuigreet draws, keeping the login screen clean.
     useTextGreeter = true;
