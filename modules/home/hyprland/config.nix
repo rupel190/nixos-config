@@ -44,6 +44,12 @@
         };
 
         misc = {
+          # The font Hyprland itself renders with — notifications, the error
+          # overlay, the debug overlay, groupbar fallback. Default is "Sans",
+          # which is why its toasts never matched anything else on screen. Pango
+          # takes a comma list as a per-glyph fallback chain, so this is the same
+          # stack window.Bar uses in ags/style.scss.
+          font_family = "Geist, MonaspiceXe Nerd Font Mono";
           # Default is false, which would strand a manually blanked screen: only
           # hypridle's on-resume restores dpms, and that never fires for a blank
           # it didn't start. Any keystroke now wakes them (and is swallowed).
@@ -383,6 +389,66 @@
         {
           match.class = "^steam_app_";
           monitor = "DP-2";
+        }
+
+        # GTA V Enhanced (3240220) places its own window at an absolute x of about
+        # -4892 -- thousands of pixels left of DP-1, which is the leftmost output at
+        # x=-2560. The generic "^steam_app_" monitor rule above does NOT rescue it:
+        # monitor= assigns an output, but a FLOATING window that sets its own
+        # coordinates keeps them, so the window exists, renders and plays audio
+        # entirely offscreen. Symptom: game audible, hyprctl clients shows it mapped,
+        # nothing visible on any monitor. center= overrides the self-chosen position.
+        # Pair this with Windowed=2 (borderless) in the game's own settings.xml --
+        # true fullscreen makes Wine attempt a modeset, which fails under Wayland with
+        # "NtUserChangeDisplaySettings returned -2".
+        {
+          match = {
+            class = "^steam_app_3240220$";
+            title = "^Grand Theft Auto V$";
+          };
+          center = true;
+        }
+
+        # The Rockstar Games Launcher spawns under the same class but with its own
+        # title, so neither the ^Grand Theft Auto V$ nor the ^$ rule below matches it.
+        # Observed sequence without this rule (hyprctl clients, 2s apart):
+        #   Rockstar Games Launcher  [500,400]   float=True    <- maps correctly
+        #   Rockstar Games Launcher  [1254,677]  float=False   <- tiled and resized
+        # It floats only while its title is still empty; once the title is set the ^$
+        # rule stops matching and Hyprland tiles it. Its CEF viewport does not survive
+        # the resize -- the window goes black, the launcher exits, and it takes the
+        # game process with it. Float + center so it keeps its own 500x400 geometry.
+        {
+          match = {
+            class = "^steam_app_3240220$";
+            title = "^Rockstar Games Launcher$";
+          };
+          float = true;
+        }
+        {
+          match = {
+            class = "^steam_app_3240220$";
+            title = "^Rockstar Games Launcher$";
+          };
+          center = true;
+        }
+
+        # GTA V also spawns a 160x20 empty-title helper window under the same class,
+        # same shape as the Plasticity popups handled above. Float it and deny it
+        # initial focus so it cannot tile into the layout or steal clicks from the game.
+        {
+          match = {
+            class = "^steam_app_3240220$";
+            title = "^$";
+          };
+          float = true;
+        }
+        {
+          match = {
+            class = "^steam_app_3240220$";
+            title = "^$";
+          };
+          no_initial_focus = true;
         }
 
         # Native Linux titles get no steam_app_ class -- they keep whatever app_id the
