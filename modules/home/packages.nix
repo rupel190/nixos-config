@@ -181,7 +181,6 @@
     ]
   );
 
-  services.swaync.enable = true;
 
   programs.direnv = {
     enable = true;

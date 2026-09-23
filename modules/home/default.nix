@@ -16,7 +16,7 @@
     ./btop # resouces monitor
     ./bat.nix # better cat command
     ./fastfetch.nix # fetch tool
-    # swaync notification center (service enabled in packages.nix)
+    ./swaync.nix # notification centre, themed to match the bar
     ./wezterm.nix # terminal
     ./discord/discord.nix # vesktop (discord web + vencord)
     ./git.nix # version control

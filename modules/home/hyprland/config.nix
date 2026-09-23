@@ -279,6 +279,9 @@
       # ignore_alpha keeps the blur from bleeding through the fully transparent
       # part of the layer surface; the bar paints its own translucent background
       # in style.scss and only that should be frosted.
+      # The same treatment for swaync, so a notification and the bar it appears
+      # under are the same translucent material rather than one frosted and one
+      # flat. Namespaces are swaync's own, seen in `hyprctl layers`.
       layer_rule = [
         {
           match.namespace = "^ags-bar$";
@@ -286,6 +289,14 @@
         }
         {
           match.namespace = "^ags-bar$";
+          ignore_alpha = 0.3;
+        }
+        {
+          match.namespace = "^swaync-(notification-window|control-center)$";
+          blur = true;
+        }
+        {
+          match.namespace = "^swaync-(notification-window|control-center)$";
           ignore_alpha = 0.3;
         }
       ];
