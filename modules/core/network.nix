@@ -3,6 +3,8 @@
   networking = {
     hostName = "${host}";
     networkmanager.enable = true;
+    # Desktop: no battery to save; a dozing Frame dongle delays headset->PC pose packets.
+    networkmanager.wifi.powersave = false;
 
     # DNS - Leave commented to use router's settings (PiHole)
     # Only override if you need to bypass router DNS
