@@ -16,4 +16,9 @@
       # allowedUDPPorts = [ ];
     };
   };
+
+  # World regdomain "00" disables all 6 GHz channels; the Steam Frame dongle links on 6 GHz.
+  boot.extraModprobeConfig = ''
+    options cfg80211 ieee80211_regdom="AT"
+  '';
 }
