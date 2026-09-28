@@ -26,7 +26,8 @@
         # escape as Plasticity's / Spotify's --use-gl=desktop; drop once RADV is
         # conformant on gfx1201. Verified 2026-07-05: GL_RENDERER flipped
         # RADV-Vulkan → radeonsi-GL, gpu_compositing enabled, idle RSS 20GB→2.4GB.
-        extraArgs = "-cef-force-glx";
+        # Steam Frame (SteamVR-for-Linux#962): start SteamVR on the desktop first, then the game from the headset.
+        extraArgs = "-cef-force-glx -pipewire -vrlinkforceenable";
 
         # ! Disable AVX-512 CPU instructions to avoid Steam SIGILL issues
         extraProfile = ''
