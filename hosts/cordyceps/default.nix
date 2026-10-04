@@ -1,8 +1,17 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 {
   imports = [
     ./hardware-configuration.nix
     ./../../modules/core
+    inputs.nix-flatpak.nixosModules.nix-flatpak
+  ];
+
+  # Flatpak. The Bambu Studio launchers in modules/home (desktop entry, fish
+  # alias, yazi opener) are unconditional, so any host importing modules/home
+  # needs the Flatpak they point at or they're dead commands.
+  services.flatpak.enable = true;
+  services.flatpak.packages = [
+    "com.bambulab.BambuStudio"
   ];
 
   # Host-specific configuration
