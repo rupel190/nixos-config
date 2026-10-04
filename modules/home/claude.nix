@@ -104,7 +104,7 @@ let
     })
   ];
 
-  # Workers (claude-workers.nix) set CLAUDE_WORKER=1 and skip the sync and the
+  # Workers (drovr.nix) set CLAUDE_WORKER=1 and skip the sync and the
   # session checks: a worker turn is not yours to push or to audit.
   #
   # Bare names only: claude-sync ships settings.json to cordyceps, where a
@@ -222,7 +222,7 @@ let
     { flakeIgnore = [ "E501" ]; } (builtins.readFile ./claude-statusline.py);
 in
 {
-  # Other modules add hooks here (claude-workers.nix does); the lists concatenate
+  # Other modules may add hooks here; the lists concatenate
   # per event, and claudeSettings below writes the merged set.
   options.my.claude.hooks = lib.mkOption {
     type = lib.types.attrsOf (lib.types.listOf lib.types.anything);

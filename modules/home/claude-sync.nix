@@ -70,7 +70,7 @@ let
       # flake input instead — no clone step on a new machine.
       - skills/interaction-tests
       - skills/beamng-vehicle-values
-      - skills/claude-workers
+      - skills/drovr
       # Safety net: any skill that later becomes a repo should not drag .git
       # internals across. doublestar syntax, matched against the relative path.
       - "**/.git/**"

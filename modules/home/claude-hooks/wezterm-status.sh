@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Claude Code -> WezTerm tab colour, and the state `cw` waits on.
+# Claude Code -> WezTerm tab colour, and the state `drovr` waits on.
 #
 # Publishes this session's state as a marker file named <wezterm-pane-id>.<state>,
 # whose content is the session's transcript path. wezterm.nix paints the tab for
-# the alert states only (permission, waiting) and ignores working/done; `cw`
+# the alert states only (permission, waiting) and ignores working/done; `drovr`
 # reads all four, and pulls the final answer from the transcript.
 #
 # A file, deliberately: claude runs hooks with no controlling terminal, and the
