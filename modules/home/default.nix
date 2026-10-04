@@ -22,6 +22,7 @@
     ./git.nix # version control
     ./lazygit.nix
     ./claude.nix # AI coding assistant
+    ./claude-workers.nix # cheap headless claude workers on DeepSeek (cw)
     ./opencode.nix # AI coding assistant (model-agnostic alternative)
     ./claude-sync.nix # sync ~/.claude across machines (R2 + age)
     ./projects # ~/projects checkout manifest + drift audit

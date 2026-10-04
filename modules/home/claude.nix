@@ -104,6 +104,9 @@ let
     })
   ];
 
+  # Workers (claude-workers.nix) set CLAUDE_WORKER=1 and skip the sync and the
+  # session checks: a worker turn is not yours to push or to audit.
+  #
   # Bare names only: claude-sync ships settings.json to cordyceps, where a
   # /nix/store path from this machine would dangle. Same rule as the statusline
   # below, and the same reason `claude-sync pull -q` is spelled this way.
@@ -129,6 +132,17 @@ let
         hooks = [
           {
             type = "command";
+            command = "claude-hook-wezterm-status working";
+          }
+        ];
+      }
+    ];
+    SessionEnd = [
+      {
+        matcher = "";
+        hooks = [
+          {
+            type = "command";
             command = "claude-hook-wezterm-status clear";
           }
         ];
@@ -140,7 +154,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-sync pull -q";
+            command = "test -n \"$CLAUDE_WORKER\" || claude-sync pull -q";
           }
         ];
       }
@@ -149,7 +163,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-check-ignore-vs-index 2>/dev/null || true";
+            command = "test -n \"$CLAUDE_WORKER\" || claude-hook-check-ignore-vs-index 2>/dev/null || true";
             timeout = 15;
             statusMessage = "Checking gitignore against the index...";
           }
@@ -160,7 +174,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-check-vault-freshness 2>/dev/null || true";
+            command = "test -n \"$CLAUDE_WORKER\" || claude-hook-check-vault-freshness 2>/dev/null || true";
             timeout = 15;
             statusMessage = "Checking DECISIONS.md against its source...";
           }
@@ -173,7 +187,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-wezterm-status clear";
+            command = "claude-hook-wezterm-status done";
           }
         ];
       }
@@ -182,7 +196,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-sync push -q";
+            command = "test -n \"$CLAUDE_WORKER\" || claude-sync push -q";
           }
         ];
       }
@@ -193,7 +207,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-wezterm-status clear";
+            command = "claude-hook-wezterm-status working";
           }
         ];
       }
@@ -208,7 +222,16 @@ let
     { flakeIgnore = [ "E501" ]; } (builtins.readFile ./claude-statusline.py);
 in
 {
-  home.packages = claudeHookPkgs ++ [
+  # Other modules add hooks here (claude-workers.nix does); the lists concatenate
+  # per event, and claudeSettings below writes the merged set.
+  options.my.claude.hooks = lib.mkOption {
+    type = lib.types.attrsOf (lib.types.listOf lib.types.anything);
+    default = { };
+  };
+
+  config.my.claude.hooks = claudeHooks;
+
+  config.home.packages = claudeHookPkgs ++ [
     inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.claude-monitor
     claude-statusline
@@ -222,7 +245,7 @@ in
   # we jq-merge just our one entry on each switch, atomically, preserving
   # everything else. Same result as `claude mcp add -s user`, but reproducible
   # and without a CLI wrapper (--mcp-config is variadic and breaks subcommands).
-  home.activation.termImageMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  config.home.activation.termImageMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     cfg="$HOME/.claude.json"
     entry=${lib.escapeShellArg (builtins.toJSON termImageServer)}
     if [ -e "$cfg" ]; then
@@ -242,10 +265,10 @@ in
   # everywhere. interaction-tests is under active development, so on amanita it
   # points at the working tree and an edit is live for the next session; other
   # hosts get the pinned input. Bump either with `nix flake update <input>`.
-  home.file.".claude/skills/beamng-vehicle-values".source =
+  config.home.file.".claude/skills/beamng-vehicle-values".source =
     inputs.claude-skill-beamng-vehicle-values;
 
-  home.file.".claude/skills/interaction-tests".source =
+  config.home.file.".claude/skills/interaction-tests".source =
     if host == "amanita" then
       config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/projects/interaction-tests"
     else
@@ -258,14 +281,14 @@ in
   # now, so a hook added through Claude's /hooks UI is dropped on the next
   # switch. Add it here instead. Everything else in the file — enabledPlugins,
   # permissions, editorMode — is Claude's and survives untouched.
-  home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  config.home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     cfg="$HOME/.claude/settings.json"
     sl=${lib.escapeShellArg (builtins.toJSON {
       type = "command";
       command = "claude-statusline";
       padding = 0;
     })}
-    hk=${lib.escapeShellArg (builtins.toJSON claudeHooks)}
+    hk=${lib.escapeShellArg (builtins.toJSON config.my.claude.hooks)}
     mkdir -p "$HOME/.claude"
     if [ -e "$cfg" ]; then
       ${pkgs.jq}/bin/jq --argjson s "$sl" --argjson h "$hk" \
