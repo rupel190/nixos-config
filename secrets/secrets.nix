@@ -31,4 +31,11 @@ in
     amanita-rupel
     cordyceps-host
   ];
+
+  # DeepSeek API key for drovr's claude-deepseek worker wrapper
+  # (modules/home/drovr.nix). amanita only until workers run elsewhere.
+  "deepseek-api-key.age".publicKeys = [
+    amanita-host
+    amanita-rupel
+  ];
 }
