@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, host, ... }:
 {
   # agenix secrets shared by every host. Kept here rather than under hosts/ so a
   # new machine needs only `git pull` + `nixos-rebuild switch` — the recipient
@@ -34,7 +34,8 @@
   };
 
   # DeepSeek API key, read at launch by drovr's claude-deepseek wrapper.
-  age.secrets.deepseek-api-key = {
+  # amanita only: it is the sole recipient, so cordyceps could not decrypt it.
+  age.secrets.deepseek-api-key = lib.mkIf (host == "amanita") {
     file = ../../secrets/deepseek-api-key.age;
     owner = "rupel";
     mode = "0400";
