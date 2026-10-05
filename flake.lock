@@ -321,6 +321,22 @@
         "type": "github"
       }
     },
+    "drovr": {
+      "locked": {
+        "lastModified": 1791232554,
+        "narHash": "sha256-O8Ptp0V+nvEWONq+HNRLPmeeqeDA2f3UudnVXvVNvws=",
+        "ref": "main",
+        "rev": "c37e746c01d125e04007badd073e871ef9741af4",
+        "revCount": 7,
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/drovr"
+      },
+      "original": {
+        "ref": "main",
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/drovr"
+      }
+    },
     "flake-compat": {
       "locked": {
         "lastModified": 1751685974,
@@ -1431,6 +1447,7 @@
         "claude-skill-beamng-vehicle-values": "claude-skill-beamng-vehicle-values",
         "claude-skill-interaction-tests": "claude-skill-interaction-tests",
         "disko": "disko",
+        "drovr": "drovr",
         "home-manager": "home-manager",
         "hyprgrass": "hyprgrass",
         "hyprland": "hyprland",

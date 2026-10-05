@@ -91,6 +91,11 @@
       flake = false;
     };
 
+    # drovr: headless Claude Code workers on cheaper backends (home module in
+    # modules/home/drovr.nix). A flake with no inputs of its own. git+ssh for the
+    # same reason as above; `nix flake update drovr` after pushing.
+    drovr.url = "git+ssh://git@github.com/rupel190/drovr?ref=main";
+
     # Agent-facing skills that live in their own repos, consumed as
     # ~/.claude/skills/<name> in modules/home/claude.nix. Source-only (plain
     # markdown, no flake.nix), so flake = false. git+ssh for the same reason as

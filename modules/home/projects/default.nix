@@ -20,6 +20,7 @@ let
     "song-analyzer" = "git@github.com:rupel190/song-analyzer.git";
     "cstheskin" = "git@github.com:rupel190/cstheskin.git";
     "wezterm-image-mcp" = "git@github.com:rupel190/wezterm-image-mcp.git";
+    "drovr" = "git@github.com:rupel190/drovr.git";
     "wow-baganator-plus" = "git@github.com:rupel190/wow-baganator-plus.git";
 
     # Nested paths work too, e.g.:
