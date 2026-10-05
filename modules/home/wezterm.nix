@@ -262,9 +262,13 @@
          -- format-tab-title is not, so the directory is read on the status tick
          -- (status_update_interval, 500ms) and the result cached for the renderer.
          local claude_markers = {}
+         -- drovr workers ("drovr 2▶ 1✓"); helper from programs.drovr.weztermHelper.
+         local drovr_ok, drovr = pcall(dofile, os.getenv("HOME") .. "/.local/share/drovr/wezterm.lua")
+         local drovr_status = ""
          wezterm.on("update-status", function()
            local ok, markers = pcall(wezterm.glob, CLAUDE_ATTENTION_DIR .. "/*")
            claude_markers = ok and markers or {}
+           drovr_status = drovr_ok and drovr.status() or ""
          end)
 
          -- Claude can sit in any pane of the tab, not only the active one.
@@ -379,7 +383,9 @@
              tabline_a = { "workspace" },
              tabline_b = {},
              tabline_c = { " " },
-             tabline_x = {},
+             tabline_x = {
+               { function() return drovr_status end, cond = function() return drovr_status ~= "" end },
+             },
              tabline_y = {},
              -- cpu/ram/clock moved to the AGS bar; they cost ~44 columns here.
              -- battery returns "" (not nil) with no battery, so only `cond` drops it.

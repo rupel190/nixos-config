@@ -18,5 +18,8 @@
 
     # Private repos only, on request; public repos qualify without being listed.
     allowedRepos = [ ];
+
+    # Status-bar summary; wezterm.nix shows it in the tabline.
+    weztermHelper = true;
   };
 }
