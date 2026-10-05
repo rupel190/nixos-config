@@ -14,6 +14,12 @@
       baseUrl = "https://api.deepseek.com/anthropic";
       model = "deepseek-v4-pro";
       keyFile = "/run/agenix/deepseek-api-key";
+      # Peak USD per 1M tokens (off-peak is half), so drovr list shows an upper bound.
+      price = {
+        input = 1.32;
+        cachedInput = 0.044;
+        output = 3.96;
+      };
     };
 
     # Private repos only, on request; public repos qualify without being listed.
