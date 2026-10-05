@@ -32,4 +32,11 @@
     owner = "rupel";
     mode = "0400";
   };
+
+  # DeepSeek API key, read at launch by drovr's claude-deepseek wrapper.
+  age.secrets.deepseek-api-key = {
+    file = ../../secrets/deepseek-api-key.age;
+    owner = "rupel";
+    mode = "0400";
+  };
 }
