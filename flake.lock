@@ -323,11 +323,11 @@
     },
     "drovr": {
       "locked": {
-        "lastModified": 1791304636,
-        "narHash": "sha256-k0Q24lUXujxYsY1EjvvLocF78Acx7WAAPpHEf2O9WkI=",
+        "lastModified": 1791306510,
+        "narHash": "sha256-Hn30k1pX+izVesRX1UsO2DHbT40SWRHpoSKMR2kTAg0=",
         "ref": "main",
-        "rev": "bd4377255e080162d5f5f354eb46365ab94b3d98",
-        "revCount": 14,
+        "rev": "94f1dffaa65f38a4666ea8b20cf2643412c069ce",
+        "revCount": 15,
         "type": "git",
         "url": "ssh://git@github.com/rupel190/drovr"
       },
