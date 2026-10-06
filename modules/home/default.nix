@@ -38,7 +38,7 @@
     ./vicinae.nix # launcher + browser tab integration (native messaging host)
     ./gtk.nix # gtk theme
     ./xdg-mimes.nix # file associations
-    ./clouddrives.nix # cloud drive sync services (OneDrive)
+    ./clouddrives.nix # cloud drive sync services (OneDrive, Proton Drive CLI)
 
     ./ags # status bar (AGS 3 / Astal, GTK4) — runs as a systemd user unit
 
@@ -58,7 +58,7 @@
     # - waypaper.nix (not using wallpaper management)
     # - scripts/ (removed - using AGS instead)
   ] ++ lib.optionals (host == "amanita") [
-    ./pi-backup.nix # weekly pull of RPi backups to silo + OneDrive (amanita only)
+    ./pi-backup.nix # weekly pull of RPi backups to the backup drive + OneDrive (amanita only)
     ./udiskie.nix # automount removable drives
   ] ++ lib.optionals (host == "cordyceps") [
     ./laptop-only.nix # brightness, battery, touchpad settings
