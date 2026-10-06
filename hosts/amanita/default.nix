@@ -98,8 +98,8 @@
     ]; # SSD
   };
 
-  fileSystems."/mnt/supersilo" = {
-    device = "/dev/disk/by-label/supersilo"; # 12TB HDD, ext4 made with -m 0
+  fileSystems."/mnt/silo" = {
+    device = "/dev/disk/by-uuid/3114d20f-90c3-4e1c-9fb1-a382889f446e"; # 12TB HDD, ext4 made with -m 0
     fsType = "ext4";
     options = [
       "noatime"
