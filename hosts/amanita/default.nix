@@ -67,7 +67,7 @@
     "exfat"
   ];
 
-  fileSystems."/mnt/silo" = {
+  fileSystems."/mnt/backup" = {
     device = "/dev/disk/by-uuid/4eb8d0d5-60b4-424e-b7d9-4aeaba384849";
     fsType = "ext4";
     options = [
@@ -76,7 +76,7 @@
     ];
   };
 
-  fileSystems."/mnt/gamedev" = {
+  fileSystems."/mnt/games" = {
     device = "/dev/disk/by-uuid/273504fb-eb69-448d-ba14-5472c43fdb8f";
     fsType = "ext4";
     options = [
