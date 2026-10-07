@@ -217,6 +217,32 @@ def render_image(path, text_px, pad, invert):
     die(f"{path} rendered with no ink - is it blank, or all transparent?")
 
 
+def parse_batch(path):
+    """One label per blank-line-separated block; its lines are the label's lines.
+
+    A block that is just "@image <file>" prints that file instead of text.
+    """
+    try:
+        text = sys.stdin.read() if path == "-" else open(path).read()
+    except OSError as exc:
+        die(f"--batch: {exc}")
+    blocks, cur = [], []
+    for line in text.splitlines():
+        if line.strip():
+            cur.append(line.rstrip())
+        elif cur:
+            blocks.append(cur)
+            cur = []
+    if cur:
+        blocks.append(cur)
+    if not blocks:
+        die(f"--batch: {path} has no labels")
+    return [
+        ("image", b[0][7:].strip()) if len(b) == 1 and b[0].startswith("@image ") else ("text", b)
+        for b in blocks
+    ]
+
+
 def parse_pbm(data):
     """Minimal binary PBM (P4) reader -> (width, height, rows of bytes)."""
     fields, pos = [], 2
@@ -267,6 +293,9 @@ def main():
     ap.add_argument("text", nargs="*", help="label text; each argument is a line")
     ap.add_argument("--image", metavar="FILE",
                     help="print an image instead of text, scaled to the tape height")
+    ap.add_argument("--batch", metavar="FILE",
+                    help="print several labels as one chained strip; blank-line-separated "
+                         "blocks in FILE (or - for stdin), one block per label")
     ap.add_argument("--list-fonts", nargs="?", const="", metavar="PATTERN",
                     help="list installed font families, optionally filtered, and exit")
     ap.add_argument("--mac", default=os.environ.get("PTOUCH_MAC", DEFAULT_MAC))
@@ -290,8 +319,8 @@ def main():
     if args.list_fonts is not None:
         list_fonts(args.list_fonts)
         return
-    if not args.text and not args.image:
-        ap.error("give some text, or --image FILE")
+    if not args.text and not args.image and not args.batch:
+        ap.error("give some text, or --image FILE, or --batch FILE")
 
     font = args.font
     if not os.path.exists(font):
@@ -334,12 +363,26 @@ def main():
     if text_px > tape_px:
         die(f"--fontsize {args.fontsize} exceeds what {mm}mm tape can print "
             f"({tape_px / DPI * 25.4:.1f}mm / {tape_px}px)")
-    if args.image:
-        w, h, rows = render_image(args.image, text_px, pad_px, args.invert)
+    if args.batch:
+        items = parse_batch(args.batch)
+    elif args.image:
+        items = [("image", args.image)]
     else:
-        w, h, rows = render(args.text, font, text_px, pad_px, args.invert)
-    mm_long = w / DPI * 25.4
-    print(f"{mm}mm tape, {w}x{h}px -> {mm_long:.0f}mm label", file=sys.stderr)
+        items = [("text", args.text)]
+
+    labels = [
+        render_image(v, text_px, pad_px, args.invert) if kind == "image"
+        else render(v, font, text_px, pad_px, args.invert)
+        for kind, v in items
+    ]
+    mm_long = sum(w for w, _, _ in labels) / DPI * 25.4
+    if len(labels) == 1:
+        w, h, _ = labels[0]
+        print(f"{mm}mm tape, {w}x{h}px -> {mm_long:.0f}mm label", file=sys.stderr)
+    else:
+        for i, (w, h, _) in enumerate(labels, 1):
+            print(f"  {i}. {w}x{h}px -> {w / DPI * 25.4:.0f}mm", file=sys.stderr)
+        print(f"{mm}mm tape, {len(labels)} labels -> {mm_long:.0f}mm strip", file=sys.stderr)
 
     if args.preview:
         out_dir = os.path.dirname(os.path.abspath(args.preview))
@@ -347,10 +390,13 @@ def main():
             sock.close()
         if not os.path.isdir(out_dir):
             die(f"no such directory: {out_dir}")
-        res = subprocess.run([MAGICK, "pbm:-", args.preview], input=pbm_bytes(w, h, rows), capture_output=True)
-        if res.returncode != 0:
-            die(f"could not write {args.preview}: {res.stderr.decode(errors='replace').strip()}")
-        print(f"wrote {args.preview}", file=sys.stderr)
+        stem, ext = os.path.splitext(args.preview)
+        for i, (w, h, rows) in enumerate(labels, 1):
+            out = args.preview if len(labels) == 1 else f"{stem}-{i}{ext}"
+            res = subprocess.run([MAGICK, "pbm:-", out], input=pbm_bytes(w, h, rows), capture_output=True)
+            if res.returncode != 0:
+                die(f"could not write {out}: {res.stderr.decode(errors='replace').strip()}")
+            print(f"wrote {out}", file=sys.stderr)
         return
 
     if sock is None:
@@ -361,16 +407,17 @@ def main():
             die("printer unreachable - is it switched on? it auto-powers-off when idle.")
         read_status(sock)
 
-    body = raster(w, h, rows, tape_px)
+    bodies = [raster(w, h, rows, tape_px) for w, h, rows in labels]
     job = bytearray(PACKBITS + RASTER_MODE)
     if not 0 <= args.margin <= 0xFFFF:
         die("--margin must be 0..65535")
     job += margin_cmd(args.margin) + PACKBITS
-    if args.precut:
-        job += PRECUT
-    for c in range(args.copies):
-        last = c == args.copies - 1
+    sequence = bodies * args.copies
+    for i, body in enumerate(sequence):
+        if args.precut:
+            job += PRECUT
         job += body
+        last = i == len(sequence) - 1
         job += PRINT_CHAIN if (args.chain or not last) else PRINT_FEED
     sock.sendall(bytes(job))
     wait_done(sock, mm_long)
