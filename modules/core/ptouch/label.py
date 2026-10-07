@@ -149,17 +149,19 @@ def read_status(sock):
     return buf[10]
 
 
-def wait_done(sock, mm_long):
-    """Hold the socket open long enough for the printer to consume the job.
+PRINT_MM_PER_S = 10.0   # measured: a 67mm label took 6.8s of actual printing
 
-    Two things had to be ruled out: closing a fixed 1s after sendall() truncated
-    back-to-back jobs, but the P710BT also never sends an unsolicited
-    "printing done" frame, so waiting for one just blocks until timeout. The
-    printer runs at ~20mm/s, so bound the wait by the label's own length and
-    exit early if a status frame does turn up.
+
+def wait_done(sock, mm_long):
+    """Wait for the printer's "printing completed" frame (status type 0x01).
+
+    It does send one. An earlier estimate-only wait used the spec's 20mm/s,
+    about twice the real rate, so the socket closed mid-print on longer labels
+    and the job died silently while the tool reported success.
     """
-    deadline = time.time() + mm_long / 20.0 + 4.0
+    budget = mm_long / PRINT_MM_PER_S + 10.0
     sock.settimeout(1.0)
+    deadline = time.time() + budget
     while time.time() < deadline:
         try:
             d = sock.recv(32)
@@ -173,8 +175,10 @@ def wait_done(sock, mm_long):
             if d[8] or d[9]:
                 print(f"label: printer error flags {d[8]:#04x}/{d[9]:#04x}", file=sys.stderr)
                 return
-            if d[18] == 0x01:  # printing completed; any other type is just a phase change
+            if d[18] == 0x01:
                 return
+    print(f"label: no completion after {budget:.0f}s - the label may be incomplete",
+          file=sys.stderr)
 
 
 def render(lines, font, text_px, pad, invert):
