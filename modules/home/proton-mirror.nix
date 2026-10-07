@@ -7,7 +7,7 @@ let
     runtimeInputs = [ proton-drive pkgs.python3 pkgs.libnotify ];
     text = ''
       if python3 ${./proton-drive/mirror.py}; then
-        notify-send "Proton mirror complete" "/mnt/backup → Proton Drive /my-files/backup"
+        notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup"
       else
         notify-send -u critical "Proton mirror failed" "see: journalctl --user -u proton-mirror"
         exit 1
@@ -20,7 +20,7 @@ in
 
   # Weekly after rsync-backups (Sun 04:00); a still-running snapshot is harmless, `latest` only moves when it finishes.
   systemd.user.services.proton-mirror = {
-    Unit.Description = "Mirror /mnt/backup to Proton Drive";
+    Unit.Description = "Mirror /mnt/backup/current to Proton Drive";
     Service = {
       Type = "oneshot";
       ExecStart = "${mirror}/bin/proton-mirror";

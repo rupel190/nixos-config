@@ -60,7 +60,7 @@
   ] ++ lib.optionals (host == "amanita") [
     ./pi-backup.nix # weekly pull of RPi backups to the backup drive (amanita only)
     ./rsync-backups.nix # weekly home + media snapshots to /mnt/backup
-    ./proton-mirror.nix # weekly mirror of /mnt/backup to Proton Drive
+    ./proton-mirror.nix # weekly mirror of /mnt/backup/current to Proton Drive (recovery/ stays local)
     ./udiskie.nix # automount removable drives
   ] ++ lib.optionals (host == "cordyceps") [
     ./laptop-only.nix # brightness, battery, touchpad settings

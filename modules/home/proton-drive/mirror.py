@@ -1,4 +1,4 @@
-"""Mirror /mnt/backup to Proton Drive with the official proton-drive CLI.
+"""Mirror /mnt/backup/current to Proton Drive with the official proton-drive CLI.
 
 Each run makes the remote an exact copy of the local tree:
   1. upload everything (the CLI skips files whose content is unchanged)
@@ -15,10 +15,11 @@ import os
 import subprocess
 import sys
 
-LOCAL = os.environ.get("MIRROR_LOCAL", "/mnt/backup")  # overrides are for testing
+DRIVE = "/mnt/backup"  # /mnt/backup/recovery is historical data and deliberately NOT mirrored
+LOCAL = os.environ.get("MIRROR_LOCAL", DRIVE + "/current")  # overrides are for testing
 REMOTE = os.environ.get("MIRROR_REMOTE", "/my-files/backup")
 SNAPSHOTS = "rsync-weekly-bak"
-EXCLUDE = {"Passwords.key", ".Trash-0", ".Trash-1000", "lost+found"}  # top level only
+EXCLUDE = {"Passwords.key"}  # by name, anywhere: the keyfile must never sit next to its database
 STATE = os.environ.get("MIRROR_STATE", os.path.expanduser("~/.local/state/proton-mirror/manifest"))
 BATCH = 200  # local paths per upload call
 
@@ -53,7 +54,7 @@ def scan(path, rel, manifest):
     clean = True
     for e in os.scandir(path):
         child = f"{rel}/{e.name}" if rel else e.name
-        if e.is_symlink() or not (e.is_file() or e.is_dir()):
+        if e.name in EXCLUDE or e.is_symlink() or not (e.is_file() or e.is_dir()):
             clean = False
         elif e.is_dir():
             manifest.add(child + "/")
@@ -69,9 +70,9 @@ def mirror_dir(path, rel, manifest, top=False):
     whole = []  # files and symlink-free folders: one upload call per batch
     for e in sorted(os.scandir(path), key=lambda e: e.name):
         child = f"{rel}/{e.name}" if rel else e.name
-        if top and (e.name in EXCLUDE or e.name == SNAPSHOTS):
+        if top and e.name == SNAPSHOTS:
             continue
-        if e.is_symlink() or not (e.is_file() or e.is_dir()):
+        if e.name in EXCLUDE or e.is_symlink() or not (e.is_file() or e.is_dir()):
             continue
         if e.is_file():
             manifest.add(child)
@@ -121,8 +122,8 @@ def prune(old, new):
 
 
 def main():
-    if not (os.path.ismount(LOCAL) or "MIRROR_LOCAL" in os.environ):
-        sys.exit(f"{LOCAL} is not mounted")
+    if "MIRROR_LOCAL" not in os.environ and not (os.path.ismount(DRIVE) and os.path.isdir(LOCAL)):
+        sys.exit(f"{DRIVE} is not mounted or {LOCAL} is missing")
     manifest = set()
     mirror_dir(LOCAL, "", manifest, top=True)
     mirror_snapshots(manifest)

@@ -5,7 +5,7 @@ let
     runtimeInputs = with pkgs; [ rsync openssh libnotify coreutils util-linux ];
     # Backups stay local: the tree includes InvoiceNinja's .env and DB dumps, never copy them to OneDrive.
     text = ''
-      BACKUP_DIR="/mnt/backup/invoiceninja_rpi"
+      BACKUP_DIR="/mnt/backup/current/invoiceninja_rpi"
       PI_HOST="raspi5"
       PI_BACKUP_DIR="/mnt/usbhdd/backups"
 

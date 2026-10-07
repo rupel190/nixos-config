@@ -1,7 +1,7 @@
 { pkgs, config, ... }:
 let
   home = config.home.homeDirectory;
-  root = "/mnt/backup/rsync-weekly-bak";
+  root = "/mnt/backup/current/rsync-weekly-bak";
   keep = 8; # weekly snapshots kept per job
 
   # name = job dir under root; sources are copied into the snapshot by basename
