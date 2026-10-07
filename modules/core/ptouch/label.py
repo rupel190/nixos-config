@@ -62,6 +62,17 @@ def list_fonts(pattern):
         print(n)
 
 
+def length_px(value, what):
+    """Accept 6mm or 43px; a bare number means mm."""
+    v = str(value).strip().lower()
+    try:
+        if v.endswith("px"):
+            return round(float(v[:-2]))
+        return round(float(v[:-2] if v.endswith("mm") else v) / 25.4 * DPI)
+    except ValueError:
+        die(f"{what}: expected something like 6mm or 43px, got {value!r}")
+
+
 def die(msg):
     sys.exit(f"label: {msg}")
 
@@ -260,13 +271,14 @@ def main():
                     help="list installed font families, optionally filtered, and exit")
     ap.add_argument("--mac", default=os.environ.get("PTOUCH_MAC", DEFAULT_MAC))
     ap.add_argument("--font", default="DejaVu Sans")
-    ap.add_argument("--pad", type=int, default=8,
-                    help="blank tape at each end, in pixels (180dpi: 8px is about 1mm)")
+    ap.add_argument("--pad", default="1mm", metavar="SIZE",
+                    help="blank tape at each end, as 1mm or 8px (default 1mm)")
     ap.add_argument("--margin", type=int, default=1, metavar="DOTS",
                     help="feed margin in dots (default 1 = 0.14mm; the printer's own "
                          "default is 14 = 2mm). The other ~22mm of leader is mechanical.")
-    ap.add_argument("--fontsize", type=int, metavar="PX",
-                    help="text height in pixels; defaults to filling the tape (12mm tape = 76px)")
+    ap.add_argument("--fontsize", metavar="SIZE",
+                    help="text height as 6mm or 43px; defaults to filling the tape "
+                         "(12mm tape prints 10.7mm, the head is the limit, not the tape)")
     ap.add_argument("--copies", type=int, default=1)
     ap.add_argument("--invert", action="store_true", help="white text on black")
     ap.add_argument("--chain", action="store_true", help="skip feed+cut so labels can be chained")
@@ -312,13 +324,20 @@ def main():
     if tape_px is None:
         die(f"unknown tape width {mm}mm")
 
-    text_px = args.fontsize or tape_px
-    if text_px > tape_px:
-        die(f"--fontsize {text_px} exceeds the {mm}mm tape's {tape_px}px printable width")
-    if args.image:
-        w, h, rows = render_image(args.image, text_px, args.pad, args.invert)
+    pad_px = length_px(args.pad, "--pad")
+    if args.fontsize:
+        text_px = length_px(args.fontsize, "--fontsize")
+        if text_px < 1:
+            die(f"--fontsize {args.fontsize} rounds to nothing at {DPI}dpi")
     else:
-        w, h, rows = render(args.text, font, text_px, args.pad, args.invert)
+        text_px = tape_px
+    if text_px > tape_px:
+        die(f"--fontsize {args.fontsize} exceeds what {mm}mm tape can print "
+            f"({tape_px / DPI * 25.4:.1f}mm / {tape_px}px)")
+    if args.image:
+        w, h, rows = render_image(args.image, text_px, pad_px, args.invert)
+    else:
+        w, h, rows = render(args.text, font, text_px, pad_px, args.invert)
     mm_long = w / DPI * 25.4
     print(f"{mm}mm tape, {w}x{h}px -> {mm_long:.0f}mm label", file=sys.stderr)
 
