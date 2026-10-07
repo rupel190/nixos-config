@@ -105,11 +105,24 @@ def connect(mac, attempts=10, backoff=2.0):
     return None
 
 
+ERR1 = {0: "no tape cassette", 1: "end of tape", 2: "cutter jam",
+        3: "weak batteries", 6: "high-voltage adapter"}
+ERR2 = {0: "wrong cassette for this job", 1: "expansion buffer full",
+        2: "communication error", 3: "communication buffer full", 4: "cover open",
+        5: "overheating", 6: "black mark not detected", 7: "system error"}
+SOFT = {"weak batteries"}
+
+
 def read_status(sock):
-    sock.sendall(INVALIDATE + INIT)
-    time.sleep(0.2)
-    sock.sendall(STATUS_REQ)
+    """Ask first, initialise second.
+
+    ESC @ clears the error state, so initialising before asking wipes a jam or
+    an open cover before it can be reported - the printer then answers with
+    every error bit zeroed and only a stale status-type byte hinting anything
+    was ever wrong.
+    """
     sock.settimeout(10)
+    sock.sendall(STATUS_REQ)
     buf = b""
     while len(buf) < 32:
         try:
@@ -120,9 +133,19 @@ def read_status(sock):
             break
         buf += chunk
     if len(buf) < 32 or buf[0] != 0x80:
-        die("no status from printer (got %d bytes)" % len(buf))
-    if buf[8] or buf[9]:
-        die(f"printer reports error flags {buf[8]:#04x}/{buf[9]:#04x} (tape jam? cover open?)")
+        die(f"no status from printer (got {len(buf)} bytes)")
+
+    faults = [v for k, v in ERR1.items() if buf[8] >> k & 1]
+    faults += [v for k, v in ERR2.items() if buf[9] >> k & 1]
+    hard = [f for f in faults if f not in SOFT]
+    for f in faults:
+        if f in SOFT:
+            print(f"label: warning: {f}", file=sys.stderr)
+    if hard:
+        die("printer reports: " + "; ".join(hard))
+
+    sock.sendall(INVALIDATE + INIT)   # now safe to clear and prepare for raster
+    time.sleep(0.2)
     return buf[10]
 
 
