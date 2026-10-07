@@ -1,4 +1,15 @@
 { inputs, pkgs, ... }:
+let
+  # Electron picks basic_text on Hyprland; force the oo7 keyring. Once migrated the flag is mandatory.
+  withKeyring =
+    pkg: bin:
+    pkgs.symlinkJoin {
+      name = "${pkg.name}-keyring";
+      paths = [ pkg ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = "wrapProgram $out/bin/${bin} --add-flags --password-store=gnome-libsecret";
+    };
+in
 {
   home.packages = (
     with pkgs;
@@ -38,8 +49,7 @@
       })
       orca-slicer
       # Communication
-      signal-desktop
-      element-desktop
+      (withKeyring signal-desktop "signal-desktop")
       slack
       teams-for-linux
       teamspeak6-client # Upgraded from teamspeak3 to avoid qtwebengine build issues

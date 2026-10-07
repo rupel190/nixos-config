@@ -2,48 +2,29 @@
 let
   pullScript = pkgs.writeShellApplication {
     name = "pull-pi-backup";
-    runtimeInputs = with pkgs; [ rsync zip openssh libnotify coreutils findutils ];
+    runtimeInputs = with pkgs; [ rsync openssh libnotify coreutils util-linux ];
+    # Backups stay local: the tree includes InvoiceNinja's .env and DB dumps, never copy them to OneDrive.
     text = ''
       BACKUP_DIR="/mnt/backup/invoiceninja_rpi"
-      ONEDRIVE_DIR="$HOME/OneDrive/Backups/InvoiceNinja"
       PI_HOST="raspi5"
       PI_BACKUP_DIR="/mnt/usbhdd/backups"
 
       echo "=== Pi Backup Pull: $(date) ==="
+      if ! mountpoint -q /mnt/backup; then
+        notify-send -u critical "Pi Backup Failed" "/mnt/backup is not mounted"
+        exit 1
+      fi
 
-      # Mirror full backup tree to the backup drive (fail = notify + exit)
-      echo "Syncing backups to the backup drive..."
       mkdir -p "$BACKUP_DIR"
       rc=0
       rsync -az --delete "$PI_HOST:$PI_BACKUP_DIR/" "$BACKUP_DIR/" || rc=$?
+      # 24 = files vanished mid-run (Pi cleanup during sync), still a usable mirror
       if [ "$rc" -ne 0 ] && [ "$rc" -ne 24 ]; then
-        # rc=24 means "some files vanished" (Pi cleanup during sync) - that's fine
         notify-send -u critical "Pi Backup Failed" "Could not reach $PI_HOST - rsync exit code $rc"
         echo "ERROR: rsync failed with exit code $rc"
         exit 1
       fi
-      echo "Backup drive sync complete: $(du -sh "$BACKUP_DIR" | cut -f1)"
-
-      # Build a single zip of the latest backup for OneDrive
-      echo "Creating OneDrive zip..."
-      mkdir -p "$ONEDRIVE_DIR"
-
-      TMPDIR=$(mktemp -d)
-      trap 'rm -rf "$TMPDIR"' EXIT
-
-      LATEST_DB=$(find "$BACKUP_DIR/invoiceninja" -name 'db-*.sql.gz' -printf '%T@\t%p\n' 2>/dev/null | sort -rn | head -1 | cut -f2)
-      LATEST_FILES=$(find "$BACKUP_DIR/invoiceninja" -name 'files-*.tar.gz' -printf '%T@\t%p\n' 2>/dev/null | sort -rn | head -1 | cut -f2)
-      LATEST_CONFIG=$(find "$BACKUP_DIR/configs" -name 'invoiceninja-config-*.tar.gz' -printf '%T@\t%p\n' 2>/dev/null | sort -rn | head -1 | cut -f2)
-
-      [ -n "''${LATEST_DB:-}" ] && cp "$LATEST_DB" "$TMPDIR/"
-      [ -n "''${LATEST_FILES:-}" ] && cp "$LATEST_FILES" "$TMPDIR/"
-      [ -n "''${LATEST_CONFIG:-}" ] && cp "$LATEST_CONFIG" "$TMPDIR/"
-
-      cd "$TMPDIR"
-      zip -j "$ONEDRIVE_DIR/invoiceninja-latest.zip" ./*
-
-      echo "OneDrive zip: $(du -h "$ONEDRIVE_DIR/invoiceninja-latest.zip" | cut -f1)"
-      echo "=== Pull complete ==="
+      echo "=== Pull complete: $(du -sh "$BACKUP_DIR" | cut -f1) ==="
     '';
   };
 in
