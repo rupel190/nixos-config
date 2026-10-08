@@ -2,7 +2,6 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ./backup-shaper.nix
     ./../../modules/core
     inputs.nix-flatpak.nixosModules.nix-flatpak
   ];

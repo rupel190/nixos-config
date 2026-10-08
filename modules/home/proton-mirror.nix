@@ -12,8 +12,7 @@ let
         echo "another proton-mirror is still running; skipping"
         exit 0
       fi
-      # as group proton-mirror, so hosts/amanita/backup-shaper.nix caps its upload
-      if /run/wrappers/bin/sg proton-mirror -c "python3 ${./proton-drive/mirror.py}"; then
+      if python3 ${./proton-drive/mirror.py}; then
         notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup"
       else
         notify-send -u critical "Proton mirror failed" "see: journalctl --user -u proton-mirror"
@@ -28,6 +27,8 @@ in
   # Weekly after rsync-backups (Sun 04:00); a still-running snapshot is harmless, `latest` only moves when it finishes.
   systemd.user.services.proton-mirror = {
     Unit.Description = "Mirror /mnt/backup/current to Proton Drive";
+    # A run lasts hours to days: never restart it on activation (HM would block until it ends, then time out)
+    Unit.X-RestartIfChanged = false;
     Service = {
       Type = "oneshot";
       ExecStart = "${mirror}/bin/proton-mirror";

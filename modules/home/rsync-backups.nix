@@ -102,6 +102,7 @@ in
 
   systemd.user.services.rsync-backups = {
     Unit.Description = "Weekly rsync snapshots of home to /mnt/backup";
+    Unit.X-RestartIfChanged = false; # long run; see proton-mirror.nix
     Service = {
       Type = "oneshot";
       ExecStart = "${backupScript}/bin/rsync-backups";

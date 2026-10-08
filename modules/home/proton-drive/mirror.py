@@ -27,7 +27,7 @@ SNAPSHOTS = "rsync-weekly-bak"
 EXCLUDE = {"Passwords.key"}  # by name, anywhere: the keyfile must never sit next to its database
 STATE = os.environ.get("MIRROR_STATE", os.path.expanduser("~/.local/state/proton-mirror/manifest"))
 BATCH = 200  # local paths per upload call
-WORKERS = 6  # parallel upload calls
+WORKERS = 3  # parallel upload calls: overlaps per-file round trips; more only crowds the uplink
 SPLIT = 2000  # folders with more files are split up, so the workers share them
 
 failures = []
