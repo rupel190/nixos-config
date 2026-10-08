@@ -147,7 +147,7 @@ let
           }
         ];
       }
-      # Pushes run on the 20-minute timer (claude-sync.nix) plus once here, detached so exit doesn't wait
+      # Pushes run on the hourly timer (claude-sync.nix) plus once here, detached so exit doesn't wait
       {
         matcher = "";
         hooks = [

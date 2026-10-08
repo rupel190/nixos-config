@@ -94,7 +94,7 @@ in
 {
   home.packages = [ claude-sync claude-sync-push ];
 
-  # Pushes every 20 min instead of after every reply: each push re-uploads changed transcripts in full
+  # Hourly, not per reply: each push re-uploads changed transcripts in full (219 MB recu ones took ~3.5 min)
   systemd.user.services.claude-sync-push = {
     Unit.Description = "Push ~/.claude to claude-sync storage";
     Unit.X-RestartIfChanged = false; # a push can take minutes; see proton-mirror.nix
@@ -106,8 +106,8 @@ in
     };
   };
   systemd.user.timers.claude-sync-push = {
-    Unit.Description = "Push ~/.claude every 20 minutes";
-    Timer.OnCalendar = "*:0/20";
+    Unit.Description = "Push ~/.claude hourly";
+    Timer.OnCalendar = "hourly";
     Install.WantedBy = [ "timers.target" ];
   };
 
