@@ -26,6 +26,7 @@ in
       ExecStart = "${mirror}/bin/proton-mirror";
       Nice = 19;
       IOSchedulingClass = "idle";
+      MemoryHigh = "4G";
     };
   };
 

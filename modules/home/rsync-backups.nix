@@ -15,6 +15,7 @@ let
         "/.local/share/Steam/steamapps/common" "/.local/share/Steam/steamapps/shadercache"
         "/.local/share/Steam/steamapps/workshop" "/.local/share/Steam/steamapps/downloading"
         "/.local/share/Steam/steamapps/temp"
+        "/games/beamng-mod-backups" "/games/gtav-layers" "/.local/share/gnome-boxes"
       ];
     }
     {
@@ -83,6 +84,8 @@ in
       ExecStart = "${backupScript}/bin/rsync-backups";
       Nice = 19;
       IOSchedulingClass = "idle";
+      # Keeps the snapshot's page cache from crowding the desktop during a 400 GB run
+      MemoryHigh = "4G";
     };
   };
 
