@@ -88,13 +88,14 @@
     freeSwapThreshold = 100;
     enableNotifications = true; # the anti-mystery switch: desktop toast on every kill
     extraArgs = [
-      # Match earlyoom's 15-char /proc/comm as UNANCHORED substrings (NixOS wraps
-      # binaries: `.Hyprland-wrapp`, `.Discord-wrappe`, `.zen-wrapped`).
-      # Prefer disposable RAM hogs; never touch anything that would wreck the session.
-      "--prefer"
-      "steamwebhelper|chrome|firefox|zen|Discord|slack|electron|curseforge"
+      # Pick the victim by actual RSS, not oom_score: user services and Electron carry
+      # oom_score_adj 200-300, so oom_score ranking killed 35 MiB helpers (backup mirror,
+      # openrazer x81) while 4-7 GB pipeline workers lived. Dry-run verified 2026-10-08.
+      # No --prefer: comm "python" is both pipeline workers and small MCP servers.
+      "--sort-by-rss"
+      # Unanchored substrings of the 15-char comm (NixOS wrappers: `.Hyprland-wrapp`); -3 GiB each.
       "--avoid"
-      "Hyprland|Xwayland|pipewire|wireplumber|sshd|systemd|dbus|greetd"
+      "Hyprland|Xwayland|pipewire|wireplumber|sshd|systemd|dbus|greetd|wezterm"
     ];
   };
 
