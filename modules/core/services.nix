@@ -23,6 +23,8 @@
       enable = true;
       openFirewall = true;
       settings.PasswordAuthentication = false;
+      # keyboard-interactive is PAM's password prompt by another name; keys only
+      settings.KbdInteractiveAuthentication = false;
       settings.PermitRootLogin = "no";
     };
   };
