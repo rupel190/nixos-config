@@ -12,7 +12,8 @@ let
         echo "another proton-mirror is still running; skipping"
         exit 0
       fi
-      if python3 ${./proton-drive/mirror.py}; then
+      # as group proton-mirror, so hosts/amanita/backup-shaper.nix caps its upload
+      if /run/wrappers/bin/sg proton-mirror -c "python3 ${./proton-drive/mirror.py}"; then
         notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup"
       else
         notify-send -u critical "Proton mirror failed" "see: journalctl --user -u proton-mirror"
