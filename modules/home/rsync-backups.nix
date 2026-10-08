@@ -27,6 +27,7 @@ let
         "/.local/share/nvim/lazy/" "/.local/share/nvim/mason/" "/.local/share/pnpm/"
         "/.bun/install/cache/" "/.cargo/registry/" "/.cargo/git/"
         "/.local/share/containers/" "/.local/share/flatpak/" "/.local/share/uv/"
+        "/.local/state/affinity-v3/work/"
         # regenerable pipeline output (sittings/ and findings-data/ stay)
         "/projects/recustomize/stitching-pipeline/tests/output/test_batch_segment/"
         "/projects/recustomize/stitching-pipeline/tests/output/variants/"

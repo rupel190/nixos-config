@@ -1,7 +1,7 @@
 """Mirror /mnt/backup/current to Proton Drive with the official proton-drive CLI.
 
 Each run makes the remote an exact copy of the local tree:
-  1. plan: walk the tree, create remote folders, list what should exist
+  1. plan: walk the tree, list what should exist, create the remote folders (in parallel)
   2. prune: trash + permanently delete what disappeared since the last run
   3. save the plan as the new manifest (a killed run loses nothing: the next one re-plans)
   4. upload in parallel (the CLI skips files whose content is unchanged)
@@ -14,6 +14,7 @@ Quirks this works around:
   - uploads are bound by per-file round trips, not bandwidth, hence WORKERS
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -41,18 +42,49 @@ def remote(rel):
     return REMOTE if not rel else REMOTE + "/" + rel
 
 
-def ensure_folder(rel):
-    if cli("filesystem", "info", remote(rel))[0] == 0:
-        return
-    if rel:
-        parent, _, name = rel.rpartition("/")
-        ensure_folder(parent)
-        rc, out = cli("filesystem", "create-folder", remote(parent), name)
-    else:
-        parent, _, name = REMOTE.rpartition("/")
-        rc, out = cli("filesystem", "create-folder", parent, name)
+def remote_children(rel):
+    rc, out = cli("filesystem", "list", "-j", remote(rel))
     if rc != 0:
-        failures.append(f"create-folder {rel}: {out.strip()}")
+        return None
+    return {n["name"]["value"] for n in json.loads(out) if n.get("name", {}).get("ok")}
+
+
+def create_folders(folders):
+    """Create the remote folders level by level; one listing per parent finds the existing ones."""
+    if cli("filesystem", "info", REMOTE)[0] != 0:
+        parent, _, name = REMOTE.rpartition("/")
+        cli("filesystem", "create-folder", parent, name)
+    created = set()
+    by_depth = {}
+    for f in folders:
+        if f:
+            by_depth.setdefault(f.count("/"), {}).setdefault(f.rpartition("/")[0], []).append(f)
+
+    def fill(item):
+        parent, children = item
+        existing = set() if parent in created else remote_children(parent)
+        for f in children:
+            name = f.rpartition("/")[2]
+            if existing is not None and name in existing:
+                continue
+            rc, out = cli("filesystem", "create-folder", remote(parent), name)
+            if rc == 0:
+                created.add(f)
+            else:
+                failures.append(f"create-folder {f}: {out.strip()}")
+
+    with ThreadPoolExecutor(WORKERS) as pool:
+        for depth in sorted(by_depth):
+            list(pool.map(fill, by_depth[depth].items()))
+
+
+def entries(path):
+    """Directory entries; an unreadable folder is reported and treated as empty."""
+    try:
+        return list(os.scandir(path))
+    except PermissionError as err:
+        failures.append(f"unreadable, skipped: {err.filename}")
+        return []
 
 
 def skipped(e):
@@ -62,7 +94,7 @@ def skipped(e):
 def scan(path, rel, manifest):
     """Record every mirrored path; return (only files and folders?, file count)."""
     clean, count = True, 0
-    for e in os.scandir(path):
+    for e in entries(path):
         child = f"{rel}/{e.name}" if rel else e.name
         if skipped(e):
             clean = False
@@ -76,11 +108,11 @@ def scan(path, rel, manifest):
     return clean, count
 
 
-def plan_dir(path, rel, manifest, jobs, top=False):
+def plan_dir(path, rel, manifest, jobs, folders, top=False):
     """Queue uploads for the contents of `path` into remote folder `rel`."""
-    ensure_folder(rel)
+    folders.add(rel)
     whole = []  # files and symlink-free folders: uploaded together in batches
-    for e in sorted(os.scandir(path), key=lambda e: e.name):
+    for e in sorted(entries(path), key=lambda e: e.name):
         child = f"{rel}/{e.name}" if rel else e.name
         if (top and e.name == SNAPSHOTS) or skipped(e):
             continue
@@ -95,12 +127,12 @@ def plan_dir(path, rel, manifest, jobs, top=False):
                 manifest |= sub
                 whole.append(e.path)
             else:
-                plan_dir(e.path, child, manifest, jobs)
+                plan_dir(e.path, child, manifest, jobs, folders)
     for i in range(0, len(whole), BATCH):
         jobs.append((whole[i:i + BATCH], rel))
 
 
-def plan_snapshots(manifest, jobs):
+def plan_snapshots(manifest, jobs, folders):
     root = os.path.join(LOCAL, SNAPSHOTS)
     if not os.path.isdir(root):
         return
@@ -109,7 +141,8 @@ def plan_snapshots(manifest, jobs):
         if os.path.isdir(latest):
             rel = f"{SNAPSHOTS}/{job}/latest"
             manifest.update({f"{SNAPSHOTS}/", f"{SNAPSHOTS}/{job}/", rel + "/"})
-            plan_dir(os.path.realpath(latest), rel, manifest, jobs)
+            folders.update({SNAPSHOTS, f"{SNAPSHOTS}/{job}"})
+            plan_dir(os.path.realpath(latest), rel, manifest, jobs, folders)
 
 
 def prune(old, new):
@@ -139,10 +172,11 @@ def upload(job):
 def main():
     if "MIRROR_LOCAL" not in os.environ and not (os.path.ismount(DRIVE) and os.path.isdir(LOCAL)):
         sys.exit(f"{DRIVE} is not mounted or {LOCAL} is missing")
-    manifest, jobs = set(), []
-    plan_dir(LOCAL, "", manifest, jobs, top=True)
-    plan_snapshots(manifest, jobs)
-    print(f"planned {len(manifest)} paths in {len(jobs)} upload calls", flush=True)
+    manifest, jobs, folders = set(), [], set()
+    plan_dir(LOCAL, "", manifest, jobs, folders, top=True)
+    plan_snapshots(manifest, jobs, folders)
+    print(f"planned {len(manifest)} paths, {len(folders)} folders, {len(jobs)} upload calls", flush=True)
+    create_folders(folders)
 
     if os.path.exists(STATE):
         with open(STATE) as f:
