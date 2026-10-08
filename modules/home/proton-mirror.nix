@@ -4,8 +4,14 @@ let
 
   mirror = pkgs.writeShellApplication {
     name = "proton-mirror";
-    runtimeInputs = [ proton-drive pkgs.python3 pkgs.libnotify ];
+    runtimeInputs = [ proton-drive pkgs.python3 pkgs.libnotify pkgs.util-linux ];
     text = ''
+      # One mirror at a time: a first upload can outlast the weekly timer
+      exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/proton-mirror.lock"
+      if ! flock -n 9; then
+        echo "another proton-mirror is still running; skipping"
+        exit 0
+      fi
       if python3 ${./proton-drive/mirror.py}; then
         notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup"
       else

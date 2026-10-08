@@ -16,6 +16,21 @@ let
         "/.local/share/Steam/steamapps/workshop" "/.local/share/Steam/steamapps/downloading"
         "/.local/share/Steam/steamapps/temp"
         "/games/beamng-mod-backups" "/games/gtav-layers" "/.local/share/gnome-boxes"
+        # app caches (Electron/Chromium/Firefox, Flatpak)
+        "/.config/**/Cache/" "/.config/**/Code Cache/" "/.config/**/GPUCache/" "/.config/**/DawnCache/"
+        "/.config/**/DawnGraphiteCache/" "/.config/**/DawnWebGPUCache/" "/.config/**/GrShaderCache/"
+        "/.config/**/ShaderCache/" "/.config/**/Service Worker/CacheStorage/"
+        "/.config/**/Service Worker/ScriptCache/" "/.config/**/Crashpad/" "/.config/**/cache2/"
+        "/.var/app/*/cache/"
+        # re-downloadable dependencies
+        "node_modules/" ".venv/" "__pycache__/" "/projects/**/.claude/worktrees/"
+        "/.local/share/nvim/lazy/" "/.local/share/nvim/mason/" "/.local/share/pnpm/"
+        "/.bun/install/cache/" "/.cargo/registry/" "/.cargo/git/"
+        # Proton prefixes: keep each game's users/ dir (saves), drop the Windows install
+        "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/windows/"
+        "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files/"
+        "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/"
+        "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/users/steamuser/AppData/Local/Temp/"
       ];
     }
     {
@@ -54,7 +69,7 @@ let
 
         echo "=== $name -> $dest/$date ==="
         local rc=0
-        rsync -aHAX --delete "''${opts[@]}" "$@" "$dest/$date/" || rc=$?
+        rsync -aHAX --delete --delete-excluded "''${opts[@]}" "$@" "$dest/$date/" || rc=$?
         # 23 = some files unreadable, 24 = files vanished mid-run; the snapshot is still usable
         if [ "$rc" -ne 0 ] && [ "$rc" -ne 23 ] && [ "$rc" -ne 24 ]; then
           notify-send -u critical "Backup failed" "$name: rsync exit $rc"

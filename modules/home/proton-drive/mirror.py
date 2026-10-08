@@ -1,19 +1,23 @@
 """Mirror /mnt/backup/current to Proton Drive with the official proton-drive CLI.
 
 Each run makes the remote an exact copy of the local tree:
-  1. upload everything (the CLI skips files whose content is unchanged)
-  2. trash + permanently delete what disappeared locally since the last run
+  1. plan: walk the tree, create remote folders, list what should exist
+  2. prune: trash + permanently delete what disappeared since the last run
+  3. save the plan as the new manifest (a killed run loses nothing: the next one re-plans)
+  4. upload in parallel (the CLI skips files whose content is unchanged)
 
 Quirks this works around:
   - a symlink fails the CLI's upload of its whole folder, so folders that
     contain one (anywhere below) are walked here and their symlinks skipped
   - rsync snapshots: only each job's `latest` is mirrored, under a fixed
     remote name, so weekly dated folders don't pile up as full copies
+  - uploads are bound by per-file round trips, not bandwidth, hence WORKERS
 """
 
 import os
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 DRIVE = "/mnt/backup"  # /mnt/backup/recovery is historical data and deliberately NOT mirrored
 LOCAL = os.environ.get("MIRROR_LOCAL", DRIVE + "/current")  # overrides are for testing
@@ -22,6 +26,8 @@ SNAPSHOTS = "rsync-weekly-bak"
 EXCLUDE = {"Passwords.key"}  # by name, anywhere: the keyfile must never sit next to its database
 STATE = os.environ.get("MIRROR_STATE", os.path.expanduser("~/.local/state/proton-mirror/manifest"))
 BATCH = 200  # local paths per upload call
+WORKERS = 6  # parallel upload calls
+SPLIT = 2000  # folders with more files are split up, so the workers share them
 
 failures = []
 
@@ -49,30 +55,34 @@ def ensure_folder(rel):
         failures.append(f"create-folder {rel}: {out.strip()}")
 
 
+def skipped(e):
+    return e.name in EXCLUDE or e.is_symlink() or not (e.is_file() or e.is_dir())
+
+
 def scan(path, rel, manifest):
-    """Record every mirrored path; return True if the tree holds only files and folders."""
-    clean = True
+    """Record every mirrored path; return (only files and folders?, file count)."""
+    clean, count = True, 0
     for e in os.scandir(path):
         child = f"{rel}/{e.name}" if rel else e.name
-        if e.name in EXCLUDE or e.is_symlink() or not (e.is_file() or e.is_dir()):
+        if skipped(e):
             clean = False
         elif e.is_dir():
             manifest.add(child + "/")
-            clean = scan(e.path, child, manifest) and clean
+            c, n = scan(e.path, child, manifest)
+            clean, count = clean and c, count + n
         else:
             manifest.add(child)
-    return clean
+            count += 1
+    return clean, count
 
 
-def mirror_dir(path, rel, manifest, top=False):
-    """Upload the contents of `path` into remote folder `rel`."""
+def plan_dir(path, rel, manifest, jobs, top=False):
+    """Queue uploads for the contents of `path` into remote folder `rel`."""
     ensure_folder(rel)
-    whole = []  # files and symlink-free folders: one upload call per batch
+    whole = []  # files and symlink-free folders: uploaded together in batches
     for e in sorted(os.scandir(path), key=lambda e: e.name):
         child = f"{rel}/{e.name}" if rel else e.name
-        if top and e.name == SNAPSHOTS:
-            continue
-        if e.name in EXCLUDE or e.is_symlink() or not (e.is_file() or e.is_dir()):
+        if (top and e.name == SNAPSHOTS) or skipped(e):
             continue
         if e.is_file():
             manifest.add(child)
@@ -80,20 +90,17 @@ def mirror_dir(path, rel, manifest, top=False):
         else:
             manifest.add(child + "/")
             sub = set()
-            if scan(e.path, child, sub):
+            clean, count = scan(e.path, child, sub)
+            if clean and count <= SPLIT:
                 manifest |= sub
                 whole.append(e.path)
             else:
-                mirror_dir(e.path, child, manifest)
+                plan_dir(e.path, child, manifest, jobs)
     for i in range(0, len(whole), BATCH):
-        rc, out = cli("filesystem", "upload", "-f", "replace", "-d", "merge", "-t",
-                      *whole[i:i + BATCH], remote(rel))
-        print(out.strip(), flush=True)
-        if rc != 0:
-            failures.append(f"upload into {rel or '/'}: exit {rc}")
+        jobs.append((whole[i:i + BATCH], rel))
 
 
-def mirror_snapshots(manifest):
+def plan_snapshots(manifest, jobs):
     root = os.path.join(LOCAL, SNAPSHOTS)
     if not os.path.isdir(root):
         return
@@ -102,7 +109,7 @@ def mirror_snapshots(manifest):
         if os.path.isdir(latest):
             rel = f"{SNAPSHOTS}/{job}/latest"
             manifest.update({f"{SNAPSHOTS}/", f"{SNAPSHOTS}/{job}/", rel + "/"})
-            mirror_dir(os.path.realpath(latest), rel, manifest)
+            plan_dir(os.path.realpath(latest), rel, manifest, jobs)
 
 
 def prune(old, new):
@@ -118,15 +125,24 @@ def prune(old, new):
             failures.append(f"trash {rel}: {out.strip()}")
             continue
         rc, out = cli("filesystem", "delete", "/trash/" + rel.rsplit("/", 1)[-1])
-        print(f"removed {rel}" if rc == 0 else f"trashed (not deleted) {rel}: {out.strip()}")
+        print(f"removed {rel}" if rc == 0 else f"trashed (not deleted) {rel}: {out.strip()}", flush=True)
+
+
+def upload(job):
+    items, rel = job
+    rc, out = cli("filesystem", "upload", "-f", "replace", "-d", "merge", "-t", *items, remote(rel))
+    print(out.strip(), flush=True)
+    if rc != 0:
+        failures.append(f"upload into {rel or '/'}: exit {rc}")
 
 
 def main():
     if "MIRROR_LOCAL" not in os.environ and not (os.path.ismount(DRIVE) and os.path.isdir(LOCAL)):
         sys.exit(f"{DRIVE} is not mounted or {LOCAL} is missing")
-    manifest = set()
-    mirror_dir(LOCAL, "", manifest, top=True)
-    mirror_snapshots(manifest)
+    manifest, jobs = set(), []
+    plan_dir(LOCAL, "", manifest, jobs, top=True)
+    plan_snapshots(manifest, jobs)
+    print(f"planned {len(manifest)} paths in {len(jobs)} upload calls", flush=True)
 
     if os.path.exists(STATE):
         with open(STATE) as f:
@@ -134,6 +150,9 @@ def main():
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
     with open(STATE, "w") as f:
         f.write("\n".join(sorted(manifest)) + "\n")
+
+    with ThreadPoolExecutor(WORKERS) as pool:
+        list(pool.map(upload, jobs))
 
     if failures:
         print("FAILURES:\n  " + "\n  ".join(failures), file=sys.stderr)
