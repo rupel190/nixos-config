@@ -61,6 +61,7 @@
     ./pi-backup.nix # weekly pull of RPi backups to the backup drive (amanita only)
     ./rsync-backups.nix # weekly home + media snapshots to /mnt/backup
     ./proton-mirror.nix # weekly mirror of /mnt/backup/current to Proton Drive (recovery/ stays local)
+    ./router-backup.nix # weekly OpenWrt config backup into /mnt/backup/current/router
     ./udiskie.nix # automount removable drives
   ] ++ lib.optionals (host == "cordyceps") [
     ./laptop-only.nix # brightness, battery, touchpad settings
