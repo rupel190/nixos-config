@@ -26,6 +26,7 @@ let
         "node_modules/" ".venv/" "__pycache__/" "/projects/**/.claude/worktrees/"
         "/.local/share/nvim/lazy/" "/.local/share/nvim/mason/" "/.local/share/pnpm/"
         "/.bun/install/cache/" "/.cargo/registry/" "/.cargo/git/"
+        "/.local/share/containers/" "/.local/share/flatpak/" "/.local/share/uv/"
         # regenerable pipeline output (sittings/ and findings-data/ stay)
         "/projects/recustomize/stitching-pipeline/tests/output/test_batch_segment/"
         "/projects/recustomize/stitching-pipeline/tests/output/variants/"
@@ -36,6 +37,7 @@ let
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files/"
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/"
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/users/steamuser/AppData/Local/Temp/"
+        "/.local/share/Steam/steamapps/compatdata/*/pfx/dosdevices/"
       ];
     }
     {
