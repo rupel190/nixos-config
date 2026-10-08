@@ -320,9 +320,9 @@ def main():
     ap.add_argument("text", nargs="*", help="label text; each argument is a line")
     ap.add_argument("--image", metavar="FILE",
                     help="print an image instead of text, scaled to the tape height")
-    ap.add_argument("--batch", metavar="FILE",
+    ap.add_argument("--batch", nargs="?", const="-", metavar="FILE",
                     help="print several labels as one chained strip; blank-line-separated "
-                         "blocks in FILE (or - for stdin), one block per label")
+                         "blocks in FILE, one block per label. Bare --batch, or -, reads stdin")
     ap.add_argument("--list-fonts", nargs="?", const="", metavar="PATTERN",
                     help="list installed font families, optionally filtered, and exit")
     ap.add_argument("--mac", default=os.environ.get("PTOUCH_MAC", DEFAULT_MAC))
@@ -348,6 +348,8 @@ def main():
         return
     if not args.text and not args.image and not args.batch:
         ap.error("give some text, or --image FILE, or --batch FILE")
+    if args.batch and (args.text or args.image):
+        ap.error("--batch reads its labels from a file or stdin; drop the text/--image")
 
     font = args.font
     if not os.path.exists(font):
