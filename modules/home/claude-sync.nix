@@ -79,9 +79,37 @@ let
     # its term-image entry embeds absolute /nix/store paths. Never sync it.
     mcp_sync: false
   '';
+
+  # One push at a time (no lock in claude-sync itself; parallel pushes re-sent the same files)
+  claude-sync-push = pkgs.writeShellApplication {
+    name = "claude-sync-push";
+    runtimeInputs = [ claude-sync pkgs.util-linux ];
+    text = ''
+      exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync-push.lock"
+      flock -n 9 || exit 0
+      exec claude-sync push -q
+    '';
+  };
 in
 {
-  home.packages = [ claude-sync ];
+  home.packages = [ claude-sync claude-sync-push ];
+
+  # Pushes every 20 min instead of after every reply: each push re-uploads changed transcripts in full
+  systemd.user.services.claude-sync-push = {
+    Unit.Description = "Push ~/.claude to claude-sync storage";
+    Unit.X-RestartIfChanged = false; # a push can take minutes; see proton-mirror.nix
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${claude-sync-push}/bin/claude-sync-push";
+      Nice = 19;
+      IOSchedulingClass = "idle";
+    };
+  };
+  systemd.user.timers.claude-sync-push = {
+    Unit.Description = "Push ~/.claude every 20 minutes";
+    Timer.OnCalendar = "*:0/20";
+    Install.WantedBy = [ "timers.target" ];
+  };
 
   # config.yaml is assembled from two sources so that non-secret settings stay
   # visible in this file rather than being buried inside an encrypted blob:

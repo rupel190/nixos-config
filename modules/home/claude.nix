@@ -147,6 +147,16 @@ let
           }
         ];
       }
+      # Pushes run on the 20-minute timer (claude-sync.nix) plus once here, detached so exit doesn't wait
+      {
+        matcher = "";
+        hooks = [
+          {
+            type = "command";
+            command = "test -n \"$CLAUDE_WORKER\" || setsid -f claude-sync-push >/dev/null 2>&1";
+          }
+        ];
+      }
     ];
     SessionStart = [
       {
@@ -188,15 +198,6 @@ let
           {
             type = "command";
             command = "claude-hook-wezterm-status done";
-          }
-        ];
-      }
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "test -n \"$CLAUDE_WORKER\" || claude-sync push -q";
           }
         ];
       }
