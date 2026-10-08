@@ -26,6 +26,11 @@ let
         "node_modules/" ".venv/" "__pycache__/" "/projects/**/.claude/worktrees/"
         "/.local/share/nvim/lazy/" "/.local/share/nvim/mason/" "/.local/share/pnpm/"
         "/.bun/install/cache/" "/.cargo/registry/" "/.cargo/git/"
+        # regenerable pipeline output (sittings/ and findings-data/ stay)
+        "/projects/recustomize/stitching-pipeline/tests/output/test_batch_segment/"
+        "/projects/recustomize/stitching-pipeline/tests/output/variants/"
+        "/projects/recustomize/stitching-pipeline/tests/output/renderer-history/"
+        "/projects/recustomize/stitching-pipeline/tests/output/test_segmentation/"
         # Proton prefixes: keep each game's users/ dir (saves), drop the Windows install
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/windows/"
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files/"
