@@ -1,6 +1,7 @@
 { pkgs, config, ... }:
 let
   home = config.home.homeDirectory;
+  videos = "/mnt/silo/videos"; # ~/Videos links here
   root = "/mnt/backup/current/rsync-weekly-bak";
   keep = 8; # weekly snapshots kept per job
 
@@ -43,7 +44,7 @@ let
     }
     {
       name = "home-media";
-      sources = [ "${home}/Videos" "${home}/Pictures" "${home}/Music" ];
+      sources = [ videos "${home}/Pictures" "${home}/Music" ];
       excludes = [ ];
     }
   ];
@@ -69,6 +70,14 @@ let
         local opts=()
         while [ "$1" != "--" ]; do opts+=("$1"); shift; done
         shift
+        # a missing source (e.g. silo not mounted) would otherwise pass as exit 23 and rotate it away
+        for s in "$@"; do
+          if [ ! -e "$s" ]; then
+            notify-send -u critical "Backup failed" "$name: $s missing"
+            failed=1
+            return
+          fi
+        done
 
         local dest="${root}/$name" date
         date=$(date +%Y-%m-%d)
@@ -99,6 +108,9 @@ let
 in
 {
   home.packages = [ backupScript ];
+
+  # Videos live on the 12TB HDD; the home-media job backs up the target, not the link
+  home.file."Videos".source = config.lib.file.mkOutOfStoreSymlink videos;
 
   systemd.user.services.rsync-backups = {
     Unit.Description = "Weekly rsync snapshots of home to /mnt/backup";

@@ -2,6 +2,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./media.nix
     ./../../modules/core
     inputs.nix-flatpak.nixosModules.nix-flatpak
   ];
