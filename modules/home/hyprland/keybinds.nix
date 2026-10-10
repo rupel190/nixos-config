@@ -94,6 +94,37 @@ let
       })
     end'';
 
+  # Laptop: flip every external output between duplicating eDP-1 and extending
+  # to its right. Mirrored outputs vanish from get_monitors(), so read them back
+  # from eDP-1's mirrors list; scale 1 overrides amanita's DP-* rules.
+  laptopMirrorToggle = dsp ''
+    function()
+      local edp = hl.get_monitor("eDP-1")
+      local mirroring = edp ~= nil and #edp.mirrors > 0
+      local outs = {}
+      if mirroring then
+        for _, m in ipairs(edp.mirrors) do outs[#outs + 1] = m.name end
+      else
+        for _, m in ipairs(hl.get_monitors()) do
+          if m.name ~= "eDP-1" then outs[#outs + 1] = m.name end
+        end
+      end
+      for _, name in ipairs(outs) do
+        hl.monitor({
+          output = name,
+          mode = "preferred",
+          position = "auto-right",
+          scale = 1,
+          mirror = mirroring and "" or "eDP-1",
+        })
+      end
+      hl.notification.create({
+        text = #outs == 0 and "no external output" or (mirroring and "extend" or "duplicate eDP-1"),
+        time = 2000,
+        color = mirroring and "rgb(a6da95)" or "rgb(f9e2af)",
+      })
+    end'';
+
   digits = [
     "1"
     "2"
@@ -261,6 +292,10 @@ in
         (bind "${sysMod} + 3" (dpmsOff "HDMI-A-2"))
         # AVR/HDMI-A-1: duplicate DP-1 <-> extend.
         (bind "${sysMod} + 4" mirrorToggle)
+      ]
+      # Any external output: duplicate eDP-1 <-> extend.
+      ++ lib.optionals (host == "cordyceps") [
+        (bind "${sysMod} + 2" laptopMirrorToggle)
       ]
       # Switch workspaces with mainMod + [0-9]; move with mainMod + ALT + [0-9].
       # 0 maps to workspace 10.
