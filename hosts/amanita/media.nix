@@ -12,9 +12,10 @@ in
     "d ${root}        2775 ${username} media - -"
     "d ${root}/movies 2775 ${username} media - -"
     "d ${root}/tv     2775 ${username} media - -"
+    "d ${root}/usenet 2775 ${username} media - -"
   ];
 
-  # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767
+  # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767, sabnzbd :8085
   services.radarr = {
     enable = true;
     group = "media";
@@ -24,6 +25,16 @@ in
     group = "media";
   };
   services.prowlarr.enable = true;
+  # Usenet download client; servers/credentials are entered in its web UI (config stays writable)
+  services.sabnzbd = {
+    enable = true;
+    group = "media";
+    settings.misc = {
+      port = 8085; # 8080 is too common a dev-server port
+      download_dir = "${root}/usenet/incomplete";
+      complete_dir = "${root}/usenet/complete"; # same fs as the library: imports are instant renames
+    };
+  };
   services.bazarr = {
     enable = true;
     group = "media";
@@ -49,6 +60,10 @@ in
   };
   systemd.services.sonarr = {
     serviceConfig.UMask = lib.mkForce "0002";
+    unitConfig.RequiresMountsFor = root;
+  };
+  systemd.services.sabnzbd = {
+    serviceConfig.UMask = "0002";
     unitConfig.RequiresMountsFor = root;
   };
   systemd.services.bazarr = {
