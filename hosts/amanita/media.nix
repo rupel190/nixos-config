@@ -14,8 +14,12 @@ in
     "d ${root}/tv     2775 ${username} media - -"
   ];
 
-  # Web UIs stay on localhost (firewall closed): radarr :7878, prowlarr :9696, bazarr :6767
+  # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767
   services.radarr = {
+    enable = true;
+    group = "media";
+  };
+  services.sonarr = {
     enable = true;
     group = "media";
   };
@@ -41,6 +45,10 @@ in
   # group-writable files so bazarr can add subtitles; wait for the nofail silo mount
   systemd.services.radarr = {
     serviceConfig.UMask = lib.mkForce "0002"; # module hardcodes 0022
+    unitConfig.RequiresMountsFor = root;
+  };
+  systemd.services.sonarr = {
+    serviceConfig.UMask = lib.mkForce "0002";
     unitConfig.RequiresMountsFor = root;
   };
   systemd.services.bazarr = {
