@@ -58,6 +58,9 @@
     };
   };
 
+  # Portal reads this for org.freedesktop.appearance; Firefox/Zen chrome follows it
+  dconf.settings."org/gnome/desktop/interface".color-scheme = "prefer-dark";
+
   home.pointerCursor = {
     enable = true;
     name = "catppuccin-macchiato-teal-cursors";
