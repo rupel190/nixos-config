@@ -33,6 +33,8 @@
     ./audio-switch # default-output ring, shared by the bar and CTRL+SUPER+ALT+A
     ./plasticity.nix # plasticity CAD (AppImage)
     ./say-clip.nix # read-aloud aid (kokoro TTS via a warm daemon)
+    ./mangohud.nix # frame-time overlay (gamescope --mangoapp)
+    ./rea.nix # reverse-engineering agent toolkit (ghidra/binwalk/jadx from nixpkgs)
     ./packages.nix # additional packages
     ./browser.nix # zen browser
     ./vicinae.nix # launcher + browser tab integration (native messaging host)

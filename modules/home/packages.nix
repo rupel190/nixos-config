@@ -29,7 +29,6 @@ in
       qpwgraph # pipewire patchbay — visual audio routing (drag-and-drop graph)
       keepassxc
       obsidian
-      # exodus — blocked: nixpkgs 26.1.5 can't be auto-downloaded; install manually or via Flatpak
       # TickTick: two RDNA 4 / NixOS rendering issues:
       # 1. libGL.so.1 unavailable → bypass EGL with ANGLE-over-Vulkan
       # 2. System RADV driver segfaults standalone → use TickTick's bundled SwiftShader Vulkan ICD

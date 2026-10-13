@@ -11,6 +11,7 @@
   services.flatpak.enable = true;
   services.flatpak.packages = [
     "com.bambulab.BambuStudio"
+    "io.exodus.Exodus" # nixpkgs exodus is requireFile pinned to an old zip; Flathub tracks upstream
   ];
 
   # Host-specific configuration
@@ -30,6 +31,12 @@
   services.udev.packages = [
     pkgs.oversteer
     pkgs.wooting-udev-rules
+  ];
+
+  # Steam Frame sideloading: APKs go to the Lepton container via `adb connect frame:5555` (Wi-Fi; USB reaches SteamOS, not Android)
+  environment.systemPackages = [
+    pkgs.sidequest
+    pkgs.android-tools
   ];
 
   # Arduino handbrake - expose as joystick to SDL/BeamNG

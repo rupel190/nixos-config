@@ -398,9 +398,9 @@
         # coordinates keeps them, so the window exists, renders and plays audio
         # entirely offscreen. Symptom: game audible, hyprctl clients shows it mapped,
         # nothing visible on any monitor. center= overrides the self-chosen position.
-        # Pair this with Windowed=2 (borderless) in the game's own settings.xml --
-        # true fullscreen makes Wine attempt a modeset, which fails under Wayland with
-        # "NtUserChangeDisplaySettings returned -2".
+        # Windowed=0 (true fullscreen) in settings.xml is correct: under gamescope the
+        # game modesets against gamescope's virtual display, not the real output.
+        # Only applies to non-gamescope launches; gamescope's own window is handled below.
         {
           match = {
             class = "^steam_app_3240220$";
@@ -459,10 +459,20 @@
           monitor = "DP-2";
         }
 
-        # Gamescope-wrapped games
+        # Gamescope-wrapped games. Its window must not be tiled: measured
+        # 1280x720 requested, 1254x677 delivered, and resizing gamescope
+        # changes the virtual display under the game.
         {
           match.class = "^gamescope";
           monitor = "DP-2";
+        }
+        {
+          match.class = "^gamescope";
+          float = true;
+        }
+        {
+          match.class = "^gamescope";
+          center = true;
         }
       ];
     };

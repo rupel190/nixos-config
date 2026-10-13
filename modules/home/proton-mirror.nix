@@ -12,6 +12,15 @@ let
         echo "another proton-mirror is still running; skipping"
         exit 0
       fi
+      # An expired session otherwise surfaces as thousands of per-call failures
+      if ! out=$(proton-drive filesystem list /my-files 2>&1); then
+        case "$out" in
+          *"login first"*) notify-send -u critical "Proton mirror: logged out" "run: proton-drive auth login" ;;
+          *) notify-send -u critical "Proton mirror: Drive unreachable" "$(echo "$out" | tail -n 1)" ;;
+        esac
+        echo "$out"
+        exit 1
+      fi
       if python3 ${./proton-drive/mirror.py}; then
         notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup"
       else
