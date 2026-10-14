@@ -11,13 +11,15 @@ Quirks this works around:
     contain one (anywhere below) are walked here and their symlinks skipped
   - rsync snapshots: only each job's `latest` is mirrored, under a fixed
     remote name, so weekly dated folders don't pile up as full copies
-  - uploads are bound by per-file round trips, not bandwidth, hence WORKERS
+  - parallel CLI processes race on the single-use refresh token after ~24h
+    and the loser deletes the stored session, hence WORKERS = 1
 """
 
 import json
 import os
 import subprocess
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 DRIVE = "/mnt/backup"  # /mnt/backup/recovery is historical data and deliberately NOT mirrored
@@ -27,10 +29,13 @@ SNAPSHOTS = "rsync-weekly-bak"
 EXCLUDE = {"Passwords.key"}  # by name, anywhere: the keyfile must never sit next to its database
 STATE = os.environ.get("MIRROR_STATE", os.path.expanduser("~/.local/state/proton-mirror/manifest"))
 BATCH = 200  # local paths per upload call
-WORKERS = 3  # parallel upload calls: overlaps per-file round trips; more only crowds the uplink
+WORKERS = 1  # upload calls at a time; >1 logs the CLI out at token refresh (see top)
 SPLIT = 2000  # folders with more files are split up, so the workers share them
 
+LOGGED_OUT = 3  # exit code the wrapper turns into a "log in again" notification
+
 failures = []
+logged_out = threading.Event()
 
 
 def cli(*args):
@@ -162,9 +167,13 @@ def prune(old, new):
 
 
 def upload(job):
+    if logged_out.is_set():
+        return
     items, rel = job
     rc, out = cli("filesystem", "upload", "-f", "replace", "-d", "merge", "-t", *items, remote(rel))
     print(out.strip(), flush=True)
+    if "login first" in out:
+        logged_out.set()
     if rc != 0:
         failures.append(f"upload into {rel or '/'}: exit {rc}")
 
@@ -188,6 +197,9 @@ def main():
     with ThreadPoolExecutor(WORKERS) as pool:
         list(pool.map(upload, jobs))
 
+    if logged_out.is_set():
+        print("Proton Drive session lost mid-run; remaining uploads skipped", file=sys.stderr)
+        sys.exit(LOGGED_OUT)
     if failures:
         print("FAILURES:\n  " + "\n  ".join(failures), file=sys.stderr)
         sys.exit(1)

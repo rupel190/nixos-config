@@ -21,12 +21,14 @@ let
         echo "$out"
         exit 1
       fi
-      if python3 ${./proton-drive/mirror.py}; then
-        notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup"
-      else
-        notify-send -u critical "Proton mirror failed" "see: journalctl --user -u proton-mirror"
-        exit 1
-      fi
+      rc=0
+      python3 ${./proton-drive/mirror.py} || rc=$?
+      case "$rc" in
+        0) notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup" ;;
+        3) notify-send -u critical "Proton mirror: logged out mid-run" "run: proton-drive auth login" ;;
+        *) notify-send -u critical "Proton mirror failed" "see: journalctl --user -u proton-mirror" ;;
+      esac
+      exit "$rc"
     '';
   };
 in
