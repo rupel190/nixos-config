@@ -29,6 +29,7 @@ in
   services.sabnzbd = {
     enable = true;
     group = "media";
+    configFile = null; # stateVersion < 26.05 defaults to a legacy ini path that silently ignores settings
     settings.misc = {
       port = 8085; # 8080 is too common a dev-server port
       download_dir = "${root}/usenet/incomplete";
