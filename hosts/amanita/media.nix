@@ -13,6 +13,9 @@ in
     "d ${root}/movies 2775 ${username} media - -"
     "d ${root}/tv     2775 ${username} media - -"
     "d ${root}/usenet 2775 ${username} media - -"
+    # sabnzbd creates these 0700 on its own, which would lock radarr/sonarr out of finished downloads
+    "d ${root}/usenet/incomplete 2775 sabnzbd media - -"
+    "d ${root}/usenet/complete   2775 sabnzbd media - -"
   ];
 
   # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767, sabnzbd :8085
@@ -34,6 +37,7 @@ in
       port = 8085; # 8080 is too common a dev-server port
       download_dir = "${root}/usenet/incomplete";
       complete_dir = "${root}/usenet/complete"; # same fs as the library: imports are instant renames
+      permissions = "775"; # finished job folders group-readable for radarr/sonarr
     };
   };
   services.bazarr = {
