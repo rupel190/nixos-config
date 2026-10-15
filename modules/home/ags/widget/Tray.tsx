@@ -8,7 +8,11 @@ function Item(item: AstalTray.TrayItem) {
     btn.menuModel = item.menuModel
     btn.insert_action_group("dbusmenu", item.actionGroup)
     // apps swap their menu and actions at runtime; without re-inserting, entries render greyed out
-    item.connect("notify::menu-model", () => (btn.menuModel = item.menuModel))
+    // but only on a genuinely new model: the importer mutates one GMenu in place and notifies, and
+    // assigning that same object back tears down the open popover (udiskie rebuilds on AboutToShow)
+    item.connect("notify::menu-model", () => {
+      if (btn.menuModel !== item.menuModel) btn.menuModel = item.menuModel
+    })
     item.connect("notify::action-group", () => btn.insert_action_group("dbusmenu", item.actionGroup))
     // SNI menus are built lazily; ask the app to refresh just before the popover opens
     btn.connect("notify::active", () => btn.active && item.about_to_show())
