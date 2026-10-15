@@ -4,3 +4,7 @@ modules/home/dotfiles/gh/hosts.yml
 # Nix build output symlinks (nixos-rebuild build / nix build [-o])
 /result
 result-*
+
+# Python bytecode — mirror.py is run from the store, but editing it in place
+# leaves a __pycache__ next to the source
+__pycache__/

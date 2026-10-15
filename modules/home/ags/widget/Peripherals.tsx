@@ -29,6 +29,8 @@ function Entry(p: Peripheral) {
 export default function Peripherals() {
   // Hidden rather than empty: with nothing paired this would otherwise leave a
   // gap in the end cluster, and it self-heals when the mouse comes back.
+  // Keep For the only child: it appends into this box instead of holding its own place,
+  // so a sibling declared after it still draws BEFORE the entries — see widget/Display.tsx
   return (
     <box
       class="Peripherals"

@@ -34,6 +34,8 @@ export default function Tray() {
   const items = createBinding(AstalTray.get_default(), "items")
 
   // hidden rather than empty, so no gap in the end cluster when nothing is registered
+  // keep For the only child: it appends into this box instead of holding its own place,
+  // so a sibling declared after it still draws BEFORE the items — see widget/Display.tsx
   return (
     <box class="Tray" spacing={2} visible={createComputed(() => items().length > 0)}>
       <For each={items}>{(item: AstalTray.TrayItem) => Item(item)}</For>
