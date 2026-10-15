@@ -130,7 +130,13 @@ export default function DisplayIndicator() {
     const mode = p === null ? "—" : (PROFILE_LABEL[p] ?? `0x${p.toString(16)}`)
     const g = gamut()
     const pct = g ? brightness()[g.bus] : undefined
-    return pct === undefined ? mode : `${mode} · ${pct}%`
+    const base = pct === undefined ? mode : `${mode} · ${pct}%`
+
+    // Only once it is actually warming the screen. At the neutral end there is
+    // no state to report and the bar stays as quiet as the rest of it; this is
+    // the only way a filter left on is visible without opening the popover.
+    const kelvin = temperature()
+    return kelvin !== null && kelvin < MAX_K ? `${base} · ${kelvin}K` : base
   })
 
   return (
@@ -164,9 +170,18 @@ export default function DisplayIndicator() {
           </box>
 
           <label class="heading" label="Brightness" xalign={0} />
-          <For each={displays} id={(d: Display) => d.bus}>
-            {(d: Display) => <BrightnessRow {...d} />}
-          </For>
+          {/* The For needs its own box. Its children are appended to whatever
+              widget contains it rather than inserted at its position in the
+              tree, so with siblings after it the rows land at the BOTTOM of the
+              popover — under the refresh button, not under this heading. A
+              dedicated parent gives them somewhere to be appended that itself
+              holds the right place. Windows.tsx nests its dynamic list the same
+              way, which is why that one never showed the problem. */}
+          <box orientation={Gtk.Orientation.VERTICAL} spacing={8}>
+            <For each={displays} id={(d: Display) => d.bus}>
+              {(d: Display) => <BrightnessRow {...d} />}
+            </For>
+          </box>
           <label
             class="empty"
             label="No monitors responding"
