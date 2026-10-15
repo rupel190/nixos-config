@@ -23,6 +23,7 @@ in
       wootility # Wooting keyboard configuration
       piper # gaming mouse onboard config (needs services.ratbagd)
       songrec # shazam-like music recognition
+      delfin # jellyfin client: native gtk, plays through mpv
       digikam # photo organizer
       bitwig-studio # audio daw
       transcribe # transcribe recorded music by ear (unfree)
