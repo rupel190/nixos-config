@@ -62,7 +62,7 @@ export default function Clock() {
         <label
           class="hm"
           label={hm}
-          $={(self) => onSecondaryClick(self, () => copy(hm.get()))}
+          $={(self: Gtk.Label) => onSecondaryClick(self, () => copy(hm.get()))}
         />
         <label class="sep" label="·" />
         {/* Copied as ISO 8601 rather than the `%a %d %b` on screen — the bar
@@ -70,7 +70,7 @@ export default function Clock() {
         <label
           class="date"
           label={date}
-          $={(self) => onSecondaryClick(self, () => copy(fmt("%Y-%m-%d")))}
+          $={(self: Gtk.Label) => onSecondaryClick(self, () => copy(fmt("%Y-%m-%d")))}
         />
       </box>
     </button>

@@ -1,6 +1,7 @@
 import { Gtk } from "ags/gtk4"
 import { createComputed } from "ags"
 import { adjustVolume, cycle, output } from "../service/audio"
+import { wheel } from "./scroll"
 
 // Nerd Font codepoints as escapes rather than literal glyphs, so the source
 // stays readable in an editor without the font. Names confirmed against the
@@ -13,26 +14,6 @@ const ICON_MUTED = "\u{F0581}" // nf-md-volume_off
 const ICON: Record<string, string> = {
   speaker: "\u{F04C3}", // nf-md-speaker
   headset: "\u{F02CB}", // nf-md-headphones
-}
-
-// A wheel notch arrives as dy = ±1.0 from a discrete mouse, but as a stream of
-// fractions from a high-resolution one — and the PRO X reports hi-res. Acting on
-// the sign alone would slam the volume from end to end in a flick, so deltas are
-// accumulated and spent a whole notch at a time.
-function onScroll(step: (n: number) => void) {
-  let accumulated = 0
-  return (_source: unknown, _dx: number, dy: number) => {
-    accumulated += dy
-    while (accumulated <= -1) {
-      accumulated += 1
-      step(1) // dy is negative upward
-    }
-    while (accumulated >= 1) {
-      accumulated -= 1
-      step(-1)
-    }
-    return true // stop here rather than letting the bar scroll behind us
-  }
 }
 
 export default function AudioIndicator() {
@@ -58,13 +39,7 @@ export default function AudioIndicator() {
       focusable={false}
       tooltipText="Click to switch output · scroll to set volume"
       onClicked={() => cycle()}
-      $={(self) => {
-        const scroll = new Gtk.EventControllerScroll({
-          flags: Gtk.EventControllerScrollFlags.VERTICAL,
-        })
-        scroll.connect("scroll", onScroll(adjustVolume))
-        self.add_controller(scroll)
-      }}
+      $={(self: Gtk.Button) => wheel(self, adjustVolume)}
     >
       <box spacing={7}>
         <label class="icon" label={icon} />

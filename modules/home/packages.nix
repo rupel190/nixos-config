@@ -76,7 +76,7 @@ in
       # Wayland/Hyprland theming
       hyprpicker # Color picker
       hyprcursor # Cursor manager
-      hyprsunset # Blue light filter
+      hyprsunset # Blue light filter CLI; the daemon is services.hyprsunset in hyprland/hyprsunset.nix
 
       ## CLI utility
       vicinae # everything launcher (Raycast-style)

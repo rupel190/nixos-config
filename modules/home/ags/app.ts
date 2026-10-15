@@ -6,6 +6,7 @@ import Bar from "./widget/Bar"
 import { init as initAudio } from "./service/audio"
 import { init as initDdc } from "./service/ddc"
 import { init as initPeripherals } from "./service/peripherals"
+import { init as initSunset } from "./service/sunset"
 import { init as initSysMon } from "./service/sysmon"
 import { init as initWindows } from "./service/windows"
 
@@ -28,6 +29,10 @@ app.start({
     // Peripheral batteries — scanned from sysfs, so this costs nothing when
     // there is nothing paired and picks up a device the moment it appears.
     initPeripherals()
+
+    // hyprsunset's colour temperature. One cheap socket read; it is re-read
+    // when the monitor popover opens, since nothing pushes the value.
+    initSunset()
 
     // Default audio output. Subscribes to WirePlumber over AstalWp; no polling,
     // and no window into which the bar could show a stale device, because an
