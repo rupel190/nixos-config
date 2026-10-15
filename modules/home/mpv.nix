@@ -12,8 +12,11 @@
       osd-shadow-color = "#24273a"; # Base
     };
 
-    # Install modern UI
-    scripts = [ pkgs.mpvScripts.uosc ];
+    # uosc = modern UI; cut = c marks start/end of a lossless clip, a cycles copy/encode
+    scripts = with pkgs.mpvScripts; [
+      uosc
+      cut
+    ];
 
     scriptOpts = {
       # Stats script (colors in #BBGGRR format) - press i for status overlay
@@ -31,4 +34,23 @@
       };
     };
   };
+
+  # mpv-cut has no output-dir option; wrap its actions to write into ~/Videos/mpv-cut
+  xdg.configFile."mpv-cut/config.lua".text = ''
+    local outdir = mp.command_native({ "expand-path", "~/Videos/mpv-cut" })
+    for name, action in pairs(ACTIONS) do
+      if name ~= "LIST" then
+        ACTIONS[name] = function(d)
+          mp.command_native({ name = "subprocess", args = { "mkdir", "-p", outdir }, playback_only = false })
+          d.indir = outdir
+          action(d)
+        end
+      end
+    end
+
+    -- keep i for stats; bookmarks and channels unused
+    KEY_BOOKMARK_ADD = nil
+    KEY_CHANNEL_INC = nil
+    KEY_CHANNEL_DEC = nil
+  '';
 }
