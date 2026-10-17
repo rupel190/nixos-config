@@ -21,6 +21,24 @@
   # official FW13 touch panel). Run: fwupdmgr refresh --force && fwupdmgr update
   services.fwupd.enable = true;
 
+  # Allied Vision Alvium 1800 U-507c (USB3 Vision) through Aravis, the vendor-neutral GenICam
+  # library: `arv-tool-0.8` lists the camera, `arv-viewer-0.8` is the live view (focus, aperture).
+  # No proprietary Vimba X needed. Aravis ships no udev rules, so access is granted here.
+  environment.systemPackages = [ pkgs.aravis ];
+  # uaccess must ship as a udev *package* (70-*), as for the P-touch in modules/core/printing.nix.
+  # ⚠️ vendor id 1ab2 (Allied Vision) is from memory: confirm with `lsusb` once it is plugged in.
+  services.udev.packages = [
+    (pkgs.writeTextFile {
+      name = "alvium-udev-rules";
+      destination = "/lib/udev/rules.d/70-alvium.rules";
+      text = ''
+        SUBSYSTEM=="usb", ATTR{idVendor}=="1ab2", TAG+="uaccess"
+      '';
+    })
+  ];
+  # USB3 Vision streams need more USB buffer than the 16 MB default, or full-resolution frames drop.
+  boot.kernelParams = [ "usbcore.usbfs_memory_mb=1000" ];
+
   # Laptop-specific settings
   # services.logind.extraConfig = ''
   #   # Don't shutdown when power button is short-pressed (useful for laptops)
