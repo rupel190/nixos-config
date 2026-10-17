@@ -24,20 +24,30 @@
            -- image. It sets WEZTERM_IMAGE_MCP=1 for exactly this check.
            if os.getenv('WEZTERM_IMAGE_MCP') then return end
 
-           -- default: a `claude --resume` tab per active project, plus a scratch tab.
-           -- cwd is set explicitly -- an omitted cwd inherits the mux server's, not $HOME.
-           local tab, default_pane, window = mux.spawn_window {
-             workspace = 'default',
-             cwd = '/home/rupel/projects/recustomize/stitching-pipeline/',
-             args = { 'claude', '--resume' },
+           -- default: one tab per named claude session (/rename), resumed by name;
+           -- session = nil is a plain shell. cwd must match the session's project dir.
+           local P = '/home/rupel/projects/'
+           local default_tabs = {
+             { P .. 'rieder/rieder-quotation-suite', 'rie-offer-new' },
+             { P .. 'prosthetic-hand', 'prosthetic-hand' },
+             { P .. 'singify', 'singify-main' },
+             { P .. 'recustomize/stitching-pipeline', 'recu-trl' },
+             { P .. 'recustomize/stitching-pipeline', 'recu-0.2' },
+             { P .. 'recustomize/stitching-pipeline', nil },
+             { P .. 'nixos-config', 'data-recovery-ordering' },
+             { '/home/rupel/playground', 'gta-modding-overlay' },
+             { '/home/rupel/playground', 'drovr-recu-upgrade' },
            }
-           window:spawn_tab {
-             cwd = '/home/rupel/projects/rieder/rieder-quotation-suite/',
-             args = { 'claude', '--resume' },
-           }
-           window:spawn_tab {
-             cwd = '/home/rupel',
-           }
+           local window
+           for _, t in ipairs(default_tabs) do
+             local spec = { cwd = t[1], args = t[2] and { 'claude', '--resume', t[2] } or nil }
+             if window then
+               window:spawn_tab(spec)
+             else
+               spec.workspace = 'default'
+               _, _, window = mux.spawn_window(spec)
+             end
+           end
 
            local tab, pulsemixer_pane, window = mux.spawn_window {
              workspace = 'system',
