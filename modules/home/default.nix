@@ -65,6 +65,7 @@
     ./proton-mirror.nix # weekly mirror of /mnt/backup/current to Proton Drive (recovery/ stays local)
     ./router-backup.nix # weekly OpenWrt config backup into /mnt/backup/current/router
     ./udiskie.nix # automount removable drives
+    ./flux-kontext.nix # FLUX.1 Kontext [dev] image edits on ROCm (non-commercial licence)
   ] ++ lib.optionals (host == "cordyceps") [
     ./laptop-only.nix # brightness, battery, touchpad settings
   ];
