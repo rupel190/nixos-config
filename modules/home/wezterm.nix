@@ -24,23 +24,25 @@
            -- image. It sets WEZTERM_IMAGE_MCP=1 for exactly this check.
            if os.getenv('WEZTERM_IMAGE_MCP') then return end
 
-           -- default: one tab per named claude session (/rename), resumed by name;
-           -- session = nil is a plain shell. cwd must match the session's project dir.
+           -- default: one tab per claude session, resumed by ID (names change on /rename);
+           -- the name is only a label, nil ID = plain shell.
+           -- env -C because spawn_tab ignores cwd for tabs with args.
            local P = '/home/rupel/projects/'
            local default_tabs = {
-             { P .. 'rieder/rieder-quotation-suite', 'rie-offer-new' },
-             { P .. 'prosthetic-hand', 'prosthetic-hand' },
-             { P .. 'singify', 'singify-main' },
-             { P .. 'recustomize/stitching-pipeline', 'recu-trl' },
-             { P .. 'recustomize/stitching-pipeline', 'recu-0.2' },
+             { P .. 'rieder/rieder-quotation-suite', 'fd7a8265-3442-4df5-8480-ab114d1f70fa' }, -- rie-offer
+             { P .. 'prosthetic-hand', '61890315-fbf6-407f-b82a-65451fea9001' },
+             { P .. 'singify', '53c419d2-0c2d-4614-acaa-4b295ed1f186' },
+             { P .. 'recustomize/stitching-pipeline', '1416e26c-fcce-47c0-9a02-478737511983' }, -- recu-trl
+             { P .. 'recustomize/stitching-pipeline', 'dde3cf55-fbdf-441a-b623-fcc31c429233' }, -- recu-0.2
              { P .. 'recustomize/stitching-pipeline', nil },
-             { P .. 'nixos-config', 'data-recovery-ordering' },
-             { '/home/rupel/playground', 'gta-modding-overlay' },
-             { '/home/rupel/playground', 'drovr-recu-upgrade' },
+             { P .. 'nixos-config', 'eeaf4693-4b8b-48fb-b1de-75cd7402f3a6' }, -- data-recovery-ordering
+             { '/home/rupel/playground', '844d3894-586d-48b9-8478-e6de77715ab3' }, -- gta-mods
+             { '/home/rupel/playground', 'fa07136e-e2ea-40dd-95fa-c9d5be440c86' }, -- drovr-recu-upgrade
            }
            local window
            for _, t in ipairs(default_tabs) do
-             local spec = { cwd = t[1], args = t[2] and { 'claude', '--resume', t[2] } or nil }
+             local spec = { cwd = t[1] }
+             if t[2] then spec.args = { 'env', '-C', t[1], 'claude', '--resume', t[2] } end
              if window then
                window:spawn_tab(spec)
              else
