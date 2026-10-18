@@ -221,6 +221,37 @@ let
   # generations and identical on both hosts.
   claude-statusline = pkgs.writers.writePython3Bin "claude-statusline"
     { flakeIgnore = [ "E501" ]; } (builtins.readFile ./claude-statusline.py);
+
+  # `claude` pulls ~/.claude BEFORE it starts. The SessionStart pull below runs too late for
+  # `claude --resume`: its picker lists sessions from local disk before any hook fires, so a
+  # session pushed from the other host was missing until the next start. Interactive starts
+  # only (not -p/--print, not a pipe, not drovr workers); a waiting lock, because the wezterm
+  # startup tabs launch several at once; a timeout, so an offline start is not blocked.
+  # claude-sync by BARE NAME, like the hooks. The SessionStart pull stays as the fallback.
+  claude-code-raw = inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  claude-pull-first = pkgs.writeShellScript "claude" ''
+    if [ -z "''${CLAUDE_WORKER:-}" ] && [ -t 0 ] && [ -t 1 ] && command -v claude-sync >/dev/null; then
+      interactive=1
+      for a in "$@"; do
+        case "$a" in -p|--print|-v|--version|-h|--help) interactive=0 ;; esac
+      done
+      if [ "$interactive" = 1 ]; then
+        (
+          ${pkgs.util-linux}/bin/flock -w 60 9 &&
+            ${pkgs.coreutils}/bin/timeout 30 claude-sync pull -q
+        ) 9>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync-pull.lock" || true
+      fi
+    fi
+    exec ${claude-code-raw}/bin/claude "$@"
+  '';
+  claude-code = pkgs.symlinkJoin {
+    name = "claude-code-pull-first";
+    paths = [ claude-code-raw ];
+    postBuild = ''
+      rm "$out/bin/claude"
+      cp ${claude-pull-first} "$out/bin/claude"
+    '';
+  };
 in
 {
   # Other modules may add hooks here; the lists concatenate
@@ -233,7 +264,7 @@ in
   config.my.claude.hooks = claudeHooks;
 
   config.home.packages = claudeHookPkgs ++ [
-    inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default
+    claude-code
     pkgs.claude-monitor
     claude-statusline
     pkgs.sox # /voice audio recording (provides `rec`)
