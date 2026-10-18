@@ -82,6 +82,7 @@ def main():
     ap.add_argument("--guidance", type=float, default=2.5)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--quant", default="Q8_0", help="GGUF quant file suffix in weights/")
+    ap.add_argument("--background", default="white", help="colour transparent inputs are composited onto")
     ap.add_argument("--keep-size", action="store_true",
                     help="keep Kontext's output resolution instead of resizing back to the input's")
     args = ap.parse_args()
@@ -106,7 +107,9 @@ def main():
     load_s = time.perf_counter() - t0
 
     for src, dst in zip(args.input, targets):
-        image = Image.open(src).convert("RGB")
+        # convert("RGB") drops alpha and exposes whatever RGB sits under transparent pixels (often black).
+        image = Image.open(src).convert("RGBA")
+        image = Image.alpha_composite(Image.new("RGBA", image.size, args.background), image).convert("RGB")
         torch.cuda.reset_peak_memory_stats()
         sampler = VramSampler()
         sampler.start()
