@@ -22,6 +22,11 @@
       };
     };
 
+    # Per day, all workers, in USD like the prices: ≈ €2 warns, ≈ €5 refuses new calls
+    # (a running one finishes). No hard dailyBudget.
+    dailyWarn = 2.3;
+    dailySoftLimit = 5.8;
+
     # Private repos only, on request; public repos qualify without being listed.
     allowedRepos = [ ];
 

@@ -323,11 +323,11 @@
     },
     "drovr": {
       "locked": {
-        "lastModified": 1791306510,
-        "narHash": "sha256-Hn30k1pX+izVesRX1UsO2DHbT40SWRHpoSKMR2kTAg0=",
+        "lastModified": 1792451065,
+        "narHash": "sha256-jNhntqlq45Y2snVL0KiHDB1iAb9PqwwAwDF5TnF7S8g=",
         "ref": "main",
-        "rev": "94f1dffaa65f38a4666ea8b20cf2643412c069ce",
-        "revCount": 15,
+        "rev": "e16cd8d0e8964928a20a6e7d826db8a3ac875840",
+        "revCount": 18,
         "type": "git",
         "url": "ssh://git@github.com/rupel190/drovr"
       },
@@ -1516,11 +1516,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791723281,
-        "narHash": "sha256-Tk0eGjGnKx9y/dpPM3wubpfBdBtbOcCOG5or/RpzmAM=",
+        "lastModified": 1792164029,
+        "narHash": "sha256-M0Lff8v2IYMVQB+eVnvBTJMWgU0eY3+pPPTOFhQT3/A=",
         "owner": "rupel190",
         "repo": "singify",
-        "rev": "5f121650f63744ed3c3d27d3ac7046693c381c98",
+        "rev": "053327a19bc3bad4785d4aeb7f1750ae7e687fb2",
         "type": "github"
       },
       "original": {
