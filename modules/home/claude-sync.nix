@@ -17,6 +17,9 @@ let
     vendorHash = "sha256-VLqVk5bhM+WoEbP+agFpm1LjzI2qFWlWQZB8yV2vbOU=";
     subPackages = [ "cmd/claude-sync" ];
 
+    # 1 GiB download cap, atomic writes, identical-content conflicts self-resolve
+    patches = [ ../../patches/claude-sync-pull-robustness.patch ];
+
     # Matches upstream's Makefile; without this `--version` reports "dev".
     ldflags = [ "-s" "-w" "-X" "main.version=${version}" ];
 
@@ -54,13 +57,13 @@ let
     # scripts are nix packages now and settings.json calls them by BARE NAME, so
     # there is nothing left in ~/.claude/hooks to carry.
     # settings.local.json is omitted deliberately: per-machine by definition.
+    # No history.jsonl: both hosts append (conflicts, lost prompts); the push timer rebuilds it
     sync_paths:
       - CLAUDE.md
       - settings.json
       - skills
       - projects
       - tasks
-      - history.jsonl
 
     exclude:
       # Both are nix-managed now (home.file in claude.nix), so the path here is
@@ -71,6 +74,10 @@ let
       - skills/interaction-tests
       - skills/beamng-vehicle-values
       - skills/drovr
+      # pull filters remote keys by exclude only, not sync_paths
+      - history.jsonl
+      - "**/*.conflict.*"
+      - "**/.claude-sync-*.tmp"
       # Safety net: any skill that later becomes a repo should not drag .git
       # internals across. doublestar syntax, matched against the relative path.
       - "**/.git/**"
@@ -100,6 +107,8 @@ in
     Unit.X-RestartIfChanged = false; # a push can take minutes; see proton-mirror.nix
     Service = {
       Type = "oneshot";
+      # Merges both hosts' session prompts into history.jsonl (~8 s)
+      ExecStartPre = "-${claude-sync}/bin/claude-sync rebuild-history -q";
       ExecStart = "${claude-sync-push}/bin/claude-sync-push";
       Nice = 19;
       IOSchedulingClass = "idle";

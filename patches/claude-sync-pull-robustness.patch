@@ -1,0 +1,160 @@
+diff --git a/internal/storage/storage.go b/internal/storage/storage.go
+index fbd5c7e..dd3a752 100644
+--- a/internal/storage/storage.go
++++ b/internal/storage/storage.go
+@@ -16,9 +16,10 @@ const (
+ 	ProviderWebDAV Provider = "webdav"
+ )
+ 
+-// MaxDownloadSize is the maximum allowed size for a single downloaded object (100MB).
++// MaxDownloadSize is the maximum allowed size for a single downloaded object (1GiB).
+ // This prevents memory exhaustion from oversized or malicious remote files.
+-const MaxDownloadSize = 100 * 1024 * 1024
++// Raised from 100MB: transcripts with inline images exceed it even compressed.
++const MaxDownloadSize = 1024 * 1024 * 1024
+ 
+ // ObjectInfo contains metadata about a stored object
+ type ObjectInfo struct {
+diff --git a/internal/sync/sync.go b/internal/sync/sync.go
+index 0a45bec..869e761 100644
+--- a/internal/sync/sync.go
++++ b/internal/sync/sync.go
+@@ -334,14 +334,18 @@ func (s *Syncer) Pull(ctx context.Context) (*SyncResult, error) {
+ 				localHash, _ := HashFile(filepath.Join(s.claudeDir, localPath))
+ 				if localHash != stateFile.Hash {
+ 					// Conflict: both changed
++					same, err := s.handleConflict(ctx, localPath, remoteObj)
++					if err != nil {
++						result.Errors = append(result.Errors, err)
++					}
++					if same {
++						continue
++					}
+ 					result.Conflicts = append(result.Conflicts, localPath)
+ 					s.progress(ProgressEvent{
+ 						Action: "conflict",
+ 						Path:   localPath,
+ 					})
+-					if err := s.handleConflict(ctx, localPath, remoteObj); err != nil {
+-						result.Errors = append(result.Errors, err)
+-					}
+ 					continue
+ 				}
+ 				shouldDownload = true
+@@ -502,8 +506,22 @@ func (s *Syncer) downloadFile(ctx context.Context, relativePath, remoteKey strin
+ 		return fmt.Errorf("failed to create directory: %w", err)
+ 	}
+ 
+-	// Transcripts can contain secrets echoed by tools: keep them user-only
+-	if err := os.WriteFile(fullPath, data, 0600); err != nil {
++	// Transcripts can contain secrets echoed by tools: keep them user-only.
++	// Temp file + rename, so a pull killed mid-write never truncates a transcript.
++	tmp, err := os.CreateTemp(dir, ".claude-sync-*.tmp")
++	if err != nil {
++		return fmt.Errorf("failed to write file: %w", err)
++	}
++	tmpPath := tmp.Name()
++	defer func() { _ = os.Remove(tmpPath) }()
++	if _, err := tmp.Write(data); err != nil {
++		_ = tmp.Close()
++		return fmt.Errorf("failed to write file: %w", err)
++	}
++	if err := tmp.Close(); err != nil {
++		return fmt.Errorf("failed to write file: %w", err)
++	}
++	if err := os.Rename(tmpPath, fullPath); err != nil {
+ 		return fmt.Errorf("failed to write file: %w", err)
+ 	}
+ 
+@@ -524,16 +542,33 @@ func (s *Syncer) downloadFile(ctx context.Context, relativePath, remoteKey strin
+ 	return nil
+ }
+ 
+-func (s *Syncer) handleConflict(ctx context.Context, relativePath string, remoteObj storage.ObjectInfo) error {
+-	s.log("Conflict detected: %s (keeping local, saving remote as .conflict)", relativePath)
+-
++// handleConflict saves the remote version as a .conflict copy. When that copy is
++// byte-identical to the local file there was no real conflict (typically a pull
++// killed after writing files but before saving state): the copy is dropped, the
++// state entry repaired, and same is true.
++func (s *Syncer) handleConflict(ctx context.Context, relativePath string, remoteObj storage.ObjectInfo) (same bool, err error) {
+ 	// Download remote version with conflict suffix
+ 	conflictPath := relativePath + ".conflict." + time.Now().Format("20060102-150405")
+ 	if err := s.downloadFile(ctx, conflictPath, remoteObj.Key, nil); err != nil {
+-		return fmt.Errorf("failed to save conflict file: %w", err)
++		return false, fmt.Errorf("failed to save conflict file: %w", err)
+ 	}
+ 
+-	return nil
++	fullPath := filepath.Join(s.claudeDir, relativePath)
++	conflictFull := filepath.Join(s.claudeDir, conflictPath)
++	localHash, lerr := HashFile(fullPath)
++	remoteHash, rerr := HashFile(conflictFull)
++	if lerr == nil && rerr == nil && localHash == remoteHash {
++		_ = os.Remove(conflictFull)
++		s.state.RemoveFile(conflictPath)
++		if info, err := os.Stat(fullPath); err == nil {
++			s.state.UpdateFile(relativePath, info, localHash)
++			s.state.MarkUploaded(relativePath)
++		}
++		return true, nil
++	}
++
++	s.log("Conflict detected: %s (keeping local, saving remote as .conflict)", relativePath)
++	return false, nil
+ }
+ 
+ // uploadManifest builds and uploads a manifest containing file mtimes from current state.
+diff --git a/internal/sync/sync_push_pull_test.go b/internal/sync/sync_push_pull_test.go
+index 091b912..9eda47f 100644
+--- a/internal/sync/sync_push_pull_test.go
++++ b/internal/sync/sync_push_pull_test.go
+@@ -394,6 +394,48 @@ func TestPullDetectsConflicts(t *testing.T) {
+ 	}
+ }
+ 
++// A pull killed after writing a file but before saving state leaves local equal
++// to remote yet different from state; that must not be reported as a conflict.
++func TestNoConflictWhenLocalMatchesRemote(t *testing.T) {
++	env := setupTestEnv(t)
++	ctx := context.Background()
++
++	writeFile(t, env.claudeDir, "history.jsonl", `{"event":"v1"}`)
++	if _, err := env.syncer.Push(ctx); err != nil {
++		t.Fatalf("Push failed: %v", err)
++	}
++
++	writeFile(t, env.claudeDir, "history.jsonl", `{"event":"v2"}`)
++	encrypted, err := env.syncer.encryptor.Encrypt([]byte(`{"event":"v2"}`))
++	if err != nil {
++		t.Fatalf("Encrypt failed: %v", err)
++	}
++	time.Sleep(10 * time.Millisecond)
++	if err := env.store.Upload(ctx, "history.jsonl.age", encrypted); err != nil {
++		t.Fatalf("Upload to mock failed: %v", err)
++	}
++
++	for i := 0; i < 2; i++ {
++		result, err := env.syncer.Pull(ctx)
++		if err != nil {
++			t.Fatalf("Pull %d failed: %v", i, err)
++		}
++		if len(result.Conflicts) != 0 {
++			t.Errorf("Pull %d: expected 0 conflicts, got %v", i, result.Conflicts)
++		}
++	}
++
++	entries, err := os.ReadDir(env.claudeDir)
++	if err != nil {
++		t.Fatalf("ReadDir failed: %v", err)
++	}
++	for _, e := range entries {
++		if strings.Contains(e.Name(), ".conflict.") || strings.HasSuffix(e.Name(), ".tmp") {
++			t.Errorf("Unexpected leftover file %s", e.Name())
++		}
++	}
++}
++
+ func TestNoConflictWhenOnlyRemoteChanged(t *testing.T) {
+ 	env := setupTestEnv(t)
+ 	ctx := context.Background()

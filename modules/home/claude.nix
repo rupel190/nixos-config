@@ -164,7 +164,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "test -n \"$CLAUDE_WORKER\" || claude-sync pull -q";
+            command = "test -n \"$CLAUDE_WORKER\" || flock -n \"\${XDG_RUNTIME_DIR:-/tmp}/claude-sync-pull.lock\" claude-sync pull -q";
           }
         ];
       }
