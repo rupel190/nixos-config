@@ -4,6 +4,7 @@ import type { Gdk, Gtk } from "ags/gtk4"
 import style from "./style.scss"
 import Bar from "./widget/Bar"
 import { init as initAudio } from "./service/audio"
+import { init as initBattery } from "./service/battery"
 import { init as initDdc } from "./service/ddc"
 import { init as initPeripherals } from "./service/peripherals"
 import { init as initSunset } from "./service/sunset"
@@ -29,6 +30,9 @@ app.start({
     // Peripheral batteries — scanned from sysfs, so this costs nothing when
     // there is nothing paired and picks up a device the moment it appears.
     initPeripherals()
+
+    // The laptop's own battery; hidden on hosts that have none.
+    initBattery()
 
     // hyprsunset's colour temperature. One cheap socket read; it is re-read
     // when the monitor popover opens, since nothing pushes the value.

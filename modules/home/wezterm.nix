@@ -399,11 +399,8 @@
                { function() return drovr_status end, cond = function() return drovr_status ~= "" end },
              },
              tabline_y = {},
-             -- cpu/ram/clock moved to the AGS bar; they cost ~44 columns here.
-             -- battery returns "" (not nil) with no battery, so only `cond` drops it.
-             tabline_z = {
-               { "battery", cond = function() return #wezterm.battery_info() > 0 end },
-             },
+             -- cpu/ram/clock/battery moved to the AGS bar; they cost ~44 columns here.
+             tabline_z = {},
              -- These live under `sections`, NOT a `tabs` key: tabline has no such key,
              -- so a `tabs = {...}` block is silently ignored and every tab falls back to
              -- the plugin defaults (index + process). That is what happened between

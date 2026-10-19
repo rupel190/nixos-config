@@ -49,11 +49,15 @@
   services.tlp = {
     enable = true;
     settings = {
-      # Battery conservation
-      START_CHARGE_THRESH_BAT0 = 20;
-      STOP_CHARGE_THRESH_BAT0 = 80;
+      # Battery conservation; the Framework's cell is BAT1, so BAT0 keys were no-ops
+      START_CHARGE_THRESH_BAT1 = 20;
+      STOP_CHARGE_THRESH_BAT1 = 80;
     };
   };
+  # cros_charge_control skips Framework ECs by default, leaving no threshold files for TLP
+  boot.extraModprobeConfig = ''
+    options cros_charge_control probe_with_fwk_charge_control=1
+  '';
 
   # Laptop monitor configuration (for Hyprland)
   # This will be available as a home-manager module when cordyceps is set up

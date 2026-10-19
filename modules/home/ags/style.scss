@@ -269,21 +269,24 @@ popover > contents {
   min-width: 36px;
 }
 
-// ── Peripheral batteries ─────────────────────────────────────────────────────
-// Device-scope power supplies only (the mouse); a laptop's own battery is scope
-// System and stays in the WezTerm tabline. See service/peripherals.ts.
+// ── Batteries ────────────────────────────────────────────────────────────────
+// .Battery is the laptop's own cell (service/battery.ts); .Peripherals are the
+// Device-scope supplies like the mouse (service/peripherals.ts). Styled as one.
 
+.Battery .icon,
 .Peripherals .icon {
   color: $teal;
   font-size: 14px;
 }
 
+.Battery .value,
 .Peripherals .value {
   color: $subtext0;
   // Room for "100%" so the icon beside it does not step sideways at 9% → 10%.
   min-width: 36px;
 }
 
+.Battery .charging,
 .Peripherals .charging {
   color: $teal;
   font-size: 11px;
@@ -291,6 +294,8 @@ popover > contents {
 
 // The one state on this bar worth raising your eyes for, so it gets the only
 // warm colour in the palette rather than another teal.
+.Battery.low .icon,
+.Battery.low .value,
 .Peripherals .stat.low .icon,
 .Peripherals .stat.low .value {
   color: #ee99a0;

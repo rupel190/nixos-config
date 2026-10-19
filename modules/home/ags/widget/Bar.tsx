@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app"
 import { Astal, Gdk, Gtk } from "ags/gtk4"
 import AudioIndicator from "./Audio"
+import Battery from "./Battery"
 import Clock from "./Clock"
 import DisplayIndicator from "./Display"
 import Peripherals from "./Peripherals"
@@ -41,7 +42,8 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
           <Clock />
         </box>
 
-        {/* end — tray, system stats, then the two hardware controls.
+        {/* end — tray, system stats, batteries (laptop, then peripherals), then
+            the two hardware controls.
             halign END pins the cluster to the right edge, so a widening
             stat grows leftward instead of shoving the buttons around. Audio sits
             inside Display so the outermost thing stays the one whose popover
@@ -49,6 +51,7 @@ export default function Bar(gdkmonitor: Gdk.Monitor) {
         <box $type="end" halign={Gtk.Align.END} spacing={14}>
           <Tray />
           <SysMon />
+          <Battery />
           <Peripherals />
           <AudioIndicator />
           <DisplayIndicator />

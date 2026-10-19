@@ -1,11 +1,10 @@
-import Gio from "gi://Gio"
-import { readFile } from "ags/file"
 import { createState } from "ags"
 import { interval } from "ags/time"
+import { POWER_SUPPLY, attr, listDir } from "./sysfs"
 
 // Battery for wireless peripherals — the PRO X mouse today, whatever else the
 // kernel exposes later. Scoped to `scope = Device` on purpose: a laptop's own
-// battery is scope System and stays with the WezTerm tabline on cordyceps, so
+// battery has no scope (or scope System) and belongs to service/battery.ts, so
 // the two never report the same cell twice.
 //
 // Nothing here can see the BlackShark V3 Pro. Razer reports battery over a
@@ -22,44 +21,12 @@ export type Peripheral = {
   isMouse: boolean
 }
 
-const POWER_SUPPLY = "/sys/class/power_supply"
-
 // Peripherals report over their own radio link and move by single digits an
 // hour; polling faster would only spend wakeups.
 const POLL_MS = 60_000
 
 const [peripherals, setPeripherals] = createState<Peripheral[]>([])
 export { peripherals }
-
-// sysfs attributes are optional and racy — a device can vanish between the
-// directory listing and the read — so a miss means "skip it this round", not a
-// failure worth surfacing.
-function attr(path: string): string | null {
-  try {
-    return readFile(path).trim()
-  } catch {
-    return null
-  }
-}
-
-function listDir(path: string): string[] {
-  const names: string[] = []
-  try {
-    const e = Gio.File.new_for_path(path).enumerate_children(
-      "standard::name",
-      Gio.FileQueryInfoFlags.NONE,
-      null,
-    )
-    let info = e.next_file(null)
-    while (info !== null) {
-      names.push(info.get_name())
-      info = e.next_file(null)
-    }
-  } catch {
-    // No such directory: a host with nothing of this kind attached.
-  }
-  return names
-}
 
 // A power_supply node says nothing about what the device *is*, so follow its
 // `device` link to the HID node and ask whether it reports relative axes. That
