@@ -313,6 +313,7 @@ in
   # now, so a hook added through Claude's /hooks UI is dropped on the next
   # switch. Add it here instead. Everything else in the file — enabledPlugins,
   # permissions, editorMode — is Claude's and survives untouched.
+  # cleanupPeriodDays: the 30-day default deletes synced sessions, and push then deletes them from R2.
   config.home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     cfg="$HOME/.claude/settings.json"
     sl=${lib.escapeShellArg (builtins.toJSON {
@@ -324,10 +325,10 @@ in
     mkdir -p "$HOME/.claude"
     if [ -e "$cfg" ]; then
       ${pkgs.jq}/bin/jq --argjson s "$sl" --argjson h "$hk" \
-        '.statusLine = $s | .hooks = $h' "$cfg" > "$cfg.hm-tmp"
+        '.statusLine = $s | .hooks = $h | .cleanupPeriodDays = 36500' "$cfg" > "$cfg.hm-tmp"
     else
       ${pkgs.jq}/bin/jq -n --argjson s "$sl" --argjson h "$hk" \
-        '{statusLine:$s, hooks:$h}' > "$cfg.hm-tmp"
+        '{statusLine:$s, hooks:$h, cleanupPeriodDays:36500}' > "$cfg.hm-tmp"
     fi
     $DRY_RUN_CMD mv "$cfg.hm-tmp" "$cfg"
   '';
