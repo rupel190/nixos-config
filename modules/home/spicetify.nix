@@ -50,6 +50,10 @@ in
         gappsWrapperArgs+=(--add-flags "--use-angle=gl")
         gappsWrapperArgs+=(--add-flags "--enable-gpu-rasterization")
         gappsWrapperArgs+=(--add-flags "--ignore-gpu-blocklist")
+        # Keyring: since oo7 became the Secret Service (a594fec), CEF hangs at
+        # startup asking it for a key → blank window. Spotify keeps nothing secret
+        # there (login lives in ~/.config/spotify/prefs), so use the basic store.
+        gappsWrapperArgs+=(--add-flags "--password-store=basic")
       '';
     });
 
