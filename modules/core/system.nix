@@ -32,6 +32,30 @@
             ];
           });
     })
+
+    # Test-only failures on nixpkgs 02c087f, neither cached by Hydra; pinned to the broken version so they self-expire.
+    #   diff-cover (via sqlfluff):          HTML report tests do exact-string compares
+    #   pyopenjtalk-plus (via piper-tts):   py3.14 reworded a TypeError the test regex-matches
+    (_final: prev: {
+      pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+        (_pyfinal: pyprev: {
+          diff-cover =
+            if pyprev.diff-cover.version == "10.5.1" then
+              pyprev.diff-cover.overridePythonAttrs { doCheck = false; }
+            else
+              pyprev.diff-cover;
+          pyopenjtalk-plus =
+            if pyprev.pyopenjtalk-plus.version == "0.4.1-post9" then
+              pyprev.pyopenjtalk-plus.overridePythonAttrs (old: {
+                disabledTests = (old.disabledTests or [ ]) ++ [
+                  "test_run_njd_from_mecab_invalid_input_should_not_break_next_call"
+                ];
+              })
+            else
+              pyprev.pyopenjtalk-plus;
+        })
+      ];
+    })
   ];
 
   # imports = [ inputs.nix-gaming.nixosModules.default ];

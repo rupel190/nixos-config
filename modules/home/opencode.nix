@@ -1,5 +1,9 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
+  # opencode 2.0 dropped its CLAUDE.md fallback; live link so claude-sync edits apply to both.
+  xdg.configFile."opencode/AGENTS.md".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.claude/CLAUDE.md";
+
   # opencode — provider-agnostic terminal coding agent (sst/opencode).
   programs.opencode = {
     enable = true;

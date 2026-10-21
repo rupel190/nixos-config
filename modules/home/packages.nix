@@ -26,7 +26,14 @@ in
       delfin # jellyfin client: native gtk, plays through mpv
       digikam # photo organizer
       bitwig-studio # audio daw
-      transcribe # transcribe recorded music by ear (unfree)
+      # transcribe music by ear (unfree); upstream deletes each superseded tarball, so nixpkgs' 9.70.1 404s
+      (transcribe.overrideAttrs (_: rec {
+        version = "9.70.4";
+        src = fetchzip {
+          url = "https://www.seventhstring.com/xscribe/downlo/xscsetup-${version}.tar.gz";
+          hash = "sha256-JV/mUXw3lMdaNWZ1t1TzE5n92bO1Rs814USqHD6CG/g=";
+        };
+      }))
       qpwgraph # pipewire patchbay — visual audio routing (drag-and-drop graph)
       keepassxc
       obsidian

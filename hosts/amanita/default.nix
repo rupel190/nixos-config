@@ -17,10 +17,6 @@
   # Host-specific configuration
   networking.hostName = "amanita";
 
-  # Headset - Razer Blacksomething v3 Pro
-  hardware.openrazer.enable = true;
-  hardware.openrazer.users = [ "rupel" ];
-
   # Gaming mice onboard config: DPI/polling/buttons (piper GUI, ratbagctl CLI)
   services.ratbagd.enable = true;
 
@@ -35,7 +31,6 @@
 
   # Steam Frame sideloading: APKs go to the Lepton container via `adb connect frame:5555` (Wi-Fi; USB reaches SteamOS, not Android)
   environment.systemPackages = [
-    pkgs.sidequest
     pkgs.android-tools
   ];
 

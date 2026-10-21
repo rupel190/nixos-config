@@ -12,7 +12,7 @@ let
       pkgs.buildGoModule (
         args
         // {
-          vendorHash = "sha256-Z1eNKci0MzXvKs49kOEYXr/JEO7AJB9kHdFTyNbxkw4=";
+          vendorHash = "sha256-Z6DoLzKbHK8J2qAM9XvGLSmPiSZqBMG7CAs74c1jrPo=";
           # Upstream still stamps -X main.version=; the var lives in cmd.Version
           # since 0.12, so without this the binary reports "dev".
           ldflags = [

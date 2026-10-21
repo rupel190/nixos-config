@@ -28,12 +28,8 @@
     # "pcie_aspm=off" # igc I226-V and RDNA4 both drop from bus with aggressive ASPM
     # "pci=noaer"  # suppress PCIe AER errors cascading after a device dropout
 
-    # RDNA 4 stability
-    "amdgpu.ppfeaturemask=0xffffbfff" # Default features minus overdrive (bit 14 = 0x4000); previous value 0xfffd7fff was wrong (cleared bits 15+17, NOT 14)
-    "amdgpu.gfxoff=0" # Disable GfxOff - was failing during PCIe bus dropout crashes
+    # RDNA 4: amdgpu.mes/mes_kiq/gfxoff aren't params (boot log: "unknown parameter ... ignored"); GfxOff is ppfeaturemask bit 0x8000
     # "amdgpu.runpm=0"  # Disable runtime power management - GPU drops PCIe on display sleep/DPMS (re-enabled after BIOS 3842/AGESA 1.3.0.0a fixed PCIe ASPM)
-    "amdgpu.mes=0"    # Disable Micro Engine Scheduler - MES fails to respond on ring reset, causing device lost from bus
-    "amdgpu.mes_kiq=0" # Disable MES KIQ (Kernel Interface Queue) - separate from mes=0, both needed on RDNA4 GFX1201
 
     # Watchdog to force reboot on hard freeze
     "nmi_watchdog=1"
