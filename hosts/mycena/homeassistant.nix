@@ -1,18 +1,46 @@
 # Home Assistant server, running on mycena itself for now.
 #
 # Kept in its own file deliberately: if this graduates to a Raspberry Pi later,
-# the move is (1) import this file from the Pi's host instead, and (2) copy
-# /var/lib/hass across. Nothing else here depends on it.
+# the move is (1) import this file from the Pi's host instead, taking
+# ./ha-components/ along with it, and (2) copy /var/lib/hass across. Nothing
+# else here depends on it.
 #
 # NOTE this makes mycena STATEFUL. Everything you configure through the HA web
 # UI — devices, dashboards, users, automations, history — lands in
 # /var/lib/hass (mostly .storage/), NOT in this repo. A reinstall via
 # nixos-anywhere reproduces the service but not its contents, so that directory
 # is the thing worth backing up.
-{ ... }:
+{ pkgs, ... }:
+let
+  # HA's own Python set, which is what nixpkgs builds custom components against.
+  haPython = pkgs.home-assistant.python3Packages;
+  mini-racer = haPython.callPackage ./ha-components/mini-racer.nix { };
+  dreame-vacuum = haPython.callPackage ./ha-components/dreame-vacuum.nix { inherit mini-racer; };
+in
 {
   services.home-assistant = {
     enable = true;
+
+    # Integrations nixpkgs does not ship, which HACS would normally install.
+    # HACS can drop the code in, but for the same reason as extraComponents
+    # below it cannot pip-install requirements, so anything with dependencies
+    # gets packaged in ./ha-components/ instead.
+    #
+    # dreame_vacuum, for the Dreame L40 Ultra (serial R2492): Settings > Devices
+    # > Add Integration > Dreame Vacuum, then the Dreamehome account and region
+    # the robot is paired in. CLOUD-ONLY for this robot: "Local Connection"
+    # needs a Xiaomi Home device and a token pulled from Xiaomi's cloud, and the
+    # L40 family is not a Xiaomi Home device. Its frontend.py (obfuscated)
+    # phones api.tasshack.com only once a paid card licence key is entered;
+    # without one it makes no call there.
+    #
+    # INTERIM. The L40 Ultra is on Valetudo's supported list (fastboot root,
+    # Dreame Breakout PCB recommended, warranty seals stay intact), which takes
+    # it off Dreame's cloud entirely. Once rooted, replace this with nixpkgs'
+    # home-assistant-custom-components.valetudo + the "mqtt" component, a
+    # services.mosquitto broker, and the valetudo-map-card lovelace module,
+    # then delete ./ha-components/. None of that needs custom packaging.
+    customComponents = [ dreame-vacuum ];
 
     # HA's python env is immutable here, so it cannot pip-install an
     # integration at runtime. "No module named X" + UnknownHandler in the log
@@ -67,6 +95,29 @@
     voice = "en-us-ryan-medium";
     uri = "tcp://127.0.0.1:10200";
   };
+
+  # piper-tts pulls pyopenjtalk-plus, whose test suite fails on nixpkgs 02c087f
+  # (py3.14 reworded a TypeError the test regex-matches) and Hydra has no cached
+  # build. Same version-guarded fix as modules/core/system.nix, repeated here
+  # because this host does not import modules/core. Self-expires on the next
+  # pyopenjtalk-plus release.
+  nixpkgs.overlays = [
+    (_final: prev: {
+      pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+        (_pyfinal: pyprev: {
+          pyopenjtalk-plus =
+            if pyprev.pyopenjtalk-plus.version == "0.4.1-post9" then
+              pyprev.pyopenjtalk-plus.overridePythonAttrs (old: {
+                disabledTests = (old.disabledTests or [ ]) ++ [
+                  "test_run_njd_from_mecab_invalid_input_should_not_break_next_call"
+                ];
+              })
+            else
+              pyprev.pyopenjtalk-plus;
+        })
+      ];
+    })
+  ];
 
   # services.home-assistant.openFirewall is gone — it now fails an assertion,
   # because HA no longer takes its frontend port from configuration.yaml, so

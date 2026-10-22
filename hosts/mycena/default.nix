@@ -96,6 +96,19 @@ in
     "mitigations=off"
   ];
 
+  # The linux-surface kernel above is 6.19.8 and nixpkgs' rustc is now >= 1.98,
+  # which dropped the `x86-softfloat` target-spec ABI name for `softfloat`.
+  # Unpatched, the kernel's Rust prep fails with "rustc-abi: invalid rustc abi:
+  # 'x86-softfloat'". This is mainline 905b06d32a52 verbatim (Cc stable for
+  # 6.12.y+). Drop it when nixos-hardware moves to a kernel that carries it; the
+  # patch then stops applying, so the build says so itself.
+  boot.kernelPatches = [
+    {
+      name = "rust-x86-softfloat-abi";
+      patch = ../../patches/linux-rust-x86-softfloat.patch;
+    }
+  ];
+
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.configurationLimit = 10;
   boot.loader.efi.canTouchEfiVariables = true;
