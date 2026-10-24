@@ -34,13 +34,11 @@
              { P .. 'singify', '53c419d2-0c2d-4614-acaa-4b295ed1f186' }, -- singify-main
              { P .. 'nixos-config', 'eeaf4693-4b8b-48fb-b1de-75cd7402f3a6' }, -- data-recovery-ordering
              { '/home/rupel/playground', '844d3894-586d-48b9-8478-e6de77715ab3' }, -- gta-mods
-             { '/home/rupel/playground', 'fa07136e-e2ea-40dd-95fa-c9d5be440c86' }, -- drovr-recu-upgrade
-             { P .. 'rupelxyz', '66a8e797-c146-4b8c-bb07-4cb7240be0c8' }, -- rupelxyz-updates
              { '/home/rupel/Documents/SkeletonCrypt/01-Projects/Desk cable management', 'a5ebd636-9cf5-4aa0-803d-64b8d7b6be1f' }, -- desk-cable-mgmt
              { P .. 'nixos-config', '037e9405-c5b2-4035-83d4-061b474a709a' }, -- wezterm-tabs
              { P .. 'recustomize/stitching-pipeline', 'dde3cf55-fbdf-441a-b623-fcc31c429233' }, -- recu-dev
              { P .. 'recustomize/stitching-pipeline', 'b2a1f634-7be0-4142-886a-c21bf111b586' }, -- recu-business
-             { P .. 'nixos-config', '9ae17dba-0c62-42a5-836c-69f68c7c43b3' }, -- wezterm-tabs-conf
+             { P .. 'nixos-config', '9ae17dba-0c62-42a5-836c-69f68c7c43b3' }, -- sticky-tabs
            }
            local window
            for _, t in ipairs(default_tabs) do
