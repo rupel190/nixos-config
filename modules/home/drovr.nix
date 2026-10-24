@@ -20,6 +20,16 @@
         cachedInput = 0.044;
         output = 3.96;
       };
+      effort = "medium";
+      # The cheap tier, for mechanical edits: `drovr run --model deepseek-flash`.
+      models.deepseek-flash = {
+        price = {
+          input = 0.3;
+          cachedInput = 0.006;
+          output = 1.2;
+        };
+        effort = "low";
+      };
     };
 
     # Per day, all workers, in USD like the prices: ≈ €2 warns, ≈ €5 refuses new calls
