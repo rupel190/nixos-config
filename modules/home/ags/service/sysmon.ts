@@ -1,6 +1,7 @@
 import { readFile } from "ags/file"
 import { createState } from "ags"
 import { interval } from "ags/time"
+import { attr, listDir } from "./sysfs"
 
 // CPU + memory, moved off the WezTerm tabline — see the note above `tabline_z`
 // in modules/home/wezterm.nix. The two numbers cost ~23 columns of a 124-column
@@ -10,6 +11,13 @@ export type Ram = {
   usedGiB: number
   totalGiB: number
   pct: number
+}
+
+export type Gpu = {
+  pct: number
+  vramUsedGiB: number
+  vramTotalGiB: number
+  vramPct: number
 }
 
 // Read straight out of procfs with Gio rather than shelling out to free/awk the
@@ -27,7 +35,10 @@ const POLL_MS = 2000
 // already uses. CPU especially cannot produce a value from a single sample.
 const [cpu, setCpu] = createState<number | null>(null)
 const [ram, setRam] = createState<Ram | null>(null)
-export { cpu, ram }
+// Stays null on a host whose driver exposes no busy counter, which is what
+// keeps the widget hidden there rather than showing a permanent em dash.
+const [gpu, setGpu] = createState<Gpu | null>(null)
+export { cpu, gpu, ram }
 
 // /proc/stat's counters are cumulative jiffies since boot, so a percentage means
 // something only as a delta between two samples. Worth stating outright, because
@@ -72,6 +83,51 @@ function sampleRam() {
   })
 }
 
+const DRM = "/sys/class/drm"
+const GIB = 1073741824
+
+// Which cardN carries the counters is discovered once rather than written down:
+// the number is allocation order, so it moves with a second GPU or a boot where
+// the driver binds in a different order. undefined = not looked for yet, null =
+// looked and this machine has none (i915 exposes no gpu_busy_percent).
+let gpuDir: string | null | undefined
+
+function findGpu(): string | null {
+  for (const name of listDir(DRM)) {
+    if (!/^card\d+$/.test(name)) continue
+    const dir = `${DRM}/${name}/device`
+    if (attr(`${dir}/gpu_busy_percent`) !== null) return dir
+  }
+  return null
+}
+
+function sampleGpu() {
+  if (gpuDir === undefined) gpuDir = findGpu()
+  if (gpuDir === null) return
+
+  // NOT a delta, unlike the CPU figure above. amdgpu reports an activity
+  // percentage it has already averaged over the SMU's own metrics window, so it
+  // is used as read — sampling it twice and subtracting would be meaningless.
+  // Measured 5-10 at 100ms intervals but a steady 7-8 at this 2s poll, so it
+  // needs no smoothing of ours either.
+  const busy = attr(`${gpuDir}/gpu_busy_percent`)
+  const used = attr(`${gpuDir}/mem_info_vram_used`)
+  const total = attr(`${gpuDir}/mem_info_vram_total`)
+  // Explicit null checks, not Number.isFinite: Number(null) is 0, so a vanished
+  // attribute would otherwise sail through as a real reading of zero.
+  if (busy === null || used === null || total === null) return
+
+  const totalBytes = Number(total)
+  if (!totalBytes) return
+
+  setGpu({
+    pct: Number(busy),
+    vramUsedGiB: Number(used) / GIB,
+    vramTotalGiB: totalBytes / GIB,
+    vramPct: Math.round((Number(used) / totalBytes) * 100),
+  })
+}
+
 let timer: ReturnType<typeof interval> | null = null
 
 export function init() {
@@ -84,5 +140,6 @@ export function init() {
   timer = interval(POLL_MS, () => {
     sampleCpu()
     sampleRam()
+    sampleGpu()
   })
 }

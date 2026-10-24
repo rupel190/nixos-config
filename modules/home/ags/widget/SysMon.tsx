@@ -1,5 +1,5 @@
 import { createComputed } from "ags"
-import { cpu, ram } from "../service/sysmon"
+import { cpu, gpu, ram } from "../service/sysmon"
 
 // Nerd Font codepoints as escapes rather than literal glyphs, so the source
 // stays readable in an editor without the font. Coverage verified in MonaspiceXe
@@ -9,6 +9,11 @@ import { cpu, ram } from "../service/sysmon"
 // silhouette is the one that reads as a processor at this size.
 const ICON_CPU = "\u{F061A}" // nf-md-chip
 const ICON_RAM = "\u{F035B}" // nf-md-memory
+// Chosen by rendering the candidates at the bar's own 14px and looking, for the
+// reason the CPU note above gives: md-video_3d just spells "3D", and both
+// expansion_card variants were the only shapes that stay horizontal next to two
+// squarish neighbours. The variant is mushier at this size.
+const ICON_GPU = "\u{F08AE}" // nf-md-expansion_card
 
 const PENDING = "—"
 
@@ -26,11 +31,24 @@ export default function SysMon() {
     return v === null ? PENDING : `${v.usedGiB.toFixed(1)}G`
   })
 
+  const gpuLabel = createComputed(() => {
+    const v = gpu()
+    return v === null ? PENDING : `${v.pct}%`
+  })
+
   const tooltip = createComputed(() => {
     const c = cpu()
     const r = ram()
     if (c === null || r === null) return "Sampling…"
-    return `CPU ${c}%  ·  RAM ${r.usedGiB.toFixed(1)} / ${r.totalGiB.toFixed(1)} GiB (${r.pct}%)`
+    const g = gpu()
+    // VRAM rides in the tooltip rather than the bar for the same reason the RAM
+    // percentage does: one headline number per stat, the other framing a hover
+    // away. A third pair of digits would widen the end cluster for little gain.
+    const gpuPart =
+      g === null
+        ? ""
+        : `  ·  GPU ${g.pct}%  ·  VRAM ${g.vramUsedGiB.toFixed(1)} / ${g.vramTotalGiB.toFixed(1)} GiB (${g.vramPct}%)`
+    return `CPU ${c}%  ·  RAM ${r.usedGiB.toFixed(1)} / ${r.totalGiB.toFixed(1)} GiB (${r.pct}%)${gpuPart}`
   })
 
   // xalign 0 pins each number's first character against its icon, so the gap
@@ -44,6 +62,12 @@ export default function SysMon() {
       <box class="stat" spacing={6}>
         <label class="icon" label={ICON_RAM} />
         <label class="value" label={ramLabel} xalign={0} />
+      </box>
+      {/* Hidden, not em-dashed, where the driver exposes no busy counter — on
+          cordyceps this stat simply does not exist rather than never resolving. */}
+      <box class="stat" spacing={6} visible={createComputed(() => gpu() !== null)}>
+        <label class="icon" label={ICON_GPU} />
+        <label class="value" label={gpuLabel} xalign={0} />
       </box>
     </box>
   )
