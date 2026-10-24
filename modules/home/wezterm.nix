@@ -1,4 +1,48 @@
 { pkgs, inputs, ... }:
+let
+  # Snapshot the default workspace for mux-startup: one entry per tab, the claude
+  # session if the tab runs one, else a shell in the tab's cwd. Tab order is kept.
+  saveTabs = pkgs.writeShellApplication {
+    name = "wezterm-save-tabs";
+    runtimeInputs = [ pkgs.jq pkgs.procps pkgs.wezterm ];
+    text = ''
+      out="$HOME/.local/state/wezterm/default-tabs.json"
+      sessions="$HOME/.claude/sessions"
+      export WEZTERM_UNIX_SOCKET="$XDG_RUNTIME_DIR/wezterm/sock"
+      mkdir -p "$(dirname "$out")"
+
+      tabs=$(wezterm cli list --format json \
+        | jq -r '.[] | select(.workspace == "default") | "\(.tab_id) \(.tty_name)"' \
+        | while read -r tab tty; do
+            t=''${tty#/dev/}
+            entry=""
+            for pid in $(ps -t "$t" -o pid=); do
+              if [ -f "$sessions/$pid.json" ]; then
+                entry=$(jq -c --argjson tab "$tab" '{tab: $tab, cwd, session: .sessionId, name}' "$sessions/$pid.json")
+                break
+              fi
+            done
+            if [ -z "$entry" ]; then
+              lead=$(ps -t "$t" -o pid=,stat= | awk '$2 ~ /s/ {print $1; exit}')
+              entry=$(jq -nc --argjson tab "$tab" --arg cwd "$(readlink "/proc/$lead/cwd")" '{tab: $tab, cwd: $cwd}')
+            fi
+            echo "$entry"
+          done \
+        | jq -s 'reduce .[] as $p ([];
+            ([.[].tab] | index($p.tab)) as $i
+            | if $i == null then . + [$p]
+              elif .[$i].session == null and $p.session != null then .[$i] = $p
+              else . end)
+          | map(del(.tab))')
+
+      count=$(jq length <<<"$tabs")
+      if [ "$count" -eq 0 ]; then echo "no tabs in the default workspace, kept the old snapshot"; exit 1; fi
+      tmp=$(mktemp "$out.XXXXXX")
+      echo "$tabs" > "$tmp" && mv "$tmp" "$out"
+      echo "saved $count tabs ($(jq '[.[] | select(.session)] | length' <<<"$tabs") claude)"
+    '';
+  };
+in
 {
   programs.wezterm = {
     enable = true;
@@ -24,26 +68,21 @@
            -- image. It sets WEZTERM_IMAGE_MCP=1 for exactly this check.
            if os.getenv('WEZTERM_IMAGE_MCP') then return end
 
-           -- default: one tab per claude session, resumed by ID (names change on /rename);
-           -- the name is only a label, nil ID = plain shell.
+           -- default: the tabs CTRL+SHIFT+S last saved; claude tabs resume by session ID.
            -- env -C because spawn_tab ignores cwd for tabs with args.
-           local P = '/home/rupel/projects/'
-           local default_tabs = {
-             { P .. 'rieder/rieder-quotation-suite', 'fd7a8265-3442-4df5-8480-ab114d1f70fa' }, -- rie-offer-0.2
-             { P .. 'prosthetic-hand', '61890315-fbf6-407f-b82a-65451fea9001' }, -- prosthetic-hand
-             { P .. 'singify', '53c419d2-0c2d-4614-acaa-4b295ed1f186' }, -- singify-main
-             { P .. 'nixos-config', 'eeaf4693-4b8b-48fb-b1de-75cd7402f3a6' }, -- data-recovery-ordering
-             { '/home/rupel/playground', '844d3894-586d-48b9-8478-e6de77715ab3' }, -- gta-mods
-             { '/home/rupel/Documents/SkeletonCrypt/01-Projects/Desk cable management', 'a5ebd636-9cf5-4aa0-803d-64b8d7b6be1f' }, -- desk-cable-mgmt
-             { P .. 'nixos-config', '037e9405-c5b2-4035-83d4-061b474a709a' }, -- wezterm-tabs
-             { P .. 'recustomize/stitching-pipeline', 'dde3cf55-fbdf-441a-b623-fcc31c429233' }, -- recu-dev
-             { P .. 'recustomize/stitching-pipeline', 'b2a1f634-7be0-4142-886a-c21bf111b586' }, -- recu-business
-             { P .. 'nixos-config', '9ae17dba-0c62-42a5-836c-69f68c7c43b3' }, -- sticky-tabs
-           }
+           local ok, default_tabs = pcall(function()
+             local f = assert(io.open(wezterm.home_dir .. "/.local/state/wezterm/default-tabs.json"))
+             local text = f:read("a")
+             f:close()
+             return wezterm.json_parse(text)
+           end)
+           if not ok or type(default_tabs) ~= "table" or #default_tabs == 0 then
+             default_tabs = { { cwd = wezterm.home_dir } }
+           end
            local window
            for _, t in ipairs(default_tabs) do
-             local spec = { cwd = t[1] }
-             if t[2] then spec.args = { 'env', '-C', t[1], 'claude', '--resume', t[2] } end
+             local spec = { cwd = t.cwd }
+             if t.session then spec.args = { 'env', '-C', t.cwd, 'claude', '--resume', t.session } end
              if window then
                window:spawn_tab(spec)
              else
@@ -143,6 +182,12 @@
 
            -- Disable close tab confirmation
            { key = "w", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentTab { confirm = false } },
+
+           -- Save the default workspace's tabs as the layout mux-startup rebuilds.
+           { key = "s", mods = "CTRL|SHIFT", action = wezterm.action_callback(function(window, _)
+             local ok, out, err = wezterm.run_child_process { "${saveTabs}/bin/wezterm-save-tabs" }
+             window:toast_notification("wezterm", ok and out or ("save failed: " .. out .. err), nil, 4000)
+           end) },
 
            -- Rename the current tab; empty input clears it back to the auto title.
            -- Same field as `wezterm cli set-tab-title`, and it always wins over the
