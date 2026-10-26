@@ -1458,8 +1458,8 @@
         "singify": "singify",
         "spicetify-nix": "spicetify-nix",
         "surge": "surge",
+        "terminal-image-mcp": "terminal-image-mcp",
         "wezterm": "wezterm",
-        "wezterm-image-mcp": "wezterm-image-mcp",
         "yazi-plugins": "yazi-plugins",
         "zen-browser": "zen-browser"
       }
@@ -1687,6 +1687,22 @@
         "type": "github"
       }
     },
+    "terminal-image-mcp": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1793032254,
+        "narHash": "sha256-4fJIJVKUE6huOQtfp6LFaPpgDXnP9P8KiEoQRbc4LI8=",
+        "ref": "refs/heads/main",
+        "rev": "71dc066cf747c3e7bb8927077dd6bda804763d55",
+        "revCount": 11,
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/terminal-image-mcp"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/rupel190/terminal-image-mcp"
+      }
+    },
     "treefmt-nix": {
       "inputs": {
         "nixpkgs": "nixpkgs_3"
@@ -1729,22 +1745,6 @@
         "owner": "wez",
         "repo": "wezterm",
         "type": "github"
-      }
-    },
-    "wezterm-image-mcp": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789917144,
-        "narHash": "sha256-QFT16KrKPmiDxsHoOFqOgssTec940vofNpP08oM8Dw8=",
-        "ref": "refs/heads/main",
-        "rev": "3f8fbff8b97b7f70ba8eedca051c6d41827a38c1",
-        "revCount": 10,
-        "type": "git",
-        "url": "ssh://git@github.com/rupel190/wezterm-image-mcp"
-      },
-      "original": {
-        "type": "git",
-        "url": "ssh://git@github.com/rupel190/wezterm-image-mcp"
       }
     },
     "windows-rs": {

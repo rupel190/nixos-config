@@ -19,13 +19,13 @@ let
     '';
   };
 
-  # term-image MCP server (shows images in a side WezTerm pane). server.py
-  # comes from the pinned wezterm-image-mcp flake input; launched via uv with
+  # term-image MCP server (WezTerm only: images in a split beside claude). server.py
+  # comes from the pinned terminal-image-mcp flake input; launched via uv with
   # the Nix python so uv doesn't download a non-runnable interpreter on NixOS.
   termImageServer = {
     type = "stdio";
     command = "${pkgs.uv}/bin/uv";
-    args = [ "run" "--python" "${pkgs.python3}/bin/python3" "${inputs.wezterm-image-mcp}/server.py" ];
+    args = [ "run" "--python" "${pkgs.python3}/bin/python3" "${inputs.terminal-image-mcp}/server.py" ];
   };
 
   # The hooks settings.json points at. writeShellApplication rather than the
