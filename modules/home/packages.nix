@@ -138,7 +138,6 @@ in
       gpu-screen-recorder # Portal-aware GPU-accelerated screen recorder
 
       ## CLI
-      kitty # fallback
       cbonsai # terminal screensaver
       pipes # terminal screensaver
       tty-clock # cli clock

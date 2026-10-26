@@ -18,6 +18,7 @@
     ./fastfetch.nix # fetch tool
     ./swaync.nix # notification centre, themed to match the bar
     ./wezterm.nix # terminal
+    ./kitty.nix # terminal, on trial
     ./discord/discord.nix # vesktop (discord web + vencord)
     ./git.nix # version control
     ./lazygit.nix
