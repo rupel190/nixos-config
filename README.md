@@ -164,7 +164,7 @@ Idle: monitors blank after 10 minutes, the session locks after 20.
 kitty starts at login with the tabs `CTRL+SHIFT+S` last saved: a claude tab resumes its session by
 ID, any other tab opens a shell in its folder. A second window, `kitty-system`, holds pulsemixer,
 tera and btop on workspace 9. kitty has no mux, so closing or crashing the window ends its programs;
-`SUPER+W` then restores the saved tabs, skipping claude sessions that are still running elsewhere.
+`SUPER+W` then restores the saved tabs.
 `SUPER+T` and `SUPER+E` spawn windows with their own classes (`kitty-scratch` / `kitty-yazi`) so
 `SUPER+W` never grabs the wrong window.
 

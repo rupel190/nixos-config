@@ -44,36 +44,12 @@ let
     '';
   };
 
-  # Login and SUPER+W: the saved tabs, minus claude sessions still running
-  # elsewhere (another kitty, wezterm), which must never be resumed twice.
-  startTabs = pkgs.writeShellApplication {
-    name = "kitty-start";
-    runtimeInputs = [ pkgs.jq pkgs.kitty pkgs.gawk pkgs.gnugrep pkgs.coreutils ];
-    text = ''
-      saved="$HOME/.local/state/kitty/default-tabs.kitty-session"
-      [ -f "$saved" ] || exec kitty
-
-      # Live = the pid still has the start time claude recorded, so a pid reused after a reboot doesn't count
-      live=""
-      for s in "$HOME"/.claude/sessions/*.json; do
-        [ -f "$s" ] || continue
-        read -r pid start id < <(jq -r '"\(.pid) \(.procStart) \(.sessionId)"' "$s") || continue
-        if [ "$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null)" = "$start" ]; then
-          live+="$id"$'\n'
-        fi
-      done
-
-      # One paragraph per tab; drop the ones whose session is live or already restored above
-      session="''${XDG_RUNTIME_DIR:-/tmp}/default.kitty-session"
-      awk -v live="$live" '
-        BEGIN { RS = ""; ORS = "\n\n"; n = split(live, ids, "\n"); for (i = 1; i <= n; i++) if (ids[i] != "") skip[ids[i]] = 1 }
-        match($0, /--resume [^ \n]+/) { id = substr($0, RSTART + 9, RLENGTH - 9); if (id in skip) next; skip[id] = 1 }
-        { print }
-      ' "$saved" >"$session"
-      grep -q '^new_tab' "$session" || exec kitty
-      exec kitty --session "$session"
-    '';
-  };
+  # Login and SUPER+W: the tabs ctrl+shift+s last saved, or a plain kitty
+  startTabs = pkgs.writeShellScriptBin "kitty-start" ''
+    saved="$HOME/.local/state/kitty/default-tabs.kitty-session"
+    [ -f "$saved" ] && exec ${pkgs.kitty}/bin/kitty --session "$saved"
+    exec ${pkgs.kitty}/bin/kitty
+  '';
 
   # The "system" window at login: pulsemixer over tera, btop in a second tab.
   # Its class sends it to workspace 9 (hyprland/config.nix).

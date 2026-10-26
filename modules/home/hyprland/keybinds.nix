@@ -143,8 +143,7 @@ in
       bind = [
         # Apps
         (bind "${mod} + F5" (exec "hyprctl reload"))
-        # The main kitty: focus it, or start it with the saved tabs (after a crash too;
-        # kitty-start skips claude sessions that are still running).
+        # The main kitty: focus it, or start it with the saved tabs (after a crash too).
         (bind "${mod} + W" (dsp ''
           function()
             local ws = hl.get_windows()
