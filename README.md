@@ -72,7 +72,7 @@ on a `host` specialArg rather than split into separate trees.
         ├── fzf.nix            # Fuzzy finder
         ├── git.nix            # Version control
         ├── gtk.nix            # GTK theming
-        ├── kitty.nix          # Terminal emulator (vertical tabs, saved-tab restore)
+        ├── kitty.nix          # Terminal emulator (vertical tabs, saved-tab restore, inline images)
         ├── laptop-only.nix    # cordyceps only: brightness, battery, gestures
         ├── lazygit.nix        # Git TUI
         ├── mpv.nix            # Media player
@@ -196,7 +196,7 @@ tera and btop on workspace 9. kitty has no mux, so closing or crashing the windo
 
 ### Development
 
-- **Claude Code** — AI coding assistant with MCP servers (incl. a WezTerm image split), hooks,
+- **Claude Code** — AI coding assistant with MCP servers (incl. images: a WezTerm split, or drawn inline in kitty by a mod), hooks,
   a usage statusline and skills pinned as flake inputs
 - **Claude Desktop**
 - **opencode** — provider-agnostic terminal coding agent
