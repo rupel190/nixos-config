@@ -7,10 +7,10 @@ let
     image = [ "imv.desktop" ];
     audio = [ "mpv.desktop" ];
     video = [ "mpv.desktop" ];
-    directory = [ "yazi-wezterm.desktop" ]; # Opens yazi in wezterm for "open in explorer" actions
+    directory = [ "yazi-kitty.desktop" ]; # Opens yazi in kitty for "open in explorer" actions
     office = [ "onlyoffice.desktop" ];
     pdf = [ "org.gnome.Evince.desktop" ];
-    terminal = [ "org.wezfurlong.wezterm.desktop" ];
+    terminal = [ "kitty.desktop" ];
     # archive - using terminal tools
     discord = [ "vesktop.desktop" ]; # official client removed; vesktop declares the same scheme
     bambustudio = [ "bambu-studio.desktop" ];
@@ -154,7 +154,7 @@ in
     NoDisplay=true
   '';
 
-  # Create yazi-wezterm.desktop for opening directories in yazi via wezterm
+  # Create yazi-kitty.desktop for opening directories in yazi via kitty
   # This is used by apps like Steam when clicking "Browse local files"
   # Bambu Studio via Flatpak. Two NixOS/GFX1201 workarounds, both baked into every launcher
   # (this desktop entry, the fish alias, the yazi opener):
@@ -183,19 +183,19 @@ in
   };
 
 
-  xdg.desktopEntries.yazi-wezterm = {
+  xdg.desktopEntries.yazi-kitty = {
     name = "Yazi (File Manager)";
     genericName = "File Manager";
     icon = "yazi";
-    comment = "Terminal file manager in WezTerm";
-    # Own app_id, same as the SUPER+E bind: SUPER+T scans for the bare wezterm
-    # class to find the mux client, and must not land on a yazi window.
-    exec = "wezterm start --class org.wezfurlong.wezterm.yazi -- yazi %u";
+    comment = "Terminal file manager in kitty";
+    # Own app_id, same as the SUPER+E bind: SUPER+W scans for the bare kitty
+    # class to find the main window, and must not land on a yazi window.
+    exec = "kitty --class kitty-yazi yazi %u";
     terminal = false;
     type = "Application";
     categories = [ "Utility" "Core" "System" "FileTools" "FileManager" ];
     mimeType = [ "inode/directory" "x-scheme-handler/file" ];
     # Keeps the icon association working now that the app_id isn't the default.
-    settings.StartupWMClass = "org.wezfurlong.wezterm.yazi";
+    settings.StartupWMClass = "kitty-yazi";
   };
 }

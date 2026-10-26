@@ -143,33 +143,28 @@ in
       bind = [
         # Apps
         (bind "${mod} + F5" (exec "hyprctl reload"))
-        # Reattach to the mux. A second `connect unix` client would just mirror the
-        # one mux window, so focus the existing terminal instead of spawning another.
+        # The main kitty: focus it, or start it with the saved tabs (after a crash too;
+        # kitty-start skips claude sessions that are still running).
         (bind "${mod} + W" (dsp ''
           function()
             local ws = hl.get_windows()
             for i = 1, #ws do
-              if ws[i].class == "org.wezfurlong.wezterm" then
+              if ws[i].class == "kitty" then
                 hl.dispatch(hl.dsp.focus({ window = ws[i] }))
                 return
               end
             end
-            hl.dispatch(hl.dsp.exec_cmd("wezterm connect unix"))
+            hl.dispatch(hl.dsp.exec_cmd("kitty-start"))
           end''))
-        # Throwaway terminal. Not `connect unix`: a second client attaches to the
-        # same workspace and mirrors, and a unique --workspace leaks a shell that
-        # outlives the window in the mux server. Own process = closes for good.
-        # Distinct app_id so the SUPER+T reattach never grabs a scratch window.
-        (bind "${mod} + T" (
-          exec "wezterm start --always-new-process --class org.wezfurlong.wezterm.scratch"
-        ))
+        # Throwaway terminal, with its own class so SUPER+W never grabs it.
+        (bind "${mod} + T" (exec "kitty --class kitty-scratch"))
         (bind "${mod} + RETURN" (exec "vicinae toggle"))
         (bind "${mod} + R" (exec "vicinae toggle"))
-        (bind "${mod} + E" (
-          exec "wezterm start --always-new-process --class org.wezfurlong.wezterm.yazi yazi"
-        ))
+        (bind "${mod} + E" (exec "kitty --class kitty-yazi yazi"))
         (bind "${mod} + C" (dsp "hl.dsp.window.close()"))
         (bind "${mod} + F" (dsp ''hl.dsp.window.float({ action = "toggle" })''))
+        # Maximize is its own state, apart from floating: SUPER+F cannot undo it
+        (bind "${mod} + M" (dsp ''hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })''))
         (bind "${mod} + P" (dsp "hl.dsp.window.pseudo()")) # dwindle
         (bind "${mod} + V" (layoutmsgIn "dwindle" "togglesplit"))
 

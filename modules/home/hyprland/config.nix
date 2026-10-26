@@ -262,7 +262,8 @@
               "keepassxc"
               "signal-desktop"
               "spotify"
-              "wezterm connect unix"
+              "kitty-start"
+              "kitty-system"
             ]
           else
             [ ]
@@ -369,17 +370,14 @@
         # Steam client (not games — those match ^steam_app_ below and go to DP-2)
         { match.class = "^steam$"; workspace = "8 silent"; }
         { match.class = "^[Ss]potify$"; workspace = "9 silent"; }
-        {
-          match = { class = "^org.wezfurlong.wezterm$"; title = "^pulsemixer$"; };
-          workspace = "9 silent";
-        }
+        { match.class = "^kitty-system$"; workspace = "9 silent"; }
 
         # Disable resize animation for wezterm only. Hyprland's window-resize animation
         # emits a configure event per frame; TUIs (claude, btop) repaint the whole screen
         # each frame through the mux round-trip and fall behind, causing oscillation and
         # leftover gaps while resizing. no_anim collapses the resize to a single event.
         {
-          # Unanchored: also covers the SUPER+W scratch class (…wezterm.scratch).
+          # Unanchored: any org.wezfurlong.wezterm.* class too.
           match.class = "^org.wezfurlong.wezterm";
           no_anim = true;
         }

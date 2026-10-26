@@ -53,25 +53,29 @@ let
       name = "claude-hook-notify";
       file = ./claude-hooks/notify.sh;
       bashOptions = [ "nounset" ];
-      # wezterm is pkgs.wezterm here too (see wezterm.nix), so naming it costs
-      # no extra build. The script still guards with `command -v`.
+      # wezterm and kitty are the same packages as wezterm.nix and kitty.nix, so
+      # naming them costs no extra build. The script still guards with `command -v`.
       runtimeInputs = with pkgs; [
         jq
         wezterm
+        kitty
         libnotify
         gnused
         coreutils
       ];
     })
     (mkHook {
-      name = "claude-hook-wezterm-status";
-      file = ./claude-hooks/wezterm-status.sh;
+      name = "claude-hook-tab-status";
+      file = ./claude-hooks/tab-status.sh;
       bashOptions = [ "nounset" ];
       runtimeInputs = with pkgs; [
         jq
+        kitty
         coreutils
       ];
     })
+    # Old name: sessions read their hooks at startup, so those started before the rename still call it
+    (pkgs.writeShellScriptBin "claude-hook-wezterm-status" ''exec claude-hook-tab-status "$@"'')
     (mkHook {
       name = "claude-hook-check-ignore-vs-index";
       file = ./claude-hooks/check-ignore-vs-index.sh;
@@ -121,7 +125,7 @@ let
           }
           {
             type = "command";
-            command = "claude-hook-wezterm-status set";
+            command = "claude-hook-tab-status set";
           }
         ];
       }
@@ -132,7 +136,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-wezterm-status working";
+            command = "claude-hook-tab-status working";
           }
         ];
       }
@@ -143,7 +147,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-wezterm-status clear";
+            command = "claude-hook-tab-status clear";
           }
         ];
       }
@@ -197,7 +201,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-wezterm-status done";
+            command = "claude-hook-tab-status done";
           }
         ];
       }
@@ -208,7 +212,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "claude-hook-wezterm-status working";
+            command = "claude-hook-tab-status working";
           }
         ];
       }

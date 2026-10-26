@@ -72,6 +72,7 @@ on a `host` specialArg rather than split into separate trees.
         ├── fzf.nix            # Fuzzy finder
         ├── git.nix            # Version control
         ├── gtk.nix            # GTK theming
+        ├── kitty.nix          # Terminal emulator (vertical tabs, saved-tab restore)
         ├── laptop-only.nix    # cordyceps only: brightness, battery, gestures
         ├── lazygit.nix        # Git TUI
         ├── mpv.nix            # Media player
@@ -87,7 +88,7 @@ on a `host` specialArg rather than split into separate trees.
         ├── tera.nix           # Terminal radio player
         ├── udiskie.nix        # amanita only: automount removable drives, tray icon
         ├── vicinae.nix        # Launcher + browser tab integration
-        ├── wezterm.nix        # Terminal emulator (mux server/client)
+        ├── wezterm.nix        # Fallback terminal emulator (mux server/client)
         ├── xdg-mimes.nix      # File associations
         └── yazi.nix           # Terminal file manager
 ```
@@ -130,11 +131,12 @@ Full list in `modules/home/hyprland/keybinds.nix`.
 
 | Key | Action |
 | --- | --- |
-| `SUPER+T` | Terminal — focuses the running WezTerm mux client, or connects if none |
-| `SUPER+W` | Fresh standalone terminal (own process, not the mux) |
+| `SUPER+W` | Terminal — focuses the main kitty, or starts it with the saved tabs |
+| `SUPER+T` | Fresh standalone terminal |
 | `SUPER+E` | Yazi file manager in a new window |
 | `SUPER+R` / `SUPER+RETURN` | Vicinae launcher |
 | `SUPER+C` / `SUPER+F` | Close window / toggle floating |
+| `SUPER+M` | Toggle maximize |
 | `SUPER+N` | Notification center (swaync) |
 | `SUPER+H/J/K/L` | Move focus (add `ALT` to move the window) |
 | `SUPER+I` / `SUPER+O` | Cycle workspaces (add `ALT` to bring the window) |
@@ -159,11 +161,12 @@ Full list in `modules/home/hyprland/keybinds.nix`.
 
 Idle: monitors blank after 10 minutes, the session locks after 20.
 
-WezTerm runs a mux server that starts two workspaces: `default`, with a `claude --resume` tab
-per active project plus a scratch tab, and `system`, with pulsemixer, tera and btop. Closing a
-window keeps the session alive — `SUPER+T` walks back into it. `SUPER+W` and `SUPER+E` deliberately spawn
-standalone processes with their own app_ids (`org.wezfurlong.wezterm.scratch` / `.yazi`) so the
-reattach never grabs the wrong window.
+kitty starts at login with the tabs `CTRL+SHIFT+S` last saved: a claude tab resumes its session by
+ID, any other tab opens a shell in its folder. A second window, `kitty-system`, holds pulsemixer,
+tera and btop on workspace 9. kitty has no mux, so closing or crashing the window ends its programs;
+`SUPER+W` then restores the saved tabs, skipping claude sessions that are still running elsewhere.
+`SUPER+T` and `SUPER+E` spawn windows with their own classes (`kitty-scratch` / `kitty-yazi`) so
+`SUPER+W` never grabs the wrong window.
 
 ## Key Software
 
@@ -178,7 +181,8 @@ reattach never grabs the wrong window.
 
 ### Terminal & CLI Tools
 
-- **WezTerm** — terminal emulator, run as mux server + GUI clients
+- **kitty** — terminal emulator, tabs down the left edge
+- **WezTerm** — fallback terminal, run as mux server + GUI clients
 - **Fish** — shell
 - **Yazi** — file manager
 - **btop** / **darya** — resource and disk-usage monitors
@@ -229,7 +233,7 @@ reattach never grabs the wrong window.
 | `hyprland-plugins`, `hyprgrass` | Plugins; hyprgrass = touchscreen gestures (laptop) |
 | `hyprpaper` | Wallpaper daemon |
 | `ags` | AGS 3.x — nixpkgs ships 2.3.0 with an incompatible API |
-| `wezterm` | Terminal emulator |
+| `wezterm` | Fallback terminal emulator |
 | `zen-browser` | Privacy-focused browser (auto-updates daily) |
 | `yazi-plugins` | Yazi plugins (source only) |
 | `spicetify-nix`, `singify` | Spotify theming + UltraStar karaoke extension |

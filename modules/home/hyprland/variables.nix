@@ -17,7 +17,7 @@
     HYPRCURSOR_SIZE = 32;
     XCURSOR_THEME = "catppuccin-macchiato-teal-cursors";
 
-    TERMINAL = "wezterm";
+    TERMINAL = "kitty";
     BROWSER = "zen";
 
     # Override Hyprland flake's home-manager module which sets this to the per-user

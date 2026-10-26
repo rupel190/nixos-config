@@ -95,7 +95,7 @@
       "--sort-by-rss"
       # Unanchored substrings of the 15-char comm (NixOS wrappers: `.Hyprland-wrapp`); -3 GiB each.
       "--avoid"
-      "Hyprland|Xwayland|pipewire|wireplumber|sshd|systemd|dbus|greetd|wezterm"
+      "Hyprland|Xwayland|pipewire|wireplumber|sshd|systemd|dbus|greetd|wezterm|kitty"
     ];
   };
 

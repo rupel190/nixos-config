@@ -141,7 +141,7 @@ in
       # Envvars
       set -g fish_greeting
       set -gx EDITOR nvim
-      set -gx TERMINAL wezterm
+      set -gx TERMINAL kitty
 
       # wezterm exports nixpkgs' "0-unstable-<date>" version verbatim, and every
       # consumer parses that as major 0 — Claude Code then believes wezterm
@@ -212,6 +212,31 @@ in
     };
 
     functions = {
+      # Inside kitty, ssh copies kitty's terminfo to the host (unknown there otherwise)
+      # and brings shell integration along; `command ssh` skips it.
+      ssh = {
+        wraps = "ssh";
+        description = "kitten ssh inside kitty, plain ssh elsewhere";
+        body = ''
+          if set -q KITTY_WINDOW_ID; and status is-interactive
+            kitten ssh $argv
+          else
+            command ssh $argv
+          end
+        '';
+      };
+
+      imgcat = {
+        description = "Show an image in the terminal";
+        body = ''
+          if set -q KITTY_WINDOW_ID
+            kitten icat $argv
+          else
+            wezterm imgcat $argv
+          end
+        '';
+      };
+
       fish_prompt = {
         description = "Informative prompt";
         body = ''
@@ -349,9 +374,6 @@ in
       #   inherits our PATH; NixOS has no /usr/bin so glycin's `prlimit` wrapper isn't found and
       #   GTK "Bail out!"s on the first SVG. See modules/home/xdg-mimes.nix for the full writeup.
       bambu-studio = "env PATH=/usr/bin:/run/current-system/sw/bin flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 com.bambulab.BambuStudio $argv";
-
-      # Terminal image display
-      imgcat = "wezterm imgcat $argv";
 
       # One-shot song recognition from active audio output — prints, copies to clipboard, and logs to its own TSV
       shazam = {

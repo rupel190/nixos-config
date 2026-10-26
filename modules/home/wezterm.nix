@@ -1,48 +1,4 @@
 { pkgs, inputs, ... }:
-let
-  # Snapshot the default workspace for mux-startup: one entry per tab, the claude
-  # session if the tab runs one, else a shell in the tab's cwd. Tab order is kept.
-  saveTabs = pkgs.writeShellApplication {
-    name = "wezterm-save-tabs";
-    runtimeInputs = [ pkgs.jq pkgs.procps pkgs.wezterm ];
-    text = ''
-      out="$HOME/.local/state/wezterm/default-tabs.json"
-      sessions="$HOME/.claude/sessions"
-      export WEZTERM_UNIX_SOCKET="$XDG_RUNTIME_DIR/wezterm/sock"
-      mkdir -p "$(dirname "$out")"
-
-      tabs=$(wezterm cli list --format json \
-        | jq -r '.[] | select(.workspace == "default") | "\(.tab_id) \(.tty_name)"' \
-        | while read -r tab tty; do
-            t=''${tty#/dev/}
-            entry=""
-            for pid in $(ps -t "$t" -o pid=); do
-              if [ -f "$sessions/$pid.json" ]; then
-                entry=$(jq -c --argjson tab "$tab" '{tab: $tab, cwd, session: .sessionId, name}' "$sessions/$pid.json")
-                break
-              fi
-            done
-            if [ -z "$entry" ]; then
-              lead=$(ps -t "$t" -o pid=,stat= | awk '$2 ~ /s/ {print $1; exit}')
-              entry=$(jq -nc --argjson tab "$tab" --arg cwd "$(readlink "/proc/$lead/cwd")" '{tab: $tab, cwd: $cwd}')
-            fi
-            echo "$entry"
-          done \
-        | jq -s 'reduce .[] as $p ([];
-            ([.[].tab] | index($p.tab)) as $i
-            | if $i == null then . + [$p]
-              elif .[$i].session == null and $p.session != null then .[$i] = $p
-              else . end)
-          | map(del(.tab))')
-
-      count=$(jq length <<<"$tabs")
-      if [ "$count" -eq 0 ]; then echo "no tabs in the default workspace, kept the old snapshot"; exit 1; fi
-      tmp=$(mktemp "$out.XXXXXX")
-      echo "$tabs" > "$tmp" && mv "$tmp" "$out"
-      echo "saved $count tabs ($(jq '[.[] | select(.session)] | length' <<<"$tabs") claude)"
-    '';
-  };
-in
 {
   programs.wezterm = {
     enable = true;
@@ -53,59 +9,12 @@ in
       ''
          -- Configuration
          local config = wezterm.config_builder()
-         local mux = wezterm.mux
 
 
          -- Unix domain for mux server/client architecture
          -- Allows GUI windows to be closed independently while workspaces persist
          config.unix_domains = { { name = "unix" } }
          config.default_gui_startup_args = { "connect", "unix" }
-
-         -- Define workspaces (runs on the mux server, not the GUI client)
-         wezterm.on('mux-startup', function()
-           -- The term-image MCP opens a throwaway viewer window with its own mux, so
-           -- this handler fires there too and would spawn the whole layout beside the
-           -- image. It sets WEZTERM_IMAGE_MCP=1 for exactly this check.
-           if os.getenv('WEZTERM_IMAGE_MCP') then return end
-
-           -- default: the tabs CTRL+SHIFT+S last saved; claude tabs resume by session ID.
-           -- env -C because spawn_tab ignores cwd for tabs with args.
-           local ok, default_tabs = pcall(function()
-             local f = assert(io.open(wezterm.home_dir .. "/.local/state/wezterm/default-tabs.json"))
-             local text = f:read("a")
-             f:close()
-             return wezterm.json_parse(text)
-           end)
-           if not ok or type(default_tabs) ~= "table" or #default_tabs == 0 then
-             default_tabs = { { cwd = wezterm.home_dir } }
-           end
-           local window
-           for _, t in ipairs(default_tabs) do
-             local spec = { cwd = t.cwd }
-             if t.session then spec.args = { 'env', '-C', t.cwd, 'claude', '--resume', t.session } end
-             if window then
-               window:spawn_tab(spec)
-             else
-               spec.workspace = 'default'
-               window = select(3, mux.spawn_window(spec))
-             end
-           end
-
-           local tab, pulsemixer_pane, window = mux.spawn_window {
-             workspace = 'system',
-             args = { 'pulsemixer' },
-           }
-           pulsemixer_pane:split {
-             direction = 'Bottom',
-             size = 0.6,
-             args = { 'tera' },
-           }
-           window:spawn_tab {
-             args = { 'btop' },
-           }
-
-         end)
-
 
          -- Font: Monaspace Xenon, the slab-serif cut. The Nerd Font patch carries
          -- the fastfetch/tabline glyphs.
@@ -182,12 +91,8 @@ in
 
            -- Disable close tab confirmation
            { key = "w", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentTab { confirm = false } },
-
-           -- Save the default workspace's tabs as the layout mux-startup rebuilds.
-           { key = "s", mods = "CTRL|SHIFT", action = wezterm.action_callback(function(window, _)
-             local ok, out, err = wezterm.run_child_process { "${saveTabs}/bin/wezterm-save-tabs" }
-             window:toast_notification("wezterm", ok and out or ("save failed: " .. out .. err), nil, 4000)
-           end) },
+           -- This pane only, e.g. the image viewer beside claude
+           { key = "q", mods = "CTRL|SHIFT", action = wezterm.action.CloseCurrentPane { confirm = false } },
 
            -- Rename the current tab; empty input clears it back to the auto title.
            -- Same field as `wezterm cli set-tab-title`, and it always wins over the
