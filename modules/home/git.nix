@@ -12,10 +12,19 @@
         init.defaultBranch = "main";
         core.editor = "nvim";
 
-        aliases = {
+        alias = {
           st = "status";
           b = "branch";
           logo = "log --oneline --name-only --graph";
+          dt = "difftool --no-symlinks --dir-diff"; # every changed file in one kitten diff
+        };
+
+        # kitten diff for `git difftool` (kitty only); delta stays the pager
+        diff.tool = "kitty";
+        difftool = {
+          prompt = false;
+          trustExitCode = true;
+          kitty.cmd = "kitten diff $LOCAL $REMOTE";
         };
       };
       # Enable LFS (Large File Storage)
@@ -31,6 +40,7 @@
         line-numbers = true;
         side-by-side = true;
         navigate = true;
+        wrap-max-lines = "unlimited"; # wrap long lines fully instead of cutting them after two
       };
     };
   };
