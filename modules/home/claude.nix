@@ -168,7 +168,7 @@ let
         hooks = [
           {
             type = "command";
-            command = "test -n \"$CLAUDE_WORKER\" || flock -n \"\${XDG_RUNTIME_DIR:-/tmp}/claude-sync-pull.lock\" claude-sync pull -q";
+            command = "test -n \"$CLAUDE_WORKER\" || claude-sync-pull";
           }
         ];
       }
@@ -231,19 +231,17 @@ let
   # session pushed from the other host was missing until the next start. Interactive starts
   # only (not -p/--print, not a pipe, not drovr workers); a waiting lock, because the wezterm
   # startup tabs launch several at once; a timeout, so an offline start is not blocked.
-  # claude-sync by BARE NAME, like the hooks. The SessionStart pull stays as the fallback.
+  # claude-sync-pull (claude-sync.nix) by BARE NAME, like the hooks; it skips while a push runs.
+  # The SessionStart pull stays as the fallback.
   claude-code-raw = inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default;
   claude-pull-first = pkgs.writeShellScript "claude" ''
-    if [ -z "''${CLAUDE_WORKER:-}" ] && [ -t 0 ] && [ -t 1 ] && command -v claude-sync >/dev/null; then
+    if [ -z "''${CLAUDE_WORKER:-}" ] && [ -t 0 ] && [ -t 1 ] && command -v claude-sync-pull >/dev/null; then
       interactive=1
       for a in "$@"; do
         case "$a" in -p|--print|-v|--version|-h|--help) interactive=0 ;; esac
       done
       if [ "$interactive" = 1 ]; then
-        (
-          ${pkgs.util-linux}/bin/flock -w 60 9 &&
-            ${pkgs.coreutils}/bin/timeout 30 claude-sync pull -q
-        ) 9>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync-pull.lock" || true
+        claude-sync-pull 60 || true
       fi
     fi
     exec ${claude-code-raw}/bin/claude "$@"

@@ -1,0 +1,298 @@
+diff --git a/internal/storage/r2/r2.go b/internal/storage/r2/r2.go
+index a7f2dad..602c202 100644
+--- a/internal/storage/r2/r2.go
++++ b/internal/storage/r2/r2.go
+@@ -47,6 +47,9 @@ func New(cfg *storage.StorageConfig) (storage.Storage, error) {
+ 
+ 	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+ 		o.BaseEndpoint = aws.String(endpoint)
++		if hc := throttledHTTPClient(); hc != nil {
++			o.HTTPClient = hc
++		}
+ 	})
+ 
+ 	return &Client{
+diff --git a/internal/storage/r2/throttle.go b/internal/storage/r2/throttle.go
+new file mode 100644
+index 0000000..304b11b
+--- /dev/null
++++ b/internal/storage/r2/throttle.go
+@@ -0,0 +1,75 @@
++package r2
++
++import (
++	"context"
++	"net"
++	"net/http"
++	"os"
++	"strconv"
++	"sync"
++	"time"
++)
++
++// UploadLimitEnv caps outgoing bytes on every connection, in kilobits per second.
++const UploadLimitEnv = "CLAUDE_SYNC_UPLOAD_KBIT"
++
++// throttledHTTPClient returns nil unless UploadLimitEnv is set to a positive number.
++func throttledHTTPClient() *http.Client {
++	kbit, err := strconv.Atoi(os.Getenv(UploadLimitEnv))
++	if err != nil || kbit <= 0 {
++		return nil
++	}
++	p := &pacer{bytesPerSec: float64(kbit) * 1000 / 8}
++	dialer := &net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}
++	tr := http.DefaultTransport.(*http.Transport).Clone()
++	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
++		c, err := dialer.DialContext(ctx, network, addr)
++		if err != nil {
++			return nil, err
++		}
++		return &pacedConn{Conn: c, p: p}, nil
++	}
++	return &http.Client{Transport: tr}
++}
++
++// pacer is shared by all connections, so parallel uploads split one budget.
++type pacer struct {
++	mu          sync.Mutex
++	bytesPerSec float64
++	next        time.Time
++}
++
++func (p *pacer) wait(n int) {
++	p.mu.Lock()
++	now := time.Now()
++	if p.next.Before(now) {
++		p.next = now
++	}
++	d := p.next.Sub(now)
++	p.next = p.next.Add(time.Duration(float64(n) / p.bytesPerSec * float64(time.Second)))
++	p.mu.Unlock()
++	if d > 0 {
++		time.Sleep(d)
++	}
++}
++
++type pacedConn struct {
++	net.Conn
++	p *pacer
++}
++
++func (c *pacedConn) Write(b []byte) (int, error) {
++	const chunk = 16 << 10
++	written := 0
++	for len(b) > 0 {
++		n := min(len(b), chunk)
++		c.p.wait(n)
++		w, err := c.Conn.Write(b[:n])
++		written += w
++		if err != nil {
++			return written, err
++		}
++		b = b[n:]
++	}
++	return written, nil
++}
+diff --git a/internal/storage/r2/throttle_test.go b/internal/storage/r2/throttle_test.go
+new file mode 100644
+index 0000000..dd62e4b
+--- /dev/null
++++ b/internal/storage/r2/throttle_test.go
+@@ -0,0 +1,37 @@
++package r2
++
++import (
++	"io"
++	"net"
++	"testing"
++	"time"
++)
++
++func TestPacedConnHoldsRate(t *testing.T) {
++	client, server := net.Pipe()
++	defer client.Close()
++	go func() { _, _ = io.Copy(io.Discard, server) }()
++
++	// 1024 kbit/s = 128 KB/s; 64 KB is four 16 KB chunks, three of them paced
++	c := &pacedConn{Conn: client, p: &pacer{bytesPerSec: 1024 * 1000 / 8}}
++	start := time.Now()
++	n, err := c.Write(make([]byte, 64<<10))
++	elapsed := time.Since(start)
++	if err != nil || n != 64<<10 {
++		t.Fatalf("Write: n=%d err=%v", n, err)
++	}
++	if elapsed < 300*time.Millisecond || elapsed > 2*time.Second {
++		t.Errorf("64 KB at 128 KB/s took %v, want ~380ms", elapsed)
++	}
++}
++
++func TestThrottleOffWithoutEnv(t *testing.T) {
++	t.Setenv(UploadLimitEnv, "")
++	if throttledHTTPClient() != nil {
++		t.Error("expected no throttled client when the env var is unset")
++	}
++	t.Setenv(UploadLimitEnv, "5000")
++	if throttledHTTPClient() == nil {
++		t.Error("expected a throttled client at 5000 kbit")
++	}
++}
+diff --git a/internal/sync/conflict_compare_test.go b/internal/sync/conflict_compare_test.go
+new file mode 100644
+index 0000000..e653680
+--- /dev/null
++++ b/internal/sync/conflict_compare_test.go
+@@ -0,0 +1,89 @@
++package sync
++
++import (
++	"context"
++	"path/filepath"
++	"strings"
++	"testing"
++	"time"
++)
++
++func TestCompareRemoteHomeTokenAndPrefix(t *testing.T) {
++	pm, err := NewPathMapper("/home/alice", nil)
++	if err != nil {
++		t.Fatalf("NewPathMapper: %v", err)
++	}
++	s := &Syncer{paths: pm}
++	local := []byte("{\"t\":\"env X=${HOME}/a\"}\n{\"cwd\":\"/home/alice/p\"}\n")
++	// What a pull writes back: the literal token came home as the path
++	roundTripped := []byte("{\"t\":\"env X=/home/alice/a\"}\n{\"cwd\":\"/home/alice/p\"}\n")
++
++	cases := []struct {
++		name        string
++		path        string
++		remote      []byte
++		same, older bool
++	}{
++		{"home token round trip", "projects/p/s.jsonl", roundTripped, true, false},
++		{"earlier snapshot", "projects/p/s.jsonl", []byte("{\"t\":\"env X=/home/alice/a\"}\n"), false, true},
++		{"diverged", "projects/p/s.jsonl", []byte("{\"t\":\"other\"}\n"), false, false},
++		{"prefix of non-transcript", "settings.json", local[:10], false, false},
++		{"empty remote", "projects/p/s.jsonl", nil, false, false},
++	}
++	for _, c := range cases {
++		same, older := s.compareRemote(c.path, local, c.remote)
++		if same != c.same || older != c.older {
++			t.Errorf("%s: got same=%v older=%v, want same=%v older=%v", c.name, same, older, c.same, c.older)
++		}
++	}
++}
++
++func TestPullTreatsEarlierRemoteSnapshotAsOlder(t *testing.T) {
++	env := setupTestEnv(t)
++	ctx := context.Background()
++	rel := filepath.Join("projects", "p", "s.jsonl")
++
++	writeFile(t, env.claudeDir, rel, "{\"n\":1}\n")
++	if _, err := env.syncer.Push(ctx); err != nil {
++		t.Fatalf("Push failed: %v", err)
++	}
++	writeFile(t, env.claudeDir, rel, "{\"n\":1}\n{\"n\":2}\n")
++
++	// Our own earlier upload, landing after the state's Uploaded time (a push whose state was lost)
++	encrypted, err := env.syncer.encryptor.Encrypt([]byte("{\"n\":1}\n"))
++	if err != nil {
++		t.Fatalf("Encrypt failed: %v", err)
++	}
++	time.Sleep(10 * time.Millisecond)
++	if err := env.store.Upload(ctx, env.syncer.remoteKey(rel), encrypted); err != nil {
++		t.Fatalf("Upload to mock failed: %v", err)
++	}
++
++	for i := 0; i < 2; i++ {
++		result, err := env.syncer.Pull(ctx)
++		if err != nil {
++			t.Fatalf("Pull %d failed: %v", i, err)
++		}
++		if len(result.Conflicts) != 0 {
++			t.Errorf("Pull %d: expected 0 conflicts, got %v", i, result.Conflicts)
++		}
++	}
++	matches, _ := filepath.Glob(filepath.Join(env.claudeDir, "projects", "p", "*.conflict.*"))
++	if len(matches) != 0 {
++		t.Errorf("Unexpected conflict copies: %v", matches)
++	}
++
++	changes, err := env.syncer.Status(ctx)
++	if err != nil {
++		t.Fatalf("Status failed: %v", err)
++	}
++	found := false
++	for _, c := range changes {
++		if c.Path == rel && strings.EqualFold(c.Action, "modify") {
++			found = true
++		}
++	}
++	if !found {
++		t.Errorf("expected %s to be pending upload, changes: %+v", rel, changes)
++	}
++}
+diff --git a/internal/sync/sync.go b/internal/sync/sync.go
+index 869e761..85c72c8 100644
+--- a/internal/sync/sync.go
++++ b/internal/sync/sync.go
+@@ -555,22 +555,51 @@ func (s *Syncer) handleConflict(ctx context.Context, relativePath string, remote
+ 
+ 	fullPath := filepath.Join(s.claudeDir, relativePath)
+ 	conflictFull := filepath.Join(s.claudeDir, conflictPath)
+-	localHash, lerr := HashFile(fullPath)
+-	remoteHash, rerr := HashFile(conflictFull)
+-	if lerr == nil && rerr == nil && localHash == remoteHash {
+-		_ = os.Remove(conflictFull)
+-		s.state.RemoveFile(conflictPath)
+-		if info, err := os.Stat(fullPath); err == nil {
+-			s.state.UpdateFile(relativePath, info, localHash)
+-			s.state.MarkUploaded(relativePath)
++	local, lerr := os.ReadFile(fullPath)
++	remote, rerr := os.ReadFile(conflictFull)
++	if lerr == nil && rerr == nil {
++		if same, older := s.compareRemote(relativePath, local, remote); same || older {
++			_ = os.Remove(conflictFull)
++			s.state.RemoveFile(conflictPath)
++			if info, err := os.Stat(fullPath); err == nil {
++				// An older remote keeps its own hash in state, so the next push uploads local
++				hash := hashBytes(local)
++				if older {
++					hash = hashBytes(remote)
++				}
++				s.state.UpdateFile(relativePath, info, hash)
++				s.state.MarkUploaded(relativePath)
++			}
++			return true, nil
+ 		}
+-		return true, nil
+ 	}
+ 
+ 	s.log("Conflict detected: %s (keeping local, saving remote as .conflict)", relativePath)
+ 	return false, nil
+ }
+ 
++// compareRemote reports whether a downloaded remote copy holds nothing local lacks.
++// Path tokens are lossy (a literal "${HOME}" comes back as the home path), so both
++// sides are compared after resolving. older: an append-only transcript whose remote
++// copy is an earlier snapshot of local, e.g. our own upload whose state was never saved.
++func (s *Syncer) compareRemote(relativePath string, local, remote []byte) (same, older bool) {
++	if IsPortableContentPath(relativePath) {
++		local = s.paths.ResolveContent(local)
++		remote = s.paths.ResolveContent(remote)
++	}
++	if bytes.Equal(local, remote) {
++		return true, false
++	}
++	base := relativePath
++	if i := strings.Index(base, ".conflict."); i >= 0 {
++		base = base[:i]
++	}
++	if strings.HasSuffix(base, ".jsonl") && len(remote) > 0 && bytes.HasPrefix(local, remote) {
++		return false, true
++	}
++	return false, false
++}
++
+ // uploadManifest builds and uploads a manifest containing file mtimes from current state.
+ func (s *Syncer) uploadManifest(ctx context.Context) error {
+ 	manifest := FileManifest{

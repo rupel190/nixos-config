@@ -17,8 +17,13 @@ let
     vendorHash = "sha256-VLqVk5bhM+WoEbP+agFpm1LjzI2qFWlWQZB8yV2vbOU=";
     subPackages = [ "cmd/claude-sync" ];
 
-    # 1 GiB download cap, atomic writes, identical-content conflicts self-resolve
-    patches = [ ../../patches/claude-sync-pull-robustness.patch ];
+    # 1 GiB download cap, atomic writes, identical-content conflicts self-resolve;
+    # a remote that differs only by ${HOME} or is an earlier snapshot is no conflict;
+    # CLAUDE_SYNC_UPLOAD_KBIT paces uploads
+    patches = [
+      ../../patches/claude-sync-pull-robustness.patch
+      ../../patches/claude-sync-conflict-compare-upload-pace.patch
+    ];
 
     # Matches upstream's Makefile; without this `--version` reports "dev".
     ldflags = [ "-s" "-w" "-X" "main.version=${version}" ];
@@ -87,6 +92,7 @@ let
     mcp_sync: false
   '';
 
+  # claude-sync.lock: push exclusive, pulls shared (a pull mid-push re-downloaded its files as conflicts).
   # One push at a time (no lock in claude-sync itself; parallel pushes re-sent the same files)
   claude-sync-push = pkgs.writeShellApplication {
     name = "claude-sync-push";
@@ -94,12 +100,30 @@ let
     text = ''
       exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync-push.lock"
       flock -n 9 || exit 0
+      exec 8>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync.lock"
+      flock -w 120 8 || exit 0
+      # ~half the 10 Mbit uplink; raise along with the router's cake rate
+      export CLAUDE_SYNC_UPLOAD_KBIT=5000
       exec claude-sync push -q
+    '';
+  };
+
+  # Usage: claude-sync-pull [seconds to wait for a sibling pull, default 0].
+  # Skips while a push runs, so a start never waits on one.
+  claude-sync-pull = pkgs.writeShellApplication {
+    name = "claude-sync-pull";
+    runtimeInputs = [ claude-sync pkgs.util-linux pkgs.coreutils ];
+    text = ''
+      exec 8>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync.lock"
+      flock -s -n 8 || exit 0
+      exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/claude-sync-pull.lock"
+      flock -w "''${1:-0}" 9 || exit 0
+      exec timeout 30 claude-sync pull -q
     '';
   };
 in
 {
-  home.packages = [ claude-sync claude-sync-push ];
+  home.packages = [ claude-sync claude-sync-push claude-sync-pull ];
 
   # Hourly, not per reply: each push re-uploads changed transcripts in full (219 MB recu ones took ~3.5 min)
   systemd.user.services.claude-sync-push = {
