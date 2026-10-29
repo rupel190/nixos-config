@@ -13,6 +13,7 @@
     ./cava/cava.nix # audio visualizer
     ./surge.nix # download manager
     ./darya.nix # disk usage visualizer
+    ./tuinews.nix # rss reader with pictures
     ./btop # resouces monitor
     ./bat.nix # better cat command
     ./fastfetch.nix # fetch tool
