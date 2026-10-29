@@ -24,6 +24,7 @@ in
       piper # gaming mouse onboard config (needs services.ratbagd)
       songrec # shazam-like music recognition
       delfin # jellyfin client: native gtk, plays through mpv
+      anki # flashcards; plain, not withAddons, which locks the in-app add-on manager
       digikam # photo organizer
       bitwig-studio # audio daw
       # transcribe music by ear (unfree); upstream deletes each superseded tarball, so nixpkgs' 9.70.1 404s
