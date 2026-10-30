@@ -84,10 +84,11 @@ def main():
     ap.add_argument("--quant", default="Q8_0", help="GGUF quant file suffix in weights/")
     ap.add_argument("--background", default="white", help="colour transparent inputs are composited onto")
     ap.add_argument("--keep-size", action="store_true",
-                    help="keep Kontext's output resolution instead of resizing back to the input's")
+                    help="keep the generated Kontext bucket (nearest the input's aspect) instead of resizing back to the input's size")
     args = ap.parse_args()
 
     import torch
+    from diffusers.pipelines.flux.pipeline_flux_kontext import PREFERRED_KONTEXT_RESOLUTIONS
     from PIL import Image
 
     # MIOpen convs return NaN on gfx1201 (ROCm 7.2 wheels, even fp32) → black images; native conv is correct.
@@ -113,9 +114,14 @@ def main():
         torch.cuda.reset_peak_memory_stats()
         sampler = VramSampler()
         sampler.start()
+        # Without height/width diffusers generates 1024² whatever the input; max_area stops it rescaling the bucket.
+        _, gen_w, gen_h = min((abs(image.width / image.height - w / h), w, h) for w, h in PREFERRED_KONTEXT_RESOLUTIONS)
         t = time.perf_counter()
         result = pipe(
             image=image,
+            width=gen_w,
+            height=gen_h,
+            max_area=gen_w * gen_h,
             prompt_embeds=embeds,
             pooled_prompt_embeds=pooled,
             guidance_scale=args.guidance,
