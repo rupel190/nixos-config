@@ -64,6 +64,7 @@ in
 
       # Utility
       proton-vpn
+      proton-authenticator # TOTP; local copy per device, sync optional
       cryptomator
       chromium
       pureref # Reference image viewer
