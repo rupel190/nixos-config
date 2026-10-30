@@ -295,6 +295,11 @@ in
       "ctrl+shift+e" = "set_tab_title";
       "ctrl+shift+\\" = "launch --location=vsplit --cwd=current";
       "ctrl+shift+minus" = "launch --location=hsplit --cwd=current";
+      # Font size on the =/+ key: with shift bigger, without smaller; ctrl+minus stays the shell's undo
+      "ctrl+plus" = "change_font_size all +1.0";
+      "ctrl+shift+equal" = "change_font_size all +1.0";
+      "ctrl+equal" = "change_font_size all -1.0";
+      "ctrl+0" = "change_font_size all 0";
       "ctrl+alt+h" = "neighboring_window left";
       "ctrl+alt+j" = "neighboring_window down";
       "ctrl+alt+k" = "neighboring_window up";
@@ -307,7 +312,12 @@ in
       "ctrl+shift+b" = "show_scrollback";
       "ctrl+shift+space" = "open_url_with_hints";
       "ctrl+shift+s" = "launch --type=background --allow-remote-control ${saveTabs}/bin/kitty-save-tabs";
-    };
+    }
+    # F1–F9 and alt+1–9 jump to that tab; F10–F12 still reach the program
+    // builtins.listToAttrs (builtins.concatMap (n: [
+      { name = "f${toString n}"; value = "goto_tab ${toString n}"; }
+      { name = "alt+${toString n}"; value = "goto_tab ${toString n}"; }
+    ]) [ 1 2 3 4 5 6 7 8 9 ]);
 
     # The first four: what a WezTerm shell passes on when kitty is started from one.
     # Left in, claude's tab hook would paint a WezTerm tab and programs would think
