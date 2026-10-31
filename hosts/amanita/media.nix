@@ -1,11 +1,15 @@
 { lib, username, ... }:
 let
   root = "/mnt/silo/media";
+  roms = "/mnt/silo/romm";
 in
 {
   # Shared group: radarr files movies, bazarr writes subtitles next to them, you browse them
   users.groups.media = { };
-  users.users.${username}.extraGroups = [ "media" ];
+  users.users.${username}.extraGroups = [
+    "media"
+    "romm"
+  ];
 
   # setgid dirs so everything created inside stays group media
   systemd.tmpfiles.rules = [
@@ -16,9 +20,17 @@ in
     # sabnzbd creates these 0700 on its own, which would lock radarr/sonarr out of finished downloads
     "d ${root}/usenet/incomplete 2775 sabnzbd media - -"
     "d ${root}/usenet/complete   2775 sabnzbd media - -"
+    # one folder per platform, named by igir's {romm} token (gb, snes, psx, …)
+    "d ${roms}/library/roms 2775 ${username} romm - -"
   ];
+  # module makes the library 0750 romm-only; group-writable so you can drop dumps in
+  systemd.tmpfiles.settings."10-romm"."${roms}/library".d = lib.mkForce {
+    mode = "2775";
+    user = "romm";
+    group = "romm";
+  };
 
-  # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767, sabnzbd :8085
+  # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767, sabnzbd :8085, romm :8070
   services.radarr = {
     enable = true;
     group = "media";
@@ -57,6 +69,24 @@ in
   };
   users.users.jellyfin.extraGroups = [ "media" ];
   systemd.services.jellyfin.unitConfig.RequiresMountsFor = root;
+
+  # ROM library at :8070 (nginx serves the UI, proxies the API); covers and cache sit next to the roms, the db on the ssd
+  services.romm = {
+    enable = true;
+    port = 8091; # API behind nginx; module default 8080 is a common dev-server port
+    dataDir = roms;
+    nginx.virtualHost = "amanita";
+  };
+  services.nginx.virtualHosts.amanita.listen = [
+    {
+      addr = "0.0.0.0";
+      port = 8070;
+    }
+  ];
+  systemd.services.romm.unitConfig.RequiresMountsFor = roms;
+  systemd.services.romm-worker.unitConfig.RequiresMountsFor = roms;
+  systemd.services.romm-scheduler.unitConfig.RequiresMountsFor = roms;
+  systemd.services.romm-watcher.unitConfig.RequiresMountsFor = roms;
 
   # group-writable files so bazarr can add subtitles; wait for the nofail silo mount
   systemd.services.radarr = {
