@@ -20,15 +20,14 @@ in
     # sabnzbd creates these 0700 on its own, which would lock radarr/sonarr out of finished downloads
     "d ${root}/usenet/incomplete 2775 sabnzbd media - -"
     "d ${root}/usenet/complete   2775 sabnzbd media - -"
+    # owned by you like /mnt/silo itself: tmpfiles refuses a romm-owned dir under a rupel-owned one
+    "d ${roms}         2770 ${username} romm - -"
+    "d ${roms}/library 2775 ${username} romm - -"
     # one folder per platform, named by igir's {romm} token (gb, snes, psx, …)
     "d ${roms}/library/roms 2775 ${username} romm - -"
   ];
-  # module makes the library 0750 romm-only; group-writable so you can drop dumps in
-  systemd.tmpfiles.settings."10-romm"."${roms}/library".d = lib.mkForce {
-    mode = "2775";
-    user = "romm";
-    group = "romm";
-  };
+  # the module's romm-owned entries would all hit that refusal; romm creates its other dirs itself via the group
+  systemd.tmpfiles.settings."10-romm" = lib.mkForce { };
 
   # Web UIs stay on localhost (firewall closed): radarr :7878, sonarr :8989, prowlarr :9696, bazarr :6767, sabnzbd :8085, romm :8070
   services.radarr = {
