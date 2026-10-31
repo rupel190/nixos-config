@@ -82,8 +82,15 @@ in
       port = 8070;
     }
   ];
-  systemd.services.romm.unitConfig.RequiresMountsFor = roms;
-  systemd.services.romm-worker.unitConfig.RequiresMountsFor = roms;
+  # group-writable platform folders, so you can copy roms in next to romm's uploads
+  systemd.services.romm = {
+    serviceConfig.UMask = "0002";
+    unitConfig.RequiresMountsFor = roms;
+  };
+  systemd.services.romm-worker = {
+    serviceConfig.UMask = "0002";
+    unitConfig.RequiresMountsFor = roms;
+  };
   systemd.services.romm-scheduler.unitConfig.RequiresMountsFor = roms;
   systemd.services.romm-watcher.unitConfig.RequiresMountsFor = roms;
 
