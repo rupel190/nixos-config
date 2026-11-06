@@ -220,12 +220,24 @@ let
     JS
     grep -q 'focusMain(a.address' $out/main.js
   '';
+  # The Building (herdr-building/RECIPE.md): the wall's real layout. Office's art.js and font stay
+  # as shipped; facts.py reads the core and the transcripts, on a pinned python.
+  officeMod = "${(lib.findFirst (l: l.name == "office") null all).pkg}/mods/office";
+  building = pkgs.runCommand "herdr-building-mod" { } ''
+    mkdir -p $out
+    cp -r ${officeMod}/art.js ${officeMod}/fonts $out/
+    cp ${./herdr-building/main.js} $out/main.js
+    cp ${./herdr-building/people.js} $out/people.js
+    cp ${./herdr-building/demo.js} $out/demo.js
+    cp ${./herdr-building/facts.py} $out/facts.py
+    cp ${./herdr-building/mod.json} $out/mod.json
+  '';
   officeWall = pkgs.writeShellScriptBin "office-wall" ''
-    # Opens the Office on its own window (second Herdr app home, same herdr-core).
+    # Opens The Building on its own window (second Herdr app home, same herdr-core).
     export HERDR_APP_HOME="''${WALL_HOME:-$HOME/${wallHome}}"
     herdr-app "$@" &
     for _ in $(seq 50); do herdr-app status >/dev/null 2>&1 && break; sleep 0.2; done
-    herdr-app do layout.switch --name office-wall >/dev/null
+    herdr-app do layout.switch --name building >/dev/null
     wait
   '';
 in
@@ -234,6 +246,36 @@ in
 
   xdg.configFile = lib.foldl' (acc: l: acc // l.files) { } all // {
     "herdr-office-wall/mods/office".source = wallOffice;
+    "herdr-office-wall/mods/building".source = building;
+    "herdr-office-wall/layouts/building.json".text = builtins.toJSON {
+      id = "building-root-node";
+      type = "column";
+      titlebar = "none";
+      theme = "graphite";
+      font_size = 13;
+      ui_font = "Geist";
+      background = "#1c2028";
+      colors = {
+        background = "#1e2230";
+        accent = "#e2a465";
+        border = "#8a5530";
+      };
+      resizable = false;
+      children = [
+        {
+          id = "building";
+          type = "block";
+          size.weight = 1;
+          content = {
+            mod = "building";
+            props = {
+              inherit mainHome;
+              python = "${pkgs.python3}/bin/python3";
+            };
+          };
+        }
+      ];
+    };
     "herdr-office-wall/layouts/office-wall.json".text = builtins.toJSON {
       id = "office-wall-root";
       type = "column";
