@@ -104,6 +104,9 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
   asks `hc get` about every terminal, walks each process in `~/.claude/sessions/<pid>.json` up to its
   terminal, and reads each transcript once and then only from where it stopped. The first scan of
   165 transcripts (1.4 GB) took under 3s.
+  Opencode's facts come from its own `opencode.db`, read-only: model, title, last input, last words,
+  and a headstone for every session with no terminal. Nothing names a terminal's session, so it
+  matches on folder, then title, then the newest; two tabs in one folder under one title can swap.
 - `demo.js`, with props `{demo: true}`: one of everything, for review and screenshots.
 - **Overrides:** terminal labels `building.model`, `building.effort` and `building.where` beat what the
   transcripts say. That is how a non-Claude agent can report itself.
@@ -118,6 +121,9 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
   freshly hired.
 - **Never add a native `.loop` or `.frames` here.** Just one wakes the whole window about 30 times a
   second, and a redraw of this many elements costs about 30ms: the first version used 95% of a core.
+- The core takes status only from the program itself (OSC 7501). Claude Code does that, and so does
+  opencode from 2.1. Older opencode shows no status: Herdr's plugin is for the terminal `herdr` and needs
+  `HERDR_*` variables that app terminals don't have.
 - `status_ms` and `turn` reset on a core restart, so they only count when `turn > 0`.
 - One stone per name: resuming leaves older sessions under the same title.
 - Hot reload doesn't fire through a symlinked mod folder: `layout.switch` away and back.
@@ -144,9 +150,5 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
 - **Message walks:** the elevator ride when one agent really messages another. No terminal has sent
   one yet, and detecting it means reading screens, so this comes last, if at all.
 - **Resurrection:** clicking a headstone to run `claude --resume`. Open question.
-- **Non-Claude agents:** tested with one real `opencode mini` tab on `qwen3.5:9b`. The core calls it
-  `fish` with no status, even mid-reply, because the plugins need `HERDR_*` variables and app
-  terminals only get `HC_*`. What does reach the core: the terminal title, `OC | <session title>`, and
-  the foreground process `.opencode-wrapp`. Model, session title and last-input times are in
-  `opencode session list` and `session export`, but only the folder and title link a session to a
-  terminal. Non-Claude contexts also get no headstones yet.
+- **Other agents than Claude Code and opencode:** they get a `VISITOR` line and no headstones. The `building.*`
+  labels are how one can report itself.

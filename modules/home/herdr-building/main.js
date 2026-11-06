@@ -202,7 +202,7 @@ export default class Building extends View {
       const f = facts[a.address] ?? {};
       if (a.status === "working") this.fed[a.address] = now;
       const fed = Math.max(this.fed[a.address] ?? 0, f.fed_ms ?? 0) || null;
-      return { ...a, ...f, status: a.status, title: a.title || f.title, fed, visitor: !!this.facts && !f.model && a.app !== "claude-code" };
+      return { ...a, ...f, status: a.status, title: (a.title || f.title || "").replace(/^OC \| /, ""), fed, visitor: !!this.facts && !f.model && a.app !== "claude-code" && a.app !== "opencode" };
     };
     const byAddr = new Map(list.map((a) => [a.address, a]));
     const parentOf = new Map(terms.filter((t) => t.parent).map((t) => [t.address, t.parent]));
@@ -408,7 +408,7 @@ export default class Building extends View {
     return v_flex().absolute().left(x).top(y + q(130)).w(q(SLOT_W)).items_center()
       .child(h_flex().justify_center().gap(q(6)).items_center()
         .when(!!a, (e) => e.child(icon(a.program, q(14))))
-        .child(txt((tab.retired ? "cleared out" : a?.title && a.title !== "Claude Code" ? a.title : tab.name).slice(0, 18), fs, a?.focused ? "#fff8e1" : ink)))
+        .child(txt((tab.retired ? "cleared out" : a?.title && a.title !== "Claude Code" && a.title !== "OpenCode" ? a.title : tab.name).slice(0, 18), fs, a?.focused ? "#fff8e1" : ink)))
       .when(!!line2, (e) => e.child(txt(line2.slice(0, 22), Math.max(8, q(11)), a?.visitor ? "#a8322a" : "#5c3a22")))
       .when((c.more ?? 0) > 0, (e) => e.child(txt(`+${c.more} more`, Math.max(8, q(11)), "#a8322a")));
   }

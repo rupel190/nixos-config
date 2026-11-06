@@ -4,12 +4,13 @@
 Live terminals come from herdr-core. Claude Code sessions are found through
 ~/.claude/sessions/<pid>.json, by walking up from the session's process to its terminal.
 Model, effort, last input and the dead all come from the transcripts, which are scanned once
-and then only from where the last scan stopped.
+and then only from where the last scan stopped. Opencode keeps the same facts in its own database.
 """
 import datetime
 import glob
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import time
@@ -18,6 +19,10 @@ HOME = os.path.expanduser("~")
 PROJECTS = f"{HOME}/.claude/projects"
 SESSIONS = f"{HOME}/.claude/sessions"
 CACHE = f"{HOME}/.cache/herdr-building/state.json"
+OPENCODE_DB = f"{os.environ.get('XDG_DATA_HOME') or HOME + '/.local/share'}/opencode/opencode.db"
+OPENCODE_TITLE = "OC | "
+LOCAL_PROVIDERS = {"ollama", "lmstudio", "llama.cpp"}
+EFFORTS = {"low", "medium", "high", "xhigh", "max"}
 WEEK_MS = 7 * 24 * 3600 * 1000
 MAX_DEAD = 400
 NOT_INPUT = ("<local-command", "<task-notification", "<system-reminder", "Caveat:")
@@ -102,6 +107,46 @@ def scan(path, rec):
                 except (ValueError, TypeError):
                     pass
     rec["offset"] = offset
+
+
+def opencode_sessions():
+    """Top-level opencode sessions as transcript-shaped records. Empty if the store has moved."""
+    try:
+        db = sqlite3.connect(f"file:{OPENCODE_DB}?mode=ro", uri=True, timeout=1)
+    except sqlite3.Error:
+        return {}
+    out = {}
+    try:
+        inputs = {r[0]: r[1:] for r in db.execute(
+            "select session_id, count(*), max(time_created) from session_message where type = 'user' group by session_id")}
+        for sid, title, folder, model, born, last, outcome in db.execute(
+                "select id, title, directory, model, time_created, time_updated, idle_outcome from session_v2"
+                " where parent_id is null and time_archived is null"):
+            model = json.loads(model) if model else {}
+            turns, fed = inputs.get(sid, (0, None))
+            rec = {"title": title, "cwd": folder, "model": model.get("id"), "provider": model.get("providerID"), "turns": turns,
+                   "fed_ms": fed, "born_ms": born, "last_ms": last, "ended": "interrupted" if outcome and outcome != "succeeded" else "answered"}
+            if model.get("variant") in EFFORTS:
+                rec["effort"] = model["variant"]
+            said = db.execute("select data from session_message where session_id = ? and type = 'assistant' order by seq desc limit 1", (sid,)).fetchone()
+            for c in (json.loads(said[0]).get("content") or []) if said else []:
+                if isinstance(c, dict) and c.get("type") == "text" and c.get("text"):
+                    rec["words"] = first_line(c["text"]) or rec.get("words")
+            out[sid] = rec
+    except (sqlite3.Error, ValueError, TypeError):
+        return {}
+    finally:
+        db.close()
+    return out
+
+
+def opencode_match(t, title, sessions, taken):
+    """Nothing names a terminal's session: same folder, then the same title, then the newest."""
+    wanted = (t.get("status") or {}).get("title") or title
+    fresh = lambda r: r["title"] == wanted or (r["last_ms"] or 0) >= (t.get("created_ms") or 0)
+    here = [(sid, r) for sid, r in sessions.items() if r["cwd"] == t.get("cwd") and sid not in taken and fresh(r)]
+    here.sort(key=lambda kv: (kv[1]["title"] == wanted, kv[1]["last_ms"] or 0), reverse=True)
+    return here[0][0] if here else None
 
 
 def hc(*args):
@@ -217,15 +262,20 @@ def main():
             full[t["address"]] = {**t, **record}
     by_pid = {t["pid"]: a for a, t in full.items() if t.get("pid")}
     sessions = live_sessions(by_pid)
+    opencode, taken = opencode_sessions(), set()
 
     terminals, live_ids, live_titles = {}, set(), set()
     for address, t in full.items():
         labels = t.get("labels") or {}
         status = t.get("status") or {}
-        title = t.get("title") or ""
+        title = (t.get("title") or "").removeprefix(OPENCODE_TITLE)
         sid, pid = sessions.get(address, (None, None))
         source = resumed_from(pid) if pid else None
         rec = records.get(sid) or records.get(source) or {}
+        if status.get("app") == "opencode" or t.get("agent") == "opencode":
+            sid = opencode_match(t, title, opencode, taken)
+            rec = opencode.get(sid, {})
+            taken.add(sid)
         tab = labels.get("herdr.tab")
         fed = rec.get("fed_ms")
         if not rec:
@@ -235,6 +285,7 @@ def main():
             elif tab and tab not in tabs:
                 tabs[tab] = now
             fed = tabs.get(tab)
+        where = "local" if rec.get("provider") in LOCAL_PROVIDERS else "api" if rec.get("provider") else billing(pid) if pid else None
         if sid:
             live_ids.update(filter(None, (sid, source)))
             live_titles.add(title)
@@ -248,7 +299,7 @@ def main():
             "session": sid,
             "model": labels.get("building.model") or rec.get("model"),
             "effort": labels.get("building.effort") or rec.get("effort"),
-            "where": labels.get("building.where") or (billing(pid) if pid else None),
+            "where": labels.get("building.where") or where,
             "fed_ms": fed,
             "turns": rec.get("turns", t.get("turn", 0)),
             "born_ms": rec.get("born_ms") or t.get("created_ms"),
@@ -256,9 +307,9 @@ def main():
         }
 
     dead, seen = [], set(live_titles)
-    ordered = sorted(records.items(), key=lambda kv: kv[1].get("last_ms") or 0, reverse=True)
+    ordered = sorted([*records.items(), *opencode.items()], key=lambda kv: kv[1].get("last_ms") or 0, reverse=True)
     for sid, rec in ordered:
-        if sid not in paths or not rec.get("turns"):
+        if (sid not in paths and sid not in opencode) or not rec.get("turns"):
             continue
         rip = (rec.get("title") or "").upper().startswith("RIP-")
         if sid in live_ids and not rip:
