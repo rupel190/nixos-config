@@ -89,10 +89,79 @@ let
 
     meta.mainProgram = "herdr-app";
   };
+  # Lisa layout (github.com/billyhunt/herdr-lisa): neon school-supplies look, built for
+  # herdr 0.1.11. Reviewed: its mods only run git and `hc machine ls` and use localStorage,
+  # no network. install.sh's copy steps, with the shared lisa.js placed in each mod.
+  lisa = pkgs.runCommand "herdr-lisa" {
+    src = pkgs.fetchFromGitHub {
+      owner = "billyhunt";
+      repo = "herdr-lisa";
+      rev = "0ab7e71d3730bdb403bce7f6d28f43cecbbaa22f";
+      hash = "sha256-Sq0B6kXoqNLk/gAsLB7JMeeBBpEMgrgoK6BoCyuUaxQ=";
+    };
+  } ''
+    mkdir -p $out/mods
+    cp -r $src/lisa/{layouts,themes,fonts,backgrounds} $out/
+    for m in $src/lisa/mods/*; do
+      cp -r $m $out/mods/
+      chmod -R u+w $out/mods/$(basename $m)
+      cp $src/lisa/lisa-kit/lisa.js $out/mods/$(basename $m)/lisa.js
+    done
+  '';
+  # One directory link per mod; mods/ itself stays the app's.
+  lisaMods = lib.genAttrs (map (m: "herdr-app/mods/${m}") [
+    "lisa-agents"
+    "lisa-pane"
+    "lisa-spaces"
+    "lisa-tabs"
+    "lisa-workspace-chrome"
+    "lisa-workspace-status"
+  ]) (n: { source = "${lisa}/mods/${baseNameOf n}"; });
+
+  # The app writes settings.json itself (zoom from the zoom keys, the Settings screen),
+  # so only the keys below are merged in and the rest of the file is left alone.
+  settings = {
+    theme = "catppuccin-macchiato";
+    colors = {
+      accent = "#8bd5ca"; # teal, as in herdr.nix
+      chrome = "#1e2030"; # mantle
+      selected = "#363a4f"; # surface0
+    };
+    telemetry = false; # herdr.nix likewise never calls herdr.dev
+  };
 in
 {
   home.packages = [
     herdr-app
     herdr-core
   ];
+
+  # Same keys as herdr.nix where the app has an equivalent: alt+hjkl moves tabs and
+  # spaces, so pane focus is ctrl+shift+hjkl (its layout.switch and picker moved to ctrl+alt+l/k). force: the app creates these files
+  # on first start.
+  xdg.configFile = lisaMods // {
+    "herdr-app/keys.json" = {
+      source = ./dotfiles/herdr-app/keys.json;
+      force = true;
+    };
+    "herdr-app/themes/catppuccin-macchiato.json".source = ./dotfiles/herdr-app/catppuccin-macchiato.json;
+    "herdr-app/layouts/lisa.json".source = "${lisa}/layouts/lisa.json";
+    "herdr-app/layouts/lisa.png".source = "${lisa}/layouts/lisa.png";
+    "herdr-app/layouts/lisa-airbrush.json".source = "${lisa}/layouts/lisa-airbrush.json";
+    "herdr-app/layouts/lisa-airbrush.png".source = "${lisa}/layouts/lisa-airbrush.png";
+    "herdr-app/themes/lisa-day.json".source = "${lisa}/themes/lisa-day.json";
+    "herdr-app/themes/lisa-dusk.json".source = "${lisa}/themes/lisa-dusk.json";
+    "herdr-app/fonts".source = "${lisa}/fonts";
+    "herdr-app/backgrounds".source = "${lisa}/backgrounds";
+    "herdr-core/config.toml".text = ''
+      shell = ["fish"]
+    '';
+  };
+
+  home.activation.herdrAppSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    f="$HOME/.config/herdr-app/settings.json"
+    if [ -f "$f" ]; then
+      ${pkgs.jq}/bin/jq --argjson s '${builtins.toJSON settings}' '. * $s' "$f" > "$f.new" && mv "$f.new" "$f"
+    fi
+  '';
 }
