@@ -74,5 +74,12 @@
     "ctrl-v": "terminal.paste_image",
     "ctrl-insert": "terminal.copy",
     "shift-insert": "terminal.paste"
+  },
+  "layout:bloomberg": {
+    "cmd-g": "bloomberg.go",
+    "cmd-shift-g": "bloomberg.help"
+  },
+  "layout:office-dusty": {
+    "ctrl-shift-i": "layout.toggle:office"
   }
 }

@@ -27,6 +27,7 @@
     ./drovr.nix # drovr: cheap headless claude workers on DeepSeek
     ./opencode.nix # AI coding assistant (model-agnostic alternative)
     ./herdr.nix # terminal multiplexer for AI coding agents
+    ./herdr-layouts.nix # community herdr-app layouts (gallery)
     ./herdr-app.nix # herdr desktop app + core (layouts like Lisa live in ~/.config/herdr-app)
     ./claude-sync.nix # sync ~/.claude across machines (R2 + age)
     ./projects # ~/projects checkout manifest + drift audit
