@@ -42,11 +42,14 @@
     # Herdr's default prefix. Not ctrl+z: that is the shell's suspend-job key.
     [keys]
     prefix = "ctrl+b"
-    # alt+hjkl without the prefix; kitty already owns alt+1-9 and ctrl+alt+hjkl.
-    previous_tab = "alt+h"
-    next_tab = "alt+l"
-    previous_workspace = "alt+k"
-    next_workspace = "alt+j"
+    # No prefix: alt+hjkl focuses panes, ctrl+shift+h/l moves tabs (as in herdr-app). Workspaces
+    # stay on prefix+w: kitty owns ctrl+shift+j/k, so herdr-app's space keys cannot reach here.
+    focus_pane_left = "alt+h"
+    focus_pane_down = "alt+j"
+    focus_pane_up = "alt+k"
+    focus_pane_right = "alt+l"
+    previous_tab = "ctrl+shift+h"
+    next_tab = "ctrl+shift+l"
     # Example custom command (uncomment and adjust):
     # [[keys.command]]
     # key = "prefix+alt+g"
