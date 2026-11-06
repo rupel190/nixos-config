@@ -140,6 +140,9 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
 - **Message walks:** the elevator ride when one agent really messages another. No terminal has sent
   one yet, and detecting it means reading screens, so this comes last, if at all.
 - **Resurrection:** clicking a headstone to run `claude --resume`. Open question.
-- **Non-Claude agents:** opencode's plugin stays silent in this app, because its `HERDR_*` variables
-  aren't set. Whether it reports some other way needs one real opencode tab. Non-Claude contexts also
-  get no headstones yet.
+- **Non-Claude agents:** tested with one real `opencode mini` tab on `qwen3.5:9b`. The core calls it
+  `fish` with no status, even mid-reply, because the plugins need `HERDR_*` variables and app
+  terminals only get `HC_*`. What does reach the core: the terminal title, `OC | <session title>`, and
+  the foreground process `.opencode-wrapp`. Model, session title and last-input times are in
+  `opencode session list` and `session export`, but only the folder and title link a session to a
+  terminal. Non-Claude contexts also get no headstones yet.
