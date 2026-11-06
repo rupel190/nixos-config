@@ -41,7 +41,7 @@ right:
 
 - **Effort is posture.** low: legs up on the desk, feet past both ears. medium: slumped. high: upright.
   xhigh: standing, while working. max: standing, faster, sweating, while working. Unknown: plain
-  sitting. Bob speed runs 950ms, 620, 380, 230, 120.
+  sitting. While working they bob every 2s, 1.5s, 1s, 0.5s and 0.5s.
 - **Rank is the outfit**, from a hand-written table, since no API says how good a model is. Opus and
   Fable: dark suit with a white collar and a vent. Sonnet and DeepSeek: shirt and collar. Haiku: tee,
   bare arms. Anything else: hoodie.
@@ -65,8 +65,8 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
   12 hours, hungry: slumped, stops wandering. 2 days: cobwebs on monitor and chair. 7 days: a skeleton
   in the chair, DVD logo still bouncing. Any input brings them straight back. A blocked skeleton
   still jumps, because the alarm comes first.
-- **Ambient life stays on the worker's floor.** Each second a fed idle worker gets up with chance 3.5%
-  (done 1.5%), walks the aisle to the bay, stays 3–11s at the furniture and walks back. Work or a block
+- **Ambient life stays on the worker's floor.** Each second a fed idle worker gets up with chance 1%
+  (done 0.4%), walks the aisle to the bay, stays 3–11s at the furniture and walks back. Work or a block
   sends them back. A new agent steps out of the elevator, whose doors stay open 4s. Nobody arrives on
   startup. The cat roams, changing floor now and then. Night dims the building, 19–6h.
 - **Removed from Office:** walking over to another worker to chat, and random thought bubbles.
@@ -96,7 +96,8 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
   CC BY-SA 4.0 and keeps its licence file).
 - `people.js`: rank, hunger, postures, ramen, towers, cobwebs, headstones.
 - `main.js`: one mod. The floors' walls and the graveyard are retained views, rebuilt only when their
-  data changes. A 250ms timer advances walks and the mod notifies only on real changes. Scrolling is
+  data changes. All motion is worked out on one 250ms beat, with 2 redraws a second while anyone works
+  or walks and 1 otherwise. Nothing uses `.loop`, `.frames` or per-person `.transition`. Scrolling is
   the mod's own offset on a clipped div: `track_scroll` only drives virtual lists, and those would
   drop walkers off screen.
 - `facts.py`: runs every 20s, read-only but for its cache at `~/.cache/herdr-building/state.json`. It
@@ -115,6 +116,8 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
 - Your restore script runs `claude --resume X --fork-session`. The fork has no transcript until its
   first input, so `facts.py` reads `X` from the command line. Without that, every restored agent looks
   freshly hired.
+- **Never add a native `.loop` or `.frames` here.** Just one wakes the whole window about 30 times a
+  second, and a redraw of this many elements costs about 30ms: the first version used 95% of a core.
 - `status_ms` and `turn` reset on a core restart, so they only count when `turn > 0`.
 - One stone per name: resuming leaves older sessions under the same title.
 - Hot reload doesn't fire through a symlinked mod folder: `layout.switch` away and back.
@@ -133,7 +136,8 @@ isn't Claude Code gets a red `VISITOR` line instead of a guessed rank.
 - ⬜ A real `hc run` from an agent seats an intern (demo only so far).
 - ⬜ A new agent arriving by elevator, and a real `RIP-` rename.
 - ⬜ An agent finishing on the wall's own selected tab still shows `done`.
-- ⬜ CPU on the real screen. On a virtual screen: 64% of a core, against Office's 44%.
+- ⬜ CPU on the real screen. On a virtual screen at 1054×1841: 11% of a core with live data, against
+  4% for a plain Herdr window.
 
 ## Not built yet
 

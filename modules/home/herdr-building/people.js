@@ -82,16 +82,16 @@ export function loafer(lk, s, opts) {
 
 // Effort xhigh and max: on their feet at the desk.
 export function stander(lk, s, id, opts) {
-  const { kind = "unknown", skeleton, sweat } = opts;
+  const { kind = "unknown", skeleton, sweat, beat = 0 } = opts;
   const el = div().relative().w(16 * s).h(17 * s).child(standing(lk, s, "back", false, null, id));
   if (kind === "suit" || kind === "shirt") el.child(r(5 * s, 7 * s, 6 * s, s, "#f4f4f0"));
   if (skeleton) el.child(r(7 * s, 8 * s, 2 * s, 6 * s, BONE));
-  if (sweat) el.child(r(14 * s, s, s, 2 * s, "#7fb8e8").id(`${id}-sweat`).loop("top", { from: s, to: 6 * s, period: 500, easing: "linear" }));
+  if (sweat) el.child(r(14 * s, (1 + (beat % 3) * 2) * s, s, 2 * s, "#7fb8e8"));
   return el;
 }
 
 export function walker(lk, s, facing, id, kind) {
-  const el = div().relative().w(16 * s).h(17 * s).child(standing(lk, s, facing, true, null, id));
+  const el = div().relative().w(16 * s).h(17 * s).child(standing(lk, s, facing, false, null, id));
   if (facing === "front" && (kind === "suit" || kind === "shirt")) el.child(r(7 * s, 7 * s, 2 * s, 4 * s, kind === "suit" ? "#a8322a" : "#2f5a7a"));
   return el;
 }
@@ -108,9 +108,9 @@ export function laptop(color, k) {
 
 // ---- things on the desk ---------------------------------------------------
 
-export function ramen(R2, steaming, id, k) {
+export function ramen(R2, steaming, beat, k) {
   const cup = [R2(110, 41, 11, 13, "#f4f4f0"), R2(110, 45, 11, 3, "#c94a3a"), R2(109, 40, 13, 2, "#d8dce4")];
-  if (steaming) cup.push(txt("~", Math.max(8, Math.round(12 * k)), "#ffffffcc").absolute().left(Math.round(110 * k)).top(Math.round(27 * k)).id(id).frames(["", "~", "≈", "~"], 380));
+  if (steaming) cup.push(txt(["", "~", "≈", "~"][Math.floor(beat / 2) % 4], Math.max(8, Math.round(12 * k)), "#ffffffcc").absolute().left(Math.round(110 * k)).top(Math.round(27 * k)));
   return cup;
 }
 
@@ -120,12 +120,12 @@ export function pile(R2, turns) {
   return Array.from({ length: n }, (_, i) => [R2(5, 92 - i * 6, 13, 6, "#f4f4f0"), R2(5, 94 - i * 6, 13, 2, "#c94a3a")]).flat();
 }
 
-export function tower(R2, where, status, id) {
+export function tower(R2, where, status, beat) {
   if (where === "local") {
     return [
       R2(148, 34, 20, 66, "#d9d2b8").child(R2(3, 6, 14, 3, "#8a8570")).child(R2(3, 12, 14, 3, "#8a8570")),
-      R2(152, 58, 4, 4, "#e0483c").id(`${id}-a`).loop("opacity", { from: 0.2, to: 1, period: 340 }),
-      R2(160, 58, 4, 4, "#5ee08a").id(`${id}-b`).loop("opacity", { from: 1, to: 0.2, period: 520 }),
+      R2(152, 58, 4, 4, beat % 8 < 4 ? "#e0483c" : "#5a2420"),
+      R2(160, 58, 4, 4, beat % 16 < 8 ? "#5ee08a" : "#24503a"),
       R2(151, 74, 14, 14, "#6a6658"),
     ];
   }
@@ -134,9 +134,9 @@ export function tower(R2, where, status, id) {
 }
 
 // Billed by the token: a meter that runs while it works.
-export function meter(R2, working, id, k) {
+export function meter(R2, working, beat, k) {
   const fs = Math.max(8, Math.round(11 * k));
-  const face = R2(26, 32, 20, 18, "#2b2f3a").child(txt("$", fs, "#f0c860").absolute().left(Math.round(5 * k)).top(Math.round(2 * k)).id(id).when(working, (e) => e.frames(["$", " ", "$", "¢"], 300)));
+  const face = R2(26, 32, 20, 18, "#2b2f3a").child(txt(working ? ["$", " ", "$", "¢"][Math.floor(beat / 2) % 4] : "$", fs, "#f0c860").absolute().left(Math.round(5 * k)).top(Math.round(2 * k)));
   return [face, R2(28, 26, 16, 4, "#f0c860"), R2(30, 22, 12, 4, "#d8a840")];
 }
 

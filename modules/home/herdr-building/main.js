@@ -18,7 +18,12 @@ const URGENT = { blocked: 4, done: 3, working: 2, idle: 1 };
 const busy = (a) => a.status === "working" || a.status === "blocked";
 const q = (v) => Math.round(v * K);
 const DVD = ["#e05a8a", "#5ab0e0", "#e0c040", "#7ee0a0", "#c08ae0", "#f08a4a"];
-const POSE = { low: { pose: "loaf", bob: 950 }, medium: { pose: "sit", slump: true, bob: 620 }, high: { pose: "sit", bob: 380 }, xhigh: { pose: "stand", bob: 230 }, max: { pose: "stand", bob: 120, sweat: true } };
+const POSE = { low: { pose: "loaf", beats: 8 }, medium: { pose: "sit", slump: true, beats: 6 }, high: { pose: "sit", beats: 4 }, xhigh: { pose: "stand", beats: 2 }, max: { pose: "stand", beats: 2, sweat: true } };
+// Every redraw redraws the whole window and a native loop asks for 30 a second, so all motion is
+// worked out here, on one slow beat: 2 redraws a second while anyone works or walks, else 1.
+const BEAT = 250;
+const swing = (t, period, from, to) => { const u = (t % period) / period; return Math.round(from + (to - from) * (u < 0.5 ? u * 2 : 2 - u * 2)); };
+const ZS = ["z", "zZ", "zZz", ""];
 
 // Walls, bays and floors: half of everything drawn, and it changes only with the size, the minute
 // and the elevators. A retained view, rebuilt only then.
@@ -131,12 +136,19 @@ export default class Building extends View {
     this.px = p.px ?? 0;
     this.drag = null;
     this.n = 0;
+    this.beat = 0;
+    this.t = Date.now();
     this.people = [];
     this.floors = [];
     this.cat = { coat: pick(rng(this.seed), CATS), x: 200, floor: 0, left: false, until: 0, ms: 16 };
     this.shell = cx.new(Shell, this.shellProps());
     this.yard = cx.new(Yard, this.yardProps());
-    cx.timer.every(250, (cx) => { this.syncViews(); if (this.tick()) cx.notify(); });
+    cx.timer.every(BEAT, (cx) => {
+      this.syncViews();
+      this.beat++;
+      const changed = this.tick();
+      if (changed || this.beat % this.pace() === 0) cx.notify();
+    });
     if (!p.demo) {
       this.loadFacts(cx);
       cx.timer.every(FACTS_MS, (cx) => this.loadFacts(cx));
@@ -242,6 +254,7 @@ export default class Building extends View {
     for (const p of pts) {
       p.ms = Math.max(16, Math.round(Math.hypot(p.x - prev.x, p.y - prev.y) / speed));
       p.facing = p.y < prev.y ? "back" : "front";
+      p.from = { x: prev.x, y: prev.y };
       prev = p;
     }
     return pts;
@@ -266,7 +279,7 @@ export default class Building extends View {
           continue;
         }
         delete this.trips[a.address];
-      } else if (slow && !busy(a) && a.stage === "fed" && a.seatIndex === 0 && Math.random() < (a.status === "done" ? 0.015 : 0.035) * (props()?.demo ? 3 : 1)) {
+      } else if (slow && !busy(a) && a.stage === "fed" && a.seatIndex === 0 && Math.random() < (a.status === "done" ? 0.004 : 0.01) * (props()?.demo ? 3 : 1)) {
         const path = this.walkTo(seat, this.furnitureSpot(f), seat.row, f);
         this.trips[a.address] = { phase: "going", path, i: 0, until: now + path[0].ms };
         changed = true;
@@ -274,6 +287,23 @@ export default class Building extends View {
     }
     for (const k of Object.keys(this.bubbles)) if (now >= this.bubbles[k].until) { delete this.bubbles[k]; changed = true; }
     return this.moveCat(now) || changed;
+  }
+
+  // Beats between redraws.
+  pace() {
+    const moving = this.people.some((a) => busy(a) || (this.trips[a.address] && this.trips[a.address].phase !== "there"));
+    return moving || Date.now() < (this.cat.t0 ?? 0) + this.cat.ms ? 2 : 4;
+  }
+
+  along(p, until) {
+    if (!p.from) return p;
+    const u = Math.max(0, Math.min(1, 1 - (until - this.t) / p.ms));
+    return { x: Math.round(p.from.x + (p.x - p.from.x) * u), y: Math.round(p.from.y + (p.y - p.from.y) * u) };
+  }
+
+  catX() {
+    const c = this.cat, u = Math.min(1, (this.t - (c.t0 ?? 0)) / c.ms), from = c.from ?? c.x;
+    return Math.round(from + (c.x - from) * u);
   }
 
   moveCat(now) {
@@ -284,6 +314,8 @@ export default class Building extends View {
     const to = 20 + Math.random() * Math.max(100, (this.W ?? 400) - 60);
     c.ms = Math.round(Math.abs(to - c.x) / CAT_WALK);
     c.left = to < c.x;
+    c.from = c.x;
+    c.t0 = now;
     c.x = Math.round(to);
     c.until = now + c.ms + (Math.random() < 0.4 ? 8000 + Math.random() * 15000 : 1000 + Math.random() * 3000);
     return true;
@@ -329,20 +361,17 @@ export default class Building extends View {
     const s = r(cq(6), cq(5), cq(54), cq(34), a ? SCREEN[a.status] ?? SCREEN.idle : "#1c2028");
     if (!a) return s;
     if (a.status === "working")
-      return s.children([0, 1, 2, 3].map((i) => r(cq(5), cq(5 + i * 7), cq(10), Math.max(1, cq(3)), "#7ee0a0")
-        .id(`code-${a.address}-${i}`).loop("width", { from: cq(6), to: cq(40 - i * 6), period: 600 + ((i * 337) % 700) + (a.address.length * 53) % 300 })));
+      return s.children([0, 1, 2, 3].map((i) => r(cq(5), cq(5 + i * 7), swing(this.t, 600 + ((i * 337) % 700) + (a.address.length * 53) % 300, cq(6), cq(40 - i * 6)), Math.max(1, cq(3)), "#7ee0a0")));
     if (a.status === "blocked") {
       const fs = Math.max(8, cq(12));
-      return s.flex().items_center().justify_center().child(v_flex().items_center().id(`need-${a.address}`).loop("opacity", { from: 0.25, to: 1, period: 700 })
-        .children([txt("NEEDS", fs, "#fff8e1"), txt("YOU", fs, "#fff8e1")]));
+      const col = this.beat % 4 < 2 ? "#fff8e1" : "#fff8e140";
+      return s.flex().items_center().justify_center().child(v_flex().items_center().children([txt("NEEDS", fs, col), txt("YOU", fs, col)]));
     }
     if (a.status === "done") return s.flex().items_center().justify_center().child(txt("OK", Math.max(8, cq(16)), "#bfe0ff"));
     const R = rng(hash(a.address)), lw = Math.max(14, cq(24)), lh = Math.max(8, cq(12)), fs = Math.max(8, cq(10));
-    return s.child(div().absolute().top(0).w(lw).h(cq(34)).id(`dvd-x-${a.address}`)
-      .loop("left", { from: 0, to: cq(54) - lw, period: 3600 + Math.floor(R() * 2400), easing: "linear" })
-      .child(div().absolute().left(0).w(lw).h(lh).bg(pick(R, DVD)).flex().items_center().justify_center().id(`dvd-y-${a.address}`)
-        .loop("top", { from: 0, to: cq(34) - lh, period: 2200 + Math.floor(R() * 1600), easing: "linear" })
-        .child(txt("DVD", fs, "#36404c"))));
+    const xp = 3600 + Math.floor(R() * 2400), yp = 2200 + Math.floor(R() * 1600);
+    return s.child(div().absolute().left(swing(this.t, xp, 0, cq(54) - lw)).top(swing(this.t, yp, 0, cq(34) - lh)).w(lw).h(lh).bg(pick(R, DVD)).flex().items_center().justify_center()
+      .child(txt("DVD", fs, "#36404c")));
   }
 
   desk(c) {
@@ -354,13 +383,13 @@ export default class Building extends View {
       .child(R2(24, 52, 122, 12, "#f0dcb0")).child(R2(24, 64, 122, 20, "#d4b27c")).child(R2(24, 64, 122, 3, "#b48a52"))
       .child(R2(28, 84, 8, 18, "#b48a52")).child(R2(134, 84, 8, 18, "#b48a52"))
       .child(R2(66, 54, 38, 6, "#e7e9ee"))
-      .children(a ? ramen(R2, status === "working", `steam-${tab.id}`, K) : [R2(110, 44, 9, 10, dl.mug)])
+      .children(a ? ramen(R2, status === "working", this.beat, K) : [R2(110, 44, 9, 10, dl.mug)])
       .children(a ? pile(R2, a.turns) : [])
       .child(R2(30, 50, 14, 3, "#3a3a3a")).child(R2(35, 32, 3, 18, "#3a3a3a")).child(R2(28, 26, 18, 8, dl.lamp))
       .when(a && (a.focused || this.night), (e) => e.child(R2(26, 34, 22, 18, "#ffe9a055")).child(R2(31, 34, 12, 3, "#fff3b0")))
-      .children(a?.where === "api" ? meter(R2, status === "working", `meter-${tab.id}`, K) : [])
+      .children(a?.where === "api" ? meter(R2, status === "working", this.beat, K) : [])
       .children(clutter(dl.clutter, R2))
-      .children(tower(R2, a?.where, status, `tower-${tab.id}`))
+      .children(tower(R2, a?.where, status, this.beat))
       .when(tab.retired, (e) => e.children(vacated(R2)));
     if (!a) el.child(R2(70, 78, 30, 26, "#3d4454")).child(R2(83, 104, 4, 8, "#2b2f3a")).child(R2(72, 112, 26, 4, "#2b2f3a"));
     else if (webbed) el.children(chairWeb(R2));
@@ -387,41 +416,40 @@ export default class Building extends View {
   person(a, c, index) {
     const t = this.trips[a.address], id = `w-${a.address}`, skeleton = a.stage === "skeleton", kind = rank(a.model), s = S;
     const lk = dress(look(a), a.model, skeleton), seat = this.seats[a.address];
-    let pos = seat, ms = 16, body;
+    let pos = seat, body;
     // A skeleton stays in the chair, and nobody stands at the desk unless they are working.
-    let pose = POSE[a.effort] ?? { pose: "sit", bob: lk.bob };
-    if (skeleton || (pose.pose === "stand" && a.status !== "working")) pose = { pose: "sit", bob: pose.bob };
+    let pose = POSE[a.effort] ?? { pose: "sit", beats: 4 };
+    if (skeleton || (pose.pose === "stand" && a.status !== "working")) pose = { pose: "sit", beats: pose.beats };
+    const hop = (el, beats, up) => el.top(Math.floor(this.beat / beats) % 2 ? -up : 0);
     if (t) {
       const p = t.path[t.i], there = t.phase === "there";
-      pos = p;
-      ms = p.ms;
-      body = there ? standing(lk, s, "back", false, a.furniture === "cooler" ? "cup" : a.furniture === "shelf" ? "book" : null, id) : walker(lk, s, p.facing, id, kind);
+      pos = there ? p : this.along(p, t.until);
+      body = there ? standing(lk, s, "back", false, a.furniture === "cooler" ? "cup" : a.furniture === "shelf" ? "book" : null, id) : hop(walker(lk, s, p.facing, id, kind), 2, s);
     } else if (index > 0) {
       body = stander(lk, s, id, { kind, skeleton }).id(`${id}-b`);
-      if (a.status === "working") body.loop("top", { from: 0, to: -1, period: pose.bob });
-      if (a.status === "blocked") body.loop("top", { from: 0, to: -4 * s, period: 700 });
+      if (a.status === "working") hop(body, pose.beats, 1);
+      if (a.status === "blocked") hop(body, 2, 4 * s);
     } else if (a.status === "blocked") {
-      body = sitter(lk, s, { kind, skeleton }).id(`${id}-sit`).loop("top", { from: 0, to: -4 * s, period: 700 });
+      body = hop(sitter(lk, s, { kind, skeleton }).id(`${id}-sit`), 2, 4 * s);
     } else if (a.status === "done") {
       body = sitter(lk, s, { kind, skeleton, sleeping: true }).id(`${id}-sit`);
     } else if (pose.pose === "loaf") {
       body = loafer(lk, s, { kind, skeleton }).id(`${id}-loaf`);
-      if (a.status === "working") body.loop("top", { from: 0, to: -1, period: pose.bob });
+      if (a.status === "working") hop(body, pose.beats, 1);
     } else if (pose.pose === "stand") {
       pos = { x: seat.x, y: seat.y - q(20) };
-      body = stander(lk, s, id, { kind, skeleton, sweat: pose.sweat && a.status === "working" }).id(`${id}-up`);
-      if (a.status === "working") body.loop("top", { from: 0, to: -Math.max(1, Math.round(s)), period: pose.bob });
+      body = stander(lk, s, id, { kind, skeleton, sweat: pose.sweat && a.status === "working", beat: this.beat }).id(`${id}-up`);
+      if (a.status === "working") hop(body, pose.beats, Math.max(1, Math.round(s)));
     } else {
       body = sitter(lk, s, { kind, skeleton, slump: pose.slump || a.stage === "hungry" }).id(`${id}-sit`);
-      if (a.status === "working") body.loop("top", { from: 0, to: -Math.max(1, Math.round(s * 0.7)), period: pose.bob });
+      if (a.status === "working") hop(body, pose.beats, Math.max(1, Math.round(s * 0.7)));
     }
     const b = this.bubbles[a.address], asking = !t && a.status === "blocked";
     return div().id(id).absolute().left(pos.x).top(pos.y).w(16 * s).h(20 * s)
-      .transition("left", { duration: ms, easing: "linear" }).transition("top", { duration: ms, easing: "linear" })
       .cursor_pointer().on_mouse_down("left", (_e, cx) => cx.stop_propagation())
       .on_click(() => this.focus(a))
       .child(body)
-      .when(!t && a.status === "done", (e) => e.child(txt("z", 16, "#24406e").absolute().left(14 * s).top(-2 * s).id(`${id}-z`).frames(["z", "zZ", "zZz", ""], 500)))
+      .when(!t && a.status === "done", (e) => e.child(txt(ZS[Math.floor(this.beat / 4) % 4], 16, "#24406e").absolute().left(14 * s).top(-2 * s)))
       .when(asking, (e) => e.child(bubble(txt("?", 12, ink)).left(11 * s).top(-8 * s)))
       .when(!!b && !asking, (e) => e.child(bubble(v_flex().children(wrapReport(b.text).map((line) => txt(line, 9, ink)))).left(10 * s).top(-8 * s)));
   }
@@ -457,7 +485,7 @@ export default class Building extends View {
     return div().absolute().right(0).top(0).w(LIGHTS).h(h).bg("#1c2028").id("lights")
       .on_mouse_down("left", (_e, cx) => cx.stop_propagation())
       .children(items.map((i) => i.el))
-      .children(items.filter((i) => i.st === "blocked").map((i) => r(Math.round(LIGHTS / 2 - i.size / 2), i.mid, i.size, i.size, "#ffb0a8").id(`blink-${i.f.id}`).loop("opacity", { from: 0, to: 1, period: 700 })))
+      .children(this.beat % 4 < 2 ? items.filter((i) => i.st === "blocked").map((i) => r(Math.round(LIGHTS / 2 - i.size / 2), i.mid, i.size, i.size, "#ffb0a8")) : [])
       .child(r(0, viewTop, LIGHTS, 2, "#e2a465")).child(r(0, viewTop + viewH - 2, LIGHTS, 2, "#e2a465"))
       .child(div().id("to-yard").absolute().left(0).top(h - 40).w(LIGHTS).h(40).bg(this.px > 0 ? "#3f5234" : "#2f3f27").flex().flex_col().items_center().justify_center().cursor_pointer()
         .on_click((_e, cx) => { this.px = this.px > 0 ? 0 : (this.W ?? 0) + FENCE; this.clamp(); cx.notify(); })
@@ -466,6 +494,7 @@ export default class Building extends View {
 
   render() {
     const p = props() ?? {};
+    this.t = Date.now();
     if (p.mainHome !== undefined) this.mainHome = p.mainHome;
     const { width: w, height: h } = this.size, world = this.world(), now = world.now;
     const { W, bay, sw, sh, perRow } = this.place(w, h);
@@ -545,8 +574,7 @@ export default class Building extends View {
           .child(txt("HIRING +", 10, "#a8322a")))))
       .children(computers.map((x) => this.desk(x)))
       .children(computers.map((x) => this.label(x)))
-      .when(!!cf, (e) => e.child(div().id("cat").absolute().left(c.x).top(this.aisle(cf, 0) + q(30))
-        .transition("left", { duration: c.ms, easing: "linear" })
+      .when(!!cf, (e) => e.child(div().id("cat").absolute().left(this.catX()).top(this.aisle(cf, 0) + q(30))
         .child(cat(c.coat, INTERN_S, c.left))))
       .children(interns.map(({ t, c: at, n }) => this.intern(t, at, n)))
       .children(people.map(({ a, c: at, n }) => this.person(a, at, n)))
