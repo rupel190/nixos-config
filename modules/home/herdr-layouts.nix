@@ -1,4 +1,4 @@
-{ pkgs, lib, ... }:
+{ config, pkgs, lib, ... }:
 
 # Community layouts for the Herdr desktop app (herdr.dev/gallery), each pinned to a commit
 # and linked into ~/.config/herdr-app. Lisa lives in herdr-app.nix.
@@ -53,7 +53,7 @@ let
       };
     in
     {
-      inherit pkg;
+      inherit name pkg;
       files = lib.listToAttrs (
         map (link "layouts") layouts ++ map (link "themes") themes ++ map (link "mods") mods
       );
@@ -195,9 +195,83 @@ let
     })
   ];
 
+  # office-wall (from ~/Downloads/herdr-office-wall.tar.gz, install.sh reproduced here):
+  # a second app home showing only the zuccs office, for a spare monitor, on the same
+  # herdr-core. Its sed patch makes a click on a worker focus the agent in the MAIN window
+  # (via `herdr-app do agent.focus`, the one program it runs). No network.
+  mainHome = "${config.home.homeDirectory}/.config/herdr-app";
+  wallHome = ".config/herdr-office-wall";
+  wallOffice = pkgs.runCommand "herdr-office-wall-mod" { } ''
+    cp -r ${(lib.findFirst (l: l.name == "office") null all).pkg}/mods/office $out
+    chmod -R u+w $out
+    sed -i \
+      -e 's/knownAgents } from "herdr";/knownAgents, exec } from "herdr";/' \
+      -e 's/this\.demo = !!p\.demo;/this.demo = !!p.demo; this.mainHome = p.mainHome;/' \
+      -e 's/run("agent\.focus", { terminal: a\.address })/focusMain(a.address, this.mainHome)/g' \
+      $out/main.js
+    cat >> $out/main.js <<'JS'
+
+    // office-wall: focus in the main Herdr window when this copy runs on its own screen.
+    function focusMain(terminal, mainHome) {
+      if (!mainHome) return run("agent.focus", { terminal });
+      exec("env", [`HERDR_APP_HOME=''${mainHome}`, "herdr-app", "do", "agent.focus", "--terminal", terminal])
+        .catch(() => run("agent.focus", { terminal }));
+    }
+    JS
+    grep -q 'focusMain(a.address' $out/main.js
+  '';
+  officeWall = pkgs.writeShellScriptBin "office-wall" ''
+    # Opens the Office on its own window (second Herdr app home, same herdr-core).
+    export HERDR_APP_HOME="''${WALL_HOME:-$HOME/${wallHome}}"
+    herdr-app "$@" &
+    for _ in $(seq 50); do herdr-app status >/dev/null 2>&1 && break; sleep 0.2; done
+    herdr-app do layout.switch --name office-wall >/dev/null
+    wait
+  '';
 in
 {
-  xdg.configFile = lib.foldl' (acc: l: acc // l.files) { } all;
+  home.packages = [ officeWall ];
+
+  xdg.configFile = lib.foldl' (acc: l: acc // l.files) { } all // {
+    "herdr-office-wall/mods/office".source = wallOffice;
+    "herdr-office-wall/layouts/office-wall.json".text = builtins.toJSON {
+      id = "office-wall-root";
+      type = "column";
+      titlebar = "none";
+      theme = "graphite";
+      font_size = 13;
+      ui_font = "Geist";
+      background = "#8a5530";
+      colors = {
+        background = "#1e2230";
+        accent = "#e2a465";
+        border = "#8a5530";
+      };
+      resizable = false;
+      children = [
+        {
+          id = "office-floor";
+          type = "block";
+          size.weight = 1;
+          window_drag = true;
+          content = {
+            mod = "office";
+            props.mainHome = mainHome;
+          };
+        }
+      ];
+    };
+  };
+
+  # The wall's own settings (the app writes zoom here too, so create-if-missing, not a link):
+  # no double sounds or toasts, the main window already does those.
+  home.activation.herdrOfficeWallSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    f="$HOME/${wallHome}/settings.json"
+    if [ ! -e "$f" ]; then
+      mkdir -p "$(dirname "$f")"
+      echo '{ "sounds": { "enabled": false } }' > "$f"
+    fi
+  '';
 
   # The command-center mod rewrites its theme to change the accent, so it needs a real file.
   home.activation.herdrCommandCenterTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
