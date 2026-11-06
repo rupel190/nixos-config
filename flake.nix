@@ -3,6 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Bumped on its own so new Ollama model formats don't wait on a full system update.
+    nixpkgs-ollama.url = "github:nixos/nixpkgs/nixos-unstable";
+    # opencode 2.1+ reports its status to Herdr itself. This commit fixes the hash that breaks 2.2.5
+    # in the channels; move back to nixpkgs once it has reached them.
+    nixpkgs-opencode.url = "github:nixos/nixpkgs/c399e1b7fb90789e3e032784ef8ad98ba9907169";
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";

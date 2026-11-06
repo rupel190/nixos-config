@@ -1211,6 +1211,38 @@
         "type": "github"
       }
     },
+    "nixpkgs-ollama": {
+      "locked": {
+        "lastModified": 1793726008,
+        "narHash": "sha256-jQp1wKvbwWdLBASTXkSi/VYmDJ5AbBi1WvcMt9HWJC8=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "1d060086d60cb76a40cf37109f979d88a5bd6396",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-opencode": {
+      "locked": {
+        "lastModified": 1793821670,
+        "narHash": "sha256-WlsILJeLh/YHQ3MtcxfELtD1k05WK9us508L76RlegE=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "c399e1b7fb90789e3e032784ef8ad98ba9907169",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "c399e1b7fb90789e3e032784ef8ad98ba9907169",
+        "type": "github"
+      }
+    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1791048980,
@@ -1453,6 +1485,8 @@
         "nix-flatpak": "nix-flatpak",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_7",
+        "nixpkgs-ollama": "nixpkgs-ollama",
+        "nixpkgs-opencode": "nixpkgs-opencode",
         "plasticityAppImage": "plasticityAppImage",
         "ragenix": "ragenix",
         "singify": "singify",
