@@ -125,6 +125,7 @@ def opencode_session(info, parents, taken):
     if not under(info.get("pid"), parents, lambda a: os.path.basename(a[0]).lstrip(".").startswith("opencode")):
         return None
     title = (info.get("status") or {}).get("title") or info.get("title") or ""
+    title = title.removeprefix("OC | ")  # opencode titles its terminal "OC | <session title>"
     born = info.get("created_ms") or 0
     here = [r for r in opencode_sessions() if r[2] == info.get("cwd") and r[0] not in taken
             and (r[1] == title or (r[3] or 0) >= born)]

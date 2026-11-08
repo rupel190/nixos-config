@@ -48,6 +48,7 @@ def context_name(address):
     if not info:
         return None
     title = info.get("title") or (info.get("status") or {}).get("title") or ""
+    title = title.removeprefix("OC | ")  # opencode titles its terminal "OC | <session title>"
     title = re.sub(r"^[^\w]+", "", title).strip()  # a status glyph or spinner before the name
     return None if title.lower() in GENERIC else title[:40]
 
