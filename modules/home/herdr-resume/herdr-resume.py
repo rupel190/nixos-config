@@ -3,7 +3,7 @@
 
 The core keeps spaces, tabs and folders across a reboot but gives each lost terminal a plain
 shell and never reruns its program. This remembers which Claude session each terminal ran and
-types `claude --resume <id>` into the recovered shell.
+types `claude --resume <id>` (or `opencode --session <id>`) into the recovered shell.
 
   herdr-resume run         the service: snapshot every 30 s, restore once per core start
   herdr-resume snapshot    one snapshot
@@ -12,6 +12,7 @@ types `claude --resume <id>` into the recovered shell.
 import glob
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import time
@@ -21,6 +22,7 @@ STATE = os.environ.get("HERDR_RESUME_STATE", f"{HOME}/.local/state/herdr-resume"
 SNAP = f"{STATE}/snapshot.json"
 DONE = f"{STATE}/restored-for"
 SESSIONS = f"{HOME}/.claude/sessions"
+OPENCODE_DB = f"{HOME}/.local/share/opencode/opencode.db"
 SHELLS = {"fish", "bash", "zsh", "sh", "dash", "nu"}
 
 
@@ -89,6 +91,47 @@ def claude_session(root, parents):
     return None
 
 
+def under(root, parents, match):
+    """First process below terminal pid `root` whose cmdline satisfies `match`."""
+    for pid in parents:
+        p = pid
+        while p and p != root:
+            p = parents.get(p)
+        if p != root:
+            continue
+        try:
+            with open(f"/proc/{pid}/cmdline", "rb") as f:
+                argv = f.read().decode(errors="replace").split("\0")
+        except OSError:
+            continue
+        if match(argv):
+            return pid
+    return None
+
+
+def opencode_sessions():
+    try:
+        db = sqlite3.connect(f"file:{OPENCODE_DB}?mode=ro", uri=True, timeout=1)
+        rows = db.execute("select id, title, directory, time_updated from session_v2"
+                          " where parent_id is null and time_archived is null").fetchall()
+        db.close()
+    except sqlite3.Error:
+        return []
+    return rows
+
+
+def opencode_session(info, parents, taken):
+    """Nothing names a terminal's opencode session: same folder, then the same title, then the newest."""
+    if not under(info.get("pid"), parents, lambda a: os.path.basename(a[0]).lstrip(".").startswith("opencode")):
+        return None
+    title = (info.get("status") or {}).get("title") or info.get("title") or ""
+    born = info.get("created_ms") or 0
+    here = [r for r in opencode_sessions() if r[2] == info.get("cwd") and r[0] not in taken
+            and (r[1] == title or (r[3] or 0) >= born)]
+    here.sort(key=lambda r: (r[1] == title, r[3] or 0), reverse=True)
+    return here[0][0] if here else None
+
+
 def snapshot():
     live = hc("ls")
     if live is None:
@@ -96,7 +139,7 @@ def snapshot():
     terminals = live.get("terminals", live)
     snap, now, core = load(), time.time(), core_start()
     parents = ppids()
-    seen = set()
+    seen, taken = set(), set()
     for t in terminals:
         if t.get("state") != "live":
             continue
@@ -106,10 +149,15 @@ def snapshot():
         if not info or not info.get("keep"):
             continue
         found = claude_session(info.get("pid"), parents)
+        agent = "claude"
+        if not found:
+            oc = opencode_session(info, parents, taken)
+            found, agent = ((oc, False), "opencode") if oc else (None, agent)
         entry = snap["entries"].get(addr)
         if found:
-            snap["entries"][addr] = {"session": found[0], "fork": found[1], "cwd": info.get("cwd"), "core": core, "seen": now,
-                                     "where": info.get("labels", {}).get("where")}
+            taken.add(found[0])
+            snap["entries"][addr] = {"agent": agent, "session": found[0], "fork": found[1], "cwd": info.get("cwd"),
+                                     "core": core, "seen": now, "where": info.get("labels", {}).get("where")}
         elif entry and entry.get("core") == core:
             # Seen running Claude under this same core and now a shell: the person quit it.
             del snap["entries"][addr]
@@ -147,7 +195,10 @@ def restore(dry):
         # A fork re-forks; a session two tabs share must not run twice, so the second forks too.
         fork = entry.get("fork") or entry["session"] in used
         used.add(entry["session"])
-        cmd = f"claude --resume {entry['session']}" + (" --fork-session" if fork else "")
+        if entry.get("agent") == "opencode":
+            cmd = f"opencode --session {entry['session']}"
+        else:
+            cmd = f"claude --resume {entry['session']}" + (" --fork-session" if fork else "")
         print(f"{t['address']} ({entry.get('where')}): {cmd}")
         if not dry:
             subprocess.run(["hc", "send", t["address"], cmd], capture_output=True, timeout=30)
