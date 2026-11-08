@@ -12,6 +12,8 @@ types `claude --resume <id>` (or `opencode --session <id>`) into the recovered s
 import glob
 import json
 import os
+import re
+import shlex
 import sqlite3
 import subprocess
 import sys
@@ -57,6 +59,38 @@ def ppids():
     return out
 
 
+# Flags that change how a session behaves, carried over a resume. Anything else (prompts, paths,
+# MCP configs, --settings) stays behind: the record is typed into a shell unattended.
+CARRY = {
+    "claude": ({"--model", "--effort", "--permission-mode", "--fallback-model"},
+               {"--dangerously-skip-permissions", "--allow-dangerously-skip-permissions"}),
+    "opencode": (set(), {"--auto"}),
+}
+SAFE = re.compile(r"^[\w.:\[\]/-]+$")
+
+
+def carried_flags(agent, pid):
+    values, bools = CARRY[agent]
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            argv = f.read().decode(errors="replace").split("\0")
+    except OSError:
+        return []
+    out, i = [], 0
+    while i < len(argv):
+        a = argv[i]
+        name, eq, val = a.partition("=")
+        if a in bools:
+            out.append(a)
+        elif name in values:
+            if not eq and i + 1 < len(argv):
+                val, i = argv[i + 1], i + 1
+            if SAFE.match(val or ""):
+                out += [name, val]
+        i += 1
+    return out
+
+
 def has_transcript(sid):
     return bool(glob.glob(f"{HOME}/.claude/projects/*/{sid}.jsonl"))
 
@@ -72,7 +106,7 @@ def resumed_from(pid):
 
 
 def claude_session(root, parents):
-    """(session id, is_fork) of the Claude running under terminal pid `root`, or None."""
+    """(session id, is_fork, flags) of the Claude running under terminal pid `root`, or None."""
     for pid in parents:
         p = pid
         while p and p != root:
@@ -84,10 +118,11 @@ def claude_session(root, parents):
                 sid = json.load(f)["sessionId"]
         except (OSError, ValueError, KeyError):
             continue
+        flags = carried_flags("claude", pid)
         if has_transcript(sid):
-            return sid, False
+            return sid, False, flags
         src = resumed_from(pid)
-        return (src, True) if src else None
+        return (src, True, flags) if src else None
     return None
 
 
@@ -122,7 +157,8 @@ def opencode_sessions():
 
 def opencode_session(info, parents, taken):
     """Nothing names a terminal's opencode session: same folder, then the same title, then the newest."""
-    if not under(info.get("pid"), parents, lambda a: os.path.basename(a[0]).lstrip(".").startswith("opencode")):
+    pid = under(info.get("pid"), parents, lambda a: os.path.basename(a[0]).lstrip(".").startswith("opencode"))
+    if not pid:
         return None
     title = (info.get("status") or {}).get("title") or info.get("title") or ""
     title = title.removeprefix("OC | ")  # opencode titles its terminal "OC | <session title>"
@@ -130,7 +166,7 @@ def opencode_session(info, parents, taken):
     here = [r for r in opencode_sessions() if r[2] == info.get("cwd") and r[0] not in taken
             and (r[1] == title or (r[3] or 0) >= born)]
     here.sort(key=lambda r: (r[1] == title, r[3] or 0), reverse=True)
-    return here[0][0] if here else None
+    return (here[0][0], carried_flags("opencode", pid)) if here else None
 
 
 def snapshot():
@@ -153,12 +189,12 @@ def snapshot():
         agent = "claude"
         if not found:
             oc = opencode_session(info, parents, taken)
-            found, agent = ((oc, False), "opencode") if oc else (None, agent)
+            found, agent = ((oc[0], False, oc[1]), "opencode") if oc else (None, agent)
         entry = snap["entries"].get(addr)
         if found:
             taken.add(found[0])
-            snap["entries"][addr] = {"agent": agent, "session": found[0], "fork": found[1], "cwd": info.get("cwd"),
-                                     "core": core, "seen": now, "where": info.get("labels", {}).get("where")}
+            snap["entries"][addr] = {"agent": agent, "session": found[0], "fork": found[1], "flags": found[2],
+                                     "cwd": info.get("cwd"), "core": core, "seen": now, "where": info.get("labels", {}).get("where")}
         elif entry and entry.get("core") == core:
             # Seen running Claude under this same core and now a shell: the person quit it.
             del snap["entries"][addr]
@@ -200,6 +236,7 @@ def restore(dry):
             cmd = f"opencode --session {entry['session']}"
         else:
             cmd = f"claude --resume {entry['session']}" + (" --fork-session" if fork else "")
+        cmd += "".join(" " + shlex.quote(f) for f in entry.get("flags", []))
         print(f"{t['address']} ({entry.get('where')}): {cmd}")
         if not dry:
             subprocess.run(["hc", "send", t["address"], cmd], capture_output=True, timeout=30)
