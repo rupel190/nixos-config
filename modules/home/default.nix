@@ -28,6 +28,7 @@
     ./opencode.nix # AI coding assistant (model-agnostic alternative)
     ./herdr.nix # terminal multiplexer for AI coding agents
     ./herdr-layouts.nix # community herdr-app layouts (gallery)
+    ./herdr-traveler-side.nix # traveler with tabs and spaces in the sidebar, agents on top
     ./herdr-resume.nix # resume claude sessions after a herdr core restart
     ./herdr-app.nix # herdr desktop app + core (layouts like Lisa live in ~/.config/herdr-app)
     ./claude-sync.nix # sync ~/.claude across machines (R2 + age)
