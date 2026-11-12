@@ -1,9 +1,6 @@
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
-import { agents, spaces, run, openOverlay, theme, window, shared, layout, settings, appHome, readTextFile, setAgentOrder } from "herdr";
-import { assignJobs, jobIn, portraitPath, tabNames } from "./lib.js";
-
-const JOBS_FILE = `${appHome()}/mods/traveler-agents/jobs.json`;
+import { spaces, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -14,16 +11,11 @@ function find(node, id) {
   return null;
 }
 
-// traveler's top bar with agents where the tabs were; the side-panel buttons and window
+// traveler's top bar with the spaces where the tabs were; the side-panel buttons and window
 // buttons stay on the right, and the per-space panel memory is traveler-tabs' own.
-export default class AgentBar extends View {
+export default class SpaceBar extends View {
   init(_props, cx) {
-    this.jobs = {};
-    cx.spawn(async (cx) => {
-      const text = await readTextFile(JOBS_FILE).catch(() => null);
-      try { const parsed = JSON.parse(text); if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) this.jobs = parsed; } catch {}
-      cx.notify();
-    });
+    this.pressed = null;
     this.panels = JSON.parse(localStorage.getItem("panels") ?? "{}");
   }
 
@@ -54,26 +46,25 @@ export default class AgentBar extends View {
 
   render() {
     const t = theme();
-    const space = spaces().find(p => p.active);
-    const list = agents();
-    setAgentOrder(list.map(a => a.address));
-    const assigned = assignJobs(tabNames(spaces(), list), this.jobs);
+    const all = spaces(), space = all.find(p => p.active);
     const stop = (_e, cx) => cx.stop_propagation();
     const button = (id, label, action) => div().id(id).size(26).flex_none().flex().items_center().justify_center().text_color(t.dim).hover(s => s.bg(t.hover).text_color(t.foreground))
       .on_mouse_down("left", stop).on_click(action).child(label);
-    const chip = a => {
-      const portrait = portraitPath(jobIn(a.tab_name, assigned));
-      const frame = a.status === "blocked" ? t.blocked : a.focused ? t.accent : t.border;
-      return h_flex().id(`agent-${a.address}`).h(48).px(8).gap(7).items_center().flex_none().text_size(12.8)
-        .border(1).border_color(frame).bg(a.focused ? t.raised : t.chrome).text_color(a.focused ? t.foreground : t.muted)
+    const chip = (sp, i) => {
+      return h_flex().id(`space-${sp.id}`).h(48).px(8).gap(7).items_center().flex_none().text_size(12.8)
+        .border(1).border_color(sp.active ? t.border : t.chrome).bg(sp.active ? t.raised : t.chrome).text_color(sp.active ? t.foreground : t.muted)
         .cursor_pointer().hover(s => s.bg(t.hover))
-        .on_mouse_down("left", stop)
-        .on_click(() => run("agent.focus", { terminal: a.address }))
-        .when(Boolean(portrait), el => el.child(image(portrait).size(44).flex_none()))
-        .when(!portrait && Boolean(a.program?.icon), el => el.child(a.program.tint ? svg(a.program.icon).size(14).text_color(t.muted) : image(a.program.icon).size(14)))
-        .child(div().max_w(170).truncate().child(a.tab_name || a.address))
-        .when(a.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
-        .when(a.status === "blocked" || a.status === "done", el => el.child(div().size(6).rounded(3).bg(t[a.status])));
+        .on_mouse_down("left", (_e, cx) => { cx.stop_propagation(); this.pressed = i; })
+        .on_mouse_up("left", () => {
+          const from = this.pressed; this.pressed = null;
+          if (from !== null && from !== i) run("space.move", { id: all[from].id, index: i + 1 });
+          else run("space.select", { id: sp.id });
+        })
+        .on_mouse_down("right", (_e, cx) => { cx.stop_propagation(); openOverlay({ mod: "menu", kind: "popup", width: 200, height: 260, props: { tab: "space", target: { id: sp.id } } }); })
+        .child(div().text_color(t.dim).child(String(i + 1)))
+        .child(div().max_w(170).truncate().child(sp.name))
+        .when(sp.status === "working", el => el.child(svg("mods/workspace-chrome/spinner.svg").size(12).flex_none().text_color(t.working).spin(900)))
+        .when(sp.status === "blocked" || sp.status === "done", el => el.child(div().size(6).rounded(3).bg(t[sp.status])));
     };
     const root = layout(), sidebar = find(root, "sidebar"), w = window();
     const lightsPadding = w?.platform === "macos" && w.titlebar === "none" && !w.fullscreen && root?.traffic_lights
@@ -93,8 +84,8 @@ export default class AgentBar extends View {
         }).child(image(icon).size(20).flex_none()).child(label);
     };
     return h_flex().size_full().min_w(0).px(10).pl(lightsPadding).gap(3).items_center().bg(t.chrome).border_b(1).border_color(t.border)
-      .child(h_flex().id("agent-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().children(list.map(chip))
-        .when(list.length === 0, el => el.child(div().text_size(12).text_color(t.dim).child("No agents"))))
+      .child(h_flex().id("space-scroll").flex_1().min_w(0).h_full().items_center().gap(3).overflow_x_scrollbar().children(all.map(chip)))
+      .child(button("space-new", "+", () => run("space.new")))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/traveler-tabs/art/files.png")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/traveler-tabs/art/changes.png")))
       .child(panelButton("inbox", "Inbox", "mods/traveler-tabs/art/inbox.png"))
