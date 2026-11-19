@@ -127,6 +127,15 @@
           force_zero_scaling = true;
         };
 
+        # The colour-temperature fade (default "auto", i.e. on for AMD) pushes a
+        # new colour matrix to every output on every frame for ~0.5s per change,
+        # and each push is a heavyweight commit on amdgpu. Dragging the AGS slider
+        # stalled Hyprland ~100ms at a time (IPC p95 101ms vs 13ms with it off).
+        # Off, a change is one commit per output; the slider is the animation.
+        render = {
+          ctm_animation = 0;
+        };
+
         debug = {
           disable_logs = false;
         };
