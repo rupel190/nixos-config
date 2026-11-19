@@ -431,6 +431,27 @@
           center = true;
         }
 
+        # Battle.net (WoW, launched as a non-Steam shortcut, so the class is that
+        # shortcut's steam_app_ id) cannot go below about 1000x640. Tiled shorter
+        # than that, Wine re-requests its size in an endless loop, ~865 X11
+        # ConfigureRequests a second, and Hyprland answers each tiled request with
+        # a full refocus. That refocus also ends any popup grab, so every AGS
+        # popover closed within milliseconds of opening while the launcher was up.
+        {
+          match = {
+            class = "^steam_app_";
+            title = "^Battle\\.net$";
+          };
+          float = true;
+        }
+        {
+          match = {
+            class = "^steam_app_";
+            title = "^Battle\\.net$";
+          };
+          center = true;
+        }
+
         # GTA V also spawns a 160x20 empty-title helper window under the same class,
         # same shape as the Plasticity popups handled above. Float it and deny it
         # initial focus so it cannot tile into the layout or steal clicks from the game.
