@@ -15,6 +15,7 @@ import {
 import {
   MAX_K,
   MIN_K,
+  applied,
   refresh as refreshSunset,
   setColorTemperature,
   temperature,
@@ -135,7 +136,9 @@ export default function DisplayIndicator() {
     // Only once it is actually warming the screen. At the neutral end there is
     // no state to report and the bar stays as quiet as the rest of it; this is
     // the only way a filter left on is visible without opening the popover.
-    const kelvin = temperature()
+    // `applied`, not `temperature`: the screen's value, which keeps a drag from
+    // relaying out every bar on every slider step.
+    const kelvin = applied()
     return kelvin !== null && kelvin < MAX_K ? `${base} · ${kelvin}K` : base
   })
 

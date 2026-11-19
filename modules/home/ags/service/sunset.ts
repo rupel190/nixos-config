@@ -18,14 +18,20 @@ const STEP_K = 100
 // steps rather than hold still until the pointer pauses. Each write is a colour
 // matrix commit on every output, which stalls Hyprland ~40ms on amdgpu even
 // with render.ctm_animation off (measured: p95 23ms at 200ms spacing, 41ms at
-// 100ms, 56ms at 50ms, and mostly blocked at 33ms). 10 steps a second is the
-// fastest that still leaves most of each gap free; 150ms looked too steppy.
-const WRITE_INTERVAL_MS = 100
+// 100ms, 56ms at 50ms, and mostly blocked at 33ms). 100ms and 150ms felt the
+// same in use, so this takes the cheaper one: ~7 steps a second.
+const WRITE_INTERVAL_MS = 150
 
 // null means there is no daemon to talk to, which hides the control rather than
 // offering one that cannot work.
 const [temperature, setTemperatureState] = createState<number | null>(null)
-export { temperature }
+
+// What the screen actually shows: trails `temperature` by up to one write
+// interval during a drag. The bar summaries bind to this rather than to the
+// pointer, so a drag relayouts three bars a few times a second instead of on
+// every slider step. Also what write() compares against to skip repeats.
+const [applied, setApplied] = createState<number | null>(null)
+export { applied, temperature }
 
 const snap = (k: number) =>
   Math.max(MIN_K, Math.min(MAX_K, Math.round(k / STEP_K) * STEP_K))
@@ -37,25 +43,25 @@ export async function refresh() {
     setTemperatureState(Number.isFinite(kelvin) ? kelvin : null)
     // What the daemon holds now, so write() never skips a value because some
     // other caller changed the temperature since the bar last wrote it.
-    written = Number.isFinite(kelvin) ? kelvin : null
+    setApplied(Number.isFinite(kelvin) ? kelvin : null)
   } catch {
     // `hyprctl hyprsunset` exits 3 with "Couldn't connect to ….hyprsunset.sock"
     // when the daemon is down. Not worth logging: it is the expected state on a
     // host where the unit has not started yet.
     setTemperatureState(null)
+    setApplied(null)
   }
 }
 
 // Writes run one after another, so the final value of a drag always lands last
 // even if an earlier hyprctl is slow to return.
 let chain: Promise<unknown> = Promise.resolve()
-let written: number | null = null
 let waiting: number | null = null
 let cooldown: { cancel(): void } | null = null
 
 function write(kelvin: number) {
-  if (kelvin === written) return
-  written = kelvin
+  if (kelvin === applied.get()) return
+  setApplied(kelvin)
   chain = chain
     .then(() => execAsync(["hyprctl", "hyprsunset", "temperature", String(kelvin)]))
     .catch((e) => console.error("sunset: temperature write failed —", e))
