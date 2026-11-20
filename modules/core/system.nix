@@ -8,7 +8,15 @@
 }:
 {
   nixpkgs.overlays = [
-    inputs.affinity-nix.overlays.default
+    # affinity-v3 on affinity-nix's own nixpkgs pin: on ours its Wine hashes differ and never hit cache.forall.systems
+    (_final: prev: {
+      affinity-v3 =
+        (import inputs.affinity-nix.inputs.nixpkgs {
+          system = prev.stdenv.hostPlatform.system;
+          config.allowUnfree = true;
+          overlays = [ inputs.affinity-nix.overlays.default ];
+        }).affinity-v3;
+    })
 
     # Hyprland carrying our local fixes (both still unfixed in 0.56.0). Kept under
     # the -mirrorfix name because two modules consume it; see patches/ for the why.
@@ -69,7 +77,7 @@
       substituters = [
         "https://cache.nixos.org"
         "https://nix-gaming.cachix.org"
-        "https://cache.garnix.io" # affinity-nix prebuilt wine prefix
+        "https://cache.forall.systems" # affinity-nix: Wine, winetricks and base prefix layers
         # Hyprland, hyprland-plugins and xdph come from git inputs, which nixpkgs
         # never builds. An input flake's own nixConfig does NOT apply to us, so
         # without this every Hyprland bump is a local C++ compile on both hosts.
@@ -78,7 +86,7 @@
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
         "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
-        "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
+        "cache.forall.systems:5PmD7QO4MSF8YgyRZtkSGXRDo96H3bybIf2SsQh8ScI="
         "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
       ];
     };
@@ -90,8 +98,8 @@
       git
       pkgs.ragenix
     ])
-    # amanita only: a 2.8 GB Wine prefix + 1.5 GB of sources, and cache.garnix.io
-    # is not resolving, so it builds locally rather than substituting.
+    # amanita only: Wine + base prefix come from cache.forall.systems; the Affinity layers
+    # (unfree, never cached) still build locally.
     ++ lib.optionals (host == "amanita") [
       pkgs.affinity-v3 # unified Affinity suite via affinity-nix (wine); needs your own installer on first run
     ];

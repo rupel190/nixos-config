@@ -131,8 +131,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # No nixpkgs.follows: keeps the upstream pin so Garnix binary cache hits
-    # (avoids compiling ElementalWarrior's patched Wine fork locally).
+    # No nixpkgs.follows: keeps the upstream pin so cache.forall.systems hits
+    # (avoids compiling ElementalWarrior's patched Wine fork locally); see system.nix overlays.
     affinity-nix.url = "github:mrshmllow/affinity-nix";
   };
 
