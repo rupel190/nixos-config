@@ -79,12 +79,27 @@ let
     ];
 
     installPhase = ''
+      runHook preInstall
       install -Dm755 herdr-app $out/libexec/herdr-app/herdr-app
       install -Dm644 herdr-app.svg $out/share/icons/hicolor/scalable/apps/herdr-app.svg
       install -Dm644 LICENSE $out/share/licenses/herdr-app/LICENSE
-      # The app starts herdr-core from PATH.
+      # The app starts herdr-core from PATH, and a core it starts hands the app's environment
+      # to every terminal it opens, apart from TERM, COLORTERM and TERM_PROGRAM; a core that
+      # already runs keeps the environment it started with. So:
+      # - herdr-app#533: graphics reply arrives after DA1; drop once fixed. Without it Claude
+      #   Code decides there is no Kitty graphics and the image mod (claude.nix) draws alt text.
+      # - kitty's variables go, for an app started from a kitty shell: the claude hooks would
+      #   paint and notify that kitty window, and TERMINFO names kitty's terminfo.
       makeWrapper $out/libexec/herdr-app/herdr-app $out/bin/herdr-app \
-        --prefix PATH : ${lib.makeBinPath [ herdr-core ]}
+        --prefix PATH : ${lib.makeBinPath [ herdr-core ]} \
+        --set CLAUDE_CODE_FORCE_TERMINAL_IMAGES 1 \
+        --unset KITTY_WINDOW_ID \
+        --unset KITTY_LISTEN_ON \
+        --unset KITTY_PID \
+        --unset KITTY_PUBLIC_KEY \
+        --unset KITTY_INSTALLATION_DIR \
+        --unset TERMINFO
+      runHook postInstall # copyDesktopItems hangs off this hook
     '';
 
     meta.mainProgram = "herdr-app";
@@ -144,6 +159,8 @@ in
       source = ./dotfiles/herdr-app/keys.json;
       force = true;
     };
+    "herdr-app/mods/tab-left".source = ./dotfiles/herdr-app/mods/tab-left;
+    "herdr-app/mods/tab-right".source = ./dotfiles/herdr-app/mods/tab-right;
     "herdr-app/themes/catppuccin-macchiato.json".source = ./dotfiles/herdr-app/catppuccin-macchiato.json;
     "herdr-app/layouts/lisa.json".source = "${lisa}/layouts/lisa.json";
     "herdr-app/layouts/lisa.png".source = "${lisa}/layouts/lisa.png";
