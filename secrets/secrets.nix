@@ -38,4 +38,11 @@ in
     amanita-host
     amanita-rupel
   ];
+
+  # Health dashboard env file: Homepage tile API keys + Gatus's Discord webhook
+  # (hosts/amanita/health.nix). Add the Pi's host key once the dashboard moves there.
+  "health-dashboard.age".publicKeys = [
+    amanita-host
+    amanita-rupel
+  ];
 }

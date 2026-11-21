@@ -3,6 +3,7 @@
   imports = [
     ./hardware-configuration.nix
     ./media.nix
+    ./health.nix
     ./../../modules/core
     inputs.nix-flatpak.nixosModules.nix-flatpak
   ];
