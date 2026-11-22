@@ -272,7 +272,6 @@
               "signal-desktop"
               "spotify"
               "kitty-start"
-              "kitty-system"
             ]
           else
             [ ]

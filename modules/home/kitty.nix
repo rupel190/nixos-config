@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   # Snapshot the main OS window as a kitty session: a claude tab resumes its
   # session by ID, any other tab becomes a shell in its cwd. Tab order is kept.
@@ -11,8 +11,10 @@ let
       mkdir -p "$(dirname "$out")"
 
       # Per tab: every foreground pid of its windows, and the active window's cwd.
-      # Only the main window; system, scratch and yazi windows have their own class.
+      # Only the main window (scratch and yazi windows have their own class), and not
+      # the system tabs: kitty-start adds those on every start, saved they'd come back twice.
       tabs=$(kitten @ ls | jq -c '.[] | select(.is_active and .wm_class == "kitty") | .tabs[]
+        | select(any(.windows[]; .user_vars.system == "1") | not)
         | {pids: [.windows[].foreground_processes[].pid],
            cwd: (first(.windows[] | select(.is_active) | .cwd) // .windows[0].cwd)}')
 
@@ -35,7 +37,7 @@ let
       done <<<"$tabs"
 
       if [ "$count" -eq 0 ]; then
-        notify-send -a kitty "Nothing saved, only the main kitty window's tabs count"
+        notify-send -a kitty "Nothing saved, only the main kitty window's tabs count (the system tabs come back on their own)"
         exit 1
       fi
       tmp=$(mktemp "$out.XXXXXX")
@@ -44,24 +46,25 @@ let
     '';
   };
 
-  # Login and SUPER+W: the tabs ctrl+shift+s last saved, or a plain kitty
+  # The system tabs every kitty-start adds after the saved ones, one program each.
+  # The `system` var marks them for kitty-save-tabs to skip.
+  systemTabs = pkgs.writeText "system-tabs.kitty-session" (
+    lib.concatMapStrings (p: ''
+      new_tab ${p}
+      launch --var system=1 ${p}
+
+    '') [ "pulsemixer" "tera" "btop" "tuinews" "mirador" "wtf" ]
+  );
+
+  # The one kitty window, at login and from SUPER+W when none is open:
+  # the tabs ctrl+shift+s last saved, then the system tabs
   startTabs = pkgs.writeShellScriptBin "kitty-start" ''
     saved="$HOME/.local/state/kitty/default-tabs.kitty-session"
-    [ -f "$saved" ] && exec ${pkgs.kitty}/bin/kitty --session "$saved"
-    exec ${pkgs.kitty}/bin/kitty
-  '';
-
-  # The "system" window at login: pulsemixer over tera, btop in a second tab.
-  # Its class sends it to workspace 9 (hyprland/config.nix).
-  systemSession = pkgs.writeText "system.kitty-session" ''
-    launch pulsemixer
-    launch --location=hsplit --bias=60 tera
-
-    new_tab
-    launch btop
-  '';
-  systemWindow = pkgs.writeShellScriptBin "kitty-system" ''
-    exec ${pkgs.kitty}/bin/kitty --class kitty-system --session ${systemSession}
+    exec ${pkgs.kitty}/bin/kitty --session - < <(
+      if [ -f "$saved" ]; then cat "$saved"; fi
+      printf '\n'
+      cat ${systemTabs}
+    )
   '';
 
   # A Claude Code mod that draws PNGs into the conversation through kitty's own
@@ -248,7 +251,7 @@ let
       '';
 in
 {
-  home.packages = [ startTabs systemWindow ];
+  home.packages = [ startTabs ];
 
   # The main terminal: stock kitty plus the looks and keys below.
   programs.kitty = {
