@@ -88,8 +88,7 @@ henrygd/beszel-agent:0.21.0
 
 **InvoiceNinja, part 1, the data: passed 2026-11-22.** The 02:00 dump as pulled to amanita
 (`db-20261122-020001.sql.gz`, 104 KB), restored into MySQL 8.4.5 by the Pi's digest with no network,
-matches the live database line for line. The script is `drill-invoiceninja-db.sh` (session scratchpad
-for now; it belongs next to the backups once the Pi runs NixOS).
+matches the live database line for line (`drills/invoiceninja-db.sh`).
 
 ```
 clients 2 · invoices 10 (9 not deleted) · payments 9 · recurring 0 · quotes 0 · credits 0
@@ -100,10 +99,15 @@ CHECKSUM TABLE equal for clients, invoices, payments, paymentables, recurring_in
 (v5 has no invoice_items table: line items live inside invoices)
 ```
 
-**InvoiceNinja, part 2, the app: still to do.** The same app image on amanita with the restored
-`storage` and `public` and the backed-up `.env`, cut off from the internet so it cannot send mail
-or run reminders: log in, open the newest invoice's PDF, open a few of the 41 documents. That is
-what proves the files tarball and `APP_KEY` work, which the checksums cannot.
+**InvoiceNinja, part 2, the app: passed 2026-11-22** (`drills/invoiceninja-app.sh up`, then `down`).
+The Pi's own compose file, `.env` and nginx config from the weekly config backup, the four images by
+digest, last night's dump and files, on amanita. App, MySQL and Redis on an internal network with no
+way out (checked: the app could not reach the internet; the `.env` mails to a log file anyway); nginx
+alone serves `127.0.0.1:8012`, the `.env`'s APP_URL. Checked: 41 of 41 documents have their file
+(629 files restored), no errors in the app log, login works, invoice 0009's PDF renders (snappdf,
+offline) and the opened documents show. So the files tarball and `APP_KEY` are good too.
+
+Still to drill: SplitPro and Paperless.
 
 ## Switch day
 
