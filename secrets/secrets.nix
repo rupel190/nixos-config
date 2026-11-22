@@ -5,6 +5,8 @@ let
   # activation. The rupel@cordyceps USER key in ~/.ssh is a different thing; it
   # would only let you run `ragenix -e` from the notebook.
   cordyceps-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICQ3TrT/nsI5i5o3Tlc+7LUgnShO1OEg3fA7eBiwNgPH root@cordyceps";
+  # made on the card's first boot, before it had a hostname
+  raspi-host = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAVxuHMdY4fd7lsmAQGqwcPL04KluQuj5eIrfB6YKhFD root@(none)";
 in
 {
   # Cloudflare API token (Pages:Edit) for deploying the recustomize pipeline report.
@@ -39,10 +41,10 @@ in
     amanita-rupel
   ];
 
-  # Health dashboard env file: Homepage tile API keys + Gatus's Discord webhook
-  # (hosts/amanita/health.nix). Add the Pi's host key once the dashboard moves there.
+  # Health dashboard env file: Gatus's Discord webhook + Glance's Pi-hole app password
+  # (hosts/raspi/health.nix). Only the Pi decrypts it since the dashboard moved there.
   "health-dashboard.age".publicKeys = [
-    amanita-host
+    raspi-host
     amanita-rupel
   ];
 }

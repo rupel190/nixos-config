@@ -16,6 +16,7 @@
     ./apps.nix
     ./pihole.nix
     ./paperless.nix
+    ./health.nix
   ];
 
   # the image module offers zfs; nothing here uses it, and its module would be built for the Pi kernel

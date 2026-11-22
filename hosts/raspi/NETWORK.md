@@ -38,11 +38,12 @@ Everything sits in lan; the iot network is empty:
 zone  who                          may start connections to
 lan   PCs, laptop, phones          internet · dmz · iot
 iot   Dreame, later other gadgets  internet only for devices that need their cloud; the Dreame none
-dmz   the Pi                       internet · amanita:11434 (Ollama for paperless-gpt) · nothing else
+dmz   the Pi                       internet · amanita:11434 (Ollama for paperless-gpt) · Gatus's amanita checks · nothing else
 ```
 
 Replies always come back (the firewall is stateful), so "lan may reach dmz" already covers the
-browser, amanita's backup pull, Beszel, Gatus and ssh.
+browser, amanita's backup pull, Beszel and ssh. Gatus runs on the Pi and checks amanita (ping,
+Jellyfin 8096, RomM 8070, Ollama 11434, Beszel 8090), which are dmz → lan connections.
 
 The Pi gets a zone of its own because it is the box that will answer the internet (SplitPro,
 Paperless through a Cloudflare tunnel). Should an app there be broken into, the intruder sits in dmz
@@ -62,10 +63,9 @@ which forwards every internet port to one device; the tunnel needs no open port 
 3. **The Pi moves to NixOS** (`MIGRATION.md`), keeping 10.0.0.10: one change at a time.
 4. **dmz:** lan4 leaves br-lan for a new br-dmz (10.0.50.0/24, the Pi at 10.0.50.10), a new zone
    with the rules above, and the router's DNS (`server=` lines, redirects) pointed at the new address.
-   The address also changes in the repo, where each file defines it once (`hosts/amanita/health.nix`,
-   `glance.nix`, `ollama-pi.nix`, `dns-watch.nix`), on the Pi (Paperless
-   `.env` and compose, SplitPro `.env` and compose), in the DHCP static lease and the `raspi` ssh
-   entry. Once Gatus and the Beszel hub run on the Pi, dmz → lan also gets their checks and the agent
-   port 45876.
+   The address also changes in the repo, where each file defines it once (`hosts/raspi/health.nix`,
+   `hosts/raspi/glance.nix`, `paperless.nix`, `ollama-pi.nix`, `dns-watch.nix`, `dash-panels.nix`),
+   on the Pi (paperless-gpt's compose, SplitPro `.env` and compose), in the DHCP static lease and the
+   `raspi` ssh entry. Should the Beszel hub move to the Pi too, dmz → lan also gets the agent port 45876.
 5. **Logins in front of everything** that has none (Glance, Gatus, paperless-gpt).
 6. **Internet route:** the Cloudflare tunnel from the Pi, outbound only.

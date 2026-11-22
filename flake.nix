@@ -166,7 +166,10 @@
           username = "rupel";
           host = "raspi";
         };
-        modules = [ ./hosts/raspi ];
+        modules = [
+          ./hosts/raspi
+          inputs.ragenix.nixosModules.default
+        ];
       };
 
       # Laptop

@@ -203,6 +203,9 @@ fallback.
   stayed in `apps/paperless/data`, the docker files sit in `apps/paperless/docker-era`, paperless-gpt moved
   to `apps/paperless-gpt`, and the module's exporter replaced backup.sh (same folder, 02:30). Raw copy
   from before: `backups/paperless-before-native-20261122.tar.gz`.
+- Done 2026-11-22: Gatus and Glance moved from amanita to the Pi (`health.nix`, `glance.nix`), with agenix
+  and the Pi's host key for their secret. amanita's checks show without alerts, its *arr apps (localhost
+  only) became plain links; the Beszel hub stays on amanita. Gatus' history started over.
 - Proton Mail Bridge (nixpkgs 3.25.0, has a NixOS module) for Paperless' mail fetch.
 - cloudflared, for the internet route.
 - InvoiceNinja upgrades, each only after a fresh backup and a drill.

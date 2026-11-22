@@ -1,7 +1,7 @@
-{ pkgs, host, ... }:
+{ pkgs, ... }:
 let
-  # Gatus does the checking (hosts/amanita/health.nix); other machines ask amanita's over the LAN
-  gatus = if host == "amanita" then "http://127.0.0.1:8083" else "http://10.0.0.20:8083";
+  # Gatus does the checking, on the Pi (hosts/raspi/health.nix)
+  gatus = "http://10.0.0.10:8083";
 
   # every Gatus check as a line, grouped as in its config: ✓ name and response time, or ✗ and why
   health = pkgs.writeShellApplication {

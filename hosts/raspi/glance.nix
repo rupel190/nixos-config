@@ -10,13 +10,19 @@ let
     inherit title icon url;
     check-url = check;
   };
-  # an app on amanita; same health paths as the gatus checks. The link opens `host`:
-  # localhost only works on amanita, its LAN address everywhere once the app's port is open
+  # an app on amanita; same health paths as the gatus checks
   app =
-    host: title: port: path:
-    site title "di:${lib.toLower title}" "http://${host}:${toString port}" "http://127.0.0.1:${toString port}${path}";
-  local = app "localhost";
-  lan = app amanita;
+    title: port: path:
+    let
+      url = "http://${amanita}:${toString port}";
+    in
+    site title "di:${lib.toLower title}" url "${url}${path}";
+  # the *arr apps only listen on amanita itself: a link for amanita's browser, no dot (the Pi can't reach them)
+  local = title: port: {
+    inherit title;
+    icon = "di:${lib.toLower title}";
+    url = "http://localhost:${toString port}";
+  };
   monitor = title: sites: {
     type = "monitor";
     cache = "1m";
@@ -24,7 +30,7 @@ let
   };
 in
 {
-  # Glance on :8084, the front page (it won over Homepage)
+  # Glance on :8084, the front page (it won over Homepage); on the Pi since 2026-11-22, so it is up when amanita is off
   services.glance = {
     enable = true;
     # the Pi-hole app password, still under the name Homepage gave it
@@ -75,24 +81,41 @@ in
                   servers = [
                     {
                       type = "local";
-                      name = "amanita";
+                      name = "raspi";
                       hide-mountpoints-by-default = true;
+                      # hidden by default means each one shown needs hide = false; a name alone stays hidden
                       mountpoints = {
-                        "/".name = "root";
-                        "/mnt/silo".name = "silo";
+                        "/" = {
+                          name = "sd card";
+                          hide = false;
+                        };
+                        "/mnt/usbhdd" = {
+                          name = "usb disk";
+                          hide = false;
+                        };
                       };
                     }
                   ];
                 }
                 (monitor "Media" [
-                  (lan "Jellyfin" 8096 "/health")
-                  (local "Sonarr" 8989 "/ping")
-                  (local "Radarr" 7878 "/ping")
-                  (local "Prowlarr" 9696 "/ping")
-                  (local "SABnzbd" 8085 "/api?mode=version")
-                  (local "Bazarr" 6767 "/")
-                  (lan "RomM" 8070 "/api/heartbeat")
+                  (app "Jellyfin" 8096 "/health")
+                  (app "RomM" 8070 "/api/heartbeat")
                 ])
+                {
+                  type = "bookmarks";
+                  title = "Media, from amanita only";
+                  groups = [
+                    {
+                      links = [
+                        (local "Sonarr" 8989)
+                        (local "Radarr" 7878)
+                        (local "Prowlarr" 9696)
+                        (local "SABnzbd" 8085)
+                        (local "Bazarr" 6767)
+                      ];
+                    }
+                  ];
+                }
                 (monitor "Pi and network" [
                   (site "Pi-hole" "di:pi-hole" "http://${pi}:8080/admin" "http://${pi}:8080/admin/")
                   (site "InvoiceNinja" "di:invoice-ninja" "http://${pi}" "http://${pi}/")
@@ -120,8 +143,8 @@ in
               size = "small";
               widgets = [
                 (monitor "Dashboards" [
-                  (lan "Gatus" 8083 "/")
-                  (lan "Beszel" 8090 "/api/health")
+                  (site "Gatus" "di:gatus" "http://${pi}:8083" "http://${pi}:8083/")
+                  (app "Beszel" 8090 "/api/health")
                 ])
                 {
                   type = "releases";
