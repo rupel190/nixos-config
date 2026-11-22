@@ -1,5 +1,6 @@
 { config, lib, ... }:
 let
+  amanita = "10.0.0.20";
   pi = "10.0.0.10";
   router = "10.0.0.1";
   secret = config.age.secrets.health-dashboard;
@@ -28,10 +29,11 @@ let
       };
     };
 
-  # Homepage tile for a local app; keys come from the secret as HOMEPAGE_VAR_<NAME>_KEY
-  tile = name: port: widget: {
+  # Homepage tile for an app on amanita; keys come from the secret as HOMEPAGE_VAR_<NAME>_KEY.
+  # The link opens `host`: localhost only works on amanita, its LAN address everywhere once the app's port is open
+  tileOn = host: name: port: widget: {
     ${name} = {
-      href = "http://localhost:${toString port}";
+      href = "http://${host}:${toString port}";
       icon = "${lib.toLower name}.svg";
       siteMonitor = "http://127.0.0.1:${toString port}";
     }
@@ -47,10 +49,12 @@ let
       );
     };
   };
+  tile = tileOn "localhost";
+  lanTile = tileOn amanita;
 in
 {
   # Health dashboard, here until the Pi runs NixOS; then this file moves to the Pi's host.
-  # All on localhost: homepage :8082 (front page), gatus :8083 (up/down + Discord), beszel :8090 (machines)
+  # All open to the LAN: homepage :8082 (front page), gatus :8083 (up/down + Discord), beszel :8090 (machines)
   imports = [ ./glance.nix ]; # :8084, on trial against homepage
 
   # tile API keys + the Discord webhook; edit with `ragenix -e health-dashboard.age` inside secrets/
@@ -61,6 +65,15 @@ in
 
   services.homepage-dashboard = {
     enable = true;
+    # open to the LAN like Jellyfin; no login, so anyone on the Wi-Fi sees it (keys stay server-side)
+    openFirewall = true;
+    allowedHosts = lib.concatMapStringsSep "," (h: "${h}:8082") [
+      "localhost"
+      "127.0.0.1"
+      amanita
+      "amanita"
+      "amanita.lan"
+    ];
     environmentFiles = [ secret.path ];
     settings = {
       title = "amanita";
@@ -109,14 +122,14 @@ in
     services = [
       {
         Health = [
-          (tile "Gatus" 8083 { key = null; })
-          (tile "Beszel" 8090 {
+          (lanTile "Gatus" 8083 { key = null; })
+          (lanTile "Beszel" 8090 {
             key = null;
             username = "{{HOMEPAGE_VAR_BESZEL_USER}}";
             password = "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}";
             version = 2;
           })
-          (tile "Glance" 8084 null)
+          (lanTile "Glance" 8084 null)
         ];
       }
       {
@@ -158,13 +171,13 @@ in
       }
       {
         Media = [
-          (tile "Jellyfin" 8096 { enableBlocks = true; })
+          (lanTile "Jellyfin" 8096 { enableBlocks = true; })
           (tile "Sonarr" 8989 { enableQueue = true; })
           (tile "Radarr" 7878 { enableQueue = true; })
           (tile "Prowlarr" 9696 { })
           (tile "SABnzbd" 8085 { })
           (tile "Bazarr" 6767 { })
-          (tile "RomM" 8070 null)
+          (lanTile "RomM" 8070 null)
         ];
       }
     ];
@@ -172,10 +185,12 @@ in
 
   services.gatus = {
     enable = true;
+    # no login; the page only shows up/down
+    openFirewall = true;
     environmentFile = secret.path;
     settings = {
       web = {
-        address = "127.0.0.1";
+        address = "0.0.0.0";
         port = 8083; # 8080 is too common a dev-server port
       };
       storage = {
@@ -218,11 +233,10 @@ in
     };
   };
 
-  services.beszel.hub.enable = true;
-  # amanita's own agent; the hub reaches it on 127.0.0.1:45876, the firewall stays shut until the Pi hosts the hub
-  services.beszel.agent = {
+  # agents: modules/core/beszel-agent.nix on every NixOS machine, a container on the Pi
+  services.beszel.hub = {
     enable = true;
-    # the hub's public key from Add System; only the hub's private half can connect, so it's fine in the repo
-    environment.KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPrLP1o+Zn4S0mz2CoesVkgmNi5/5HpXojgasEuZcsui";
+    host = "0.0.0.0"; # has its own login
   };
+  networking.firewall.allowedTCPPorts = [ config.services.beszel.hub.port ];
 }

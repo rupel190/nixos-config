@@ -9,6 +9,7 @@
 }:
 {
   imports = [
+    ./beszel-agent.nix
     ./bootloader.nix
     ./greetd.nix
     ./hardware.nix

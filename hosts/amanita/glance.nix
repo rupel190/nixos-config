@@ -1,5 +1,6 @@
 { config, lib, ... }:
 let
+  amanita = "10.0.0.20";
   pi = "10.0.0.10";
   router = "10.0.0.1";
   secret = config.age.secrets.health-dashboard;
@@ -9,10 +10,13 @@ let
     inherit title icon url;
     check-url = check;
   };
-  # an app on amanita; same health paths as the gatus checks
-  local =
-    title: port: path:
-    site title "di:${lib.toLower title}" "http://localhost:${toString port}" "http://127.0.0.1:${toString port}${path}";
+  # an app on amanita; same health paths as the gatus checks. The link opens `host`:
+  # localhost only works on amanita, its LAN address everywhere once the app's port is open
+  app =
+    host: title: port: path:
+    site title "di:${lib.toLower title}" "http://${host}:${toString port}" "http://127.0.0.1:${toString port}${path}";
+  local = app "localhost";
+  lan = app amanita;
   monitor = title: sites: {
     type = "monitor";
     cache = "1m";
@@ -25,8 +29,13 @@ in
     enable = true;
     # reuses Homepage's Pi-hole app password from the same secret
     environmentFile = secret.path;
+    # open to the LAN like Jellyfin; no login, so anyone on the Wi-Fi sees it
+    openFirewall = true;
     settings = {
-      server.port = 8084;
+      server = {
+        host = "0.0.0.0";
+        port = 8084;
+      };
       # catppuccin macchiato, like btop
       theme = {
         background-color = "232 23 18";
@@ -37,7 +46,8 @@ in
       };
       pages = [
         {
-          name = "amanita";
+          # one tab for everything; a tab per machine needs Glance's own agent on that machine
+          name = "Home";
           columns = [
             {
               size = "small";
@@ -75,13 +85,13 @@ in
                   ];
                 }
                 (monitor "Media" [
-                  (local "Jellyfin" 8096 "/health")
+                  (lan "Jellyfin" 8096 "/health")
                   (local "Sonarr" 8989 "/ping")
                   (local "Radarr" 7878 "/ping")
                   (local "Prowlarr" 9696 "/ping")
                   (local "SABnzbd" 8085 "/api?mode=version")
                   (local "Bazarr" 6767 "/")
-                  (local "RomM" 8070 "/api/heartbeat")
+                  (lan "RomM" 8070 "/api/heartbeat")
                 ])
                 (monitor "Pi and network" [
                   (site "Pi-hole" "di:pi-hole" "http://${pi}:8080/admin" "http://${pi}:8080/admin/")
@@ -109,9 +119,9 @@ in
               size = "small";
               widgets = [
                 (monitor "Dashboards" [
-                  (local "Homepage" 8082 "/")
-                  (local "Gatus" 8083 "/")
-                  (local "Beszel" 8090 "/api/health")
+                  (lan "Homepage" 8082 "/")
+                  (lan "Gatus" 8083 "/")
+                  (lan "Beszel" 8090 "/api/health")
                 ])
                 {
                   type = "releases";

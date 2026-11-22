@@ -82,6 +82,8 @@ in
       port = 8070;
     }
   ];
+  # open to the LAN; romm has its own login
+  networking.firewall.allowedTCPPorts = [ 8070 ];
   # group-writable platform folders, so you can copy roms in next to romm's uploads
   systemd.services.romm = {
     serviceConfig.UMask = "0002";
