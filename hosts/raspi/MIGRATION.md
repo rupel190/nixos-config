@@ -7,8 +7,11 @@ data on a 1 TB WD USB disk).
 ## Ground rules
 
 1. **The data does not move.** Everything that matters lives on the USB disk (`/mnt/usbhdd`, ext4,
-   UUID `d2c9cf26-b12d-4074-b9b3-4a5d450e34d8`). NixOS goes on a **new SD card**; the current card
-   stays untouched in a drawer. Rollback = power off, swap cards back, boot.
+   UUID `d2c9cf26-b12d-4074-b9b3-4a5d450e34d8`). NixOS ends up on the SD card as before, but gets
+   there through a USB stick (a Transcend 32 GB, `usb-JetFlash_Transcend_32GB_25JS7A52XU1KRC4M-0:0`):
+   it runs from the stick first while the Debian card sits untouched, and only once it works is the
+   Debian card saved as an image onto the USB disk and overwritten. amanita has no SD reader, so all
+   writing happens on the Pi itself.
 2. **Same software first, newer later.** Every app starts on NixOS with the exact image it runs
    today (digests below) on the same data folders, so no database migration runs during the switch
    and the old card can still read the data. Upgrades and native NixOS modules come afterwards, one
@@ -109,22 +112,35 @@ offline) and the opened documents show. So the files tarball and `APP_KEY` are g
 
 Still to drill: SplitPro and Paperless.
 
-## Switch day
+## Switch
 
-1. DNS: the router falls back to Cloudflare while Pi-hole is down, so the network keeps working
-   (ads get through for that time).
-2. Stop all containers on Debian, run the backups once more, pull to amanita.
-3. Power off, put in the new NixOS card, boot. Check ssh, the USB disk, beszel, zerotier.
-4. Start the apps one at a time and check each against its drill numbers: InvoiceNinja, SplitPro,
-   Paperless, Pi-hole, the rest.
-5. Backups as systemd timers; run each once; amanita's pull and watchdog green.
-6. Keep the old SD card for at least four weeks.
+The Pi 5 tries the SD card first, then NVMe, then USB (`BOOT_ORDER=0xf461`): it boots the stick only
+while the SD card is out. Once both carry the NixOS image they also share its partition labels
+(`FIRMWARE`, `NIXOS_SD`, which the system mounts by), so never boot with both plugged in.
+
+1. **Prepare the stick** (no downtime): the image built on amanita
+   (`nix build .#nixosConfigurations.raspi.config.system.build.sdImage --option extra-substituters
+   https://nixos-raspberrypi.cachix.org`) written onto the stick by its by-id path; the Debian SSH host
+   keys and `/var/lib/zerotier-one` copied onto it.
+2. **Stage 1, NixOS from the stick:** stop the apps on Debian, run every backup once more, pull to
+   amanita. Shut down, take the SD card out (it stays untouched), boot. DNS falls back to Cloudflare
+   meanwhile. Check ssh, the USB disk, beszel, zerotier; the images load, the apps come up one by one
+   and are checked against the drill numbers; every backup timer run once, amanita's pull and
+   watchdog green.
+3. **Stage 2, onto the SD card**, once stage 1 runs well: insert the Debian card while NixOS runs
+   from the stick; save it whole as an image onto the USB disk (`/mnt/usbhdd/images/debian-sd-<date>.img.zst`),
+   write the NixOS image onto it, copy the host keys and zerotier identity in. Reboot without the
+   stick: NixOS from the SD card, the same setup as before. The stick stays as a NixOS rescue system.
 
 ## Rollback
 
-Power off, swap the old card back in, boot: Debian starts with everything as before. That works only
-because the switch changes no versions: the same MySQL and app versions wrote the data, so the old
-system reads it. Never run an upgraded app against the data while the old card is still the fallback.
+- Before stage 2: power off, stick out, SD card in: Debian starts with everything as before.
+- After stage 2: boot from the stick (SD card out) for a working NixOS, or, from there, write the
+  saved Debian image back onto the card.
+
+Both work only because the switch changes no versions: the same MySQL and app versions wrote the
+data, so either system reads it. Never run an upgraded app against the data while Debian is still a
+fallback.
 
 ## Afterwards, one at a time
 

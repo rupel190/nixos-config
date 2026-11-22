@@ -1,5 +1,7 @@
 {
   lib,
+  pkgs,
+  inputs,
   nixos-raspberrypi,
   username,
   ...
@@ -65,6 +67,8 @@
 
   # identity and network membership ("raspi5", 192.168.196.27) are copied over from Debian before first boot
   services.zerotierone.enable = true;
+  # the agent at the hub's version (amanita runs unstable's beszel), not 26.05's older one
+  services.beszel.agent.package = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.beszel;
   services.smartd.enable = true;
   virtualisation.docker.enable = true;
   # the journal lives on the boot stick; Debian kept /var/log on the USB disk to spare its SD card
