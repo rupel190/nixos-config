@@ -5,7 +5,7 @@ let
   pullScript = pkgs.writeShellApplication {
     name = "pull-pi-backup";
     runtimeInputs = with pkgs; [ rsync openssh libnotify coreutils util-linux ];
-    # Backups stay local: the tree includes InvoiceNinja's .env and DB dumps, never copy them to OneDrive.
+    # Backups stay local: the tree includes InvoiceNinja's and SplitPro's .env and DB dumps, never copy them to OneDrive.
     text = ''
       BACKUP_DIR="/mnt/backup/current/invoiceninja_rpi"
       PI_HOST="raspi"
@@ -49,16 +49,22 @@ let
       MAX_AGE_DAYS=2
       problems=""
 
-      # -size +1k skips the 20-byte empty dumps the Pi wrote while its container name was wrong
-      newest=$(find /mnt/backup/current/invoiceninja_rpi/invoiceninja -name 'db-*.sql.gz' -size +1k -printf '%T@\n' 2>/dev/null | sort -n | tail -1 | cut -d. -f1)
-      if [ -z "$newest" ]; then
-        problems="No usable InvoiceNinja DB dump in /mnt/backup/current/invoiceninja_rpi."
-      else
-        age=$(( ( $(date +%s) - newest ) / 86400 ))
-        if [ "$age" -gt "$MAX_AGE_DAYS" ]; then
-          problems="Newest InvoiceNinja DB dump in /mnt/backup is $age days old (pull-pi-backup)."
+      # each app dumps into its own folder of the Pi's /mnt/usbhdd/backups, which the pull copies whole
+      ages=""
+      for app in InvoiceNinja SplitPro; do
+        dir="/mnt/backup/current/invoiceninja_rpi/''${app,,}"
+        # -size +1k skips the 20-byte empty dumps the Pi wrote while its container name was wrong
+        newest=$(find "$dir" -name 'db-*.sql.gz' -size +1k -printf '%T@\n' 2>/dev/null | sort -n | tail -1 | cut -d. -f1)
+        if [ -z "$newest" ]; then
+          problems="$problems No usable $app DB dump in $dir."
+          continue
         fi
-      fi
+        age=$(( ( $(date +%s) - newest ) / 86400 ))
+        ages="$ages $app $age,"
+        if [ "$age" -gt "$MAX_AGE_DAYS" ]; then
+          problems="$problems Newest $app DB dump in /mnt/backup is $age days old (pull-pi-backup)."
+        fi
+      done
 
       # The Pi is meant to run 24/7 but has lost power for weeks at a time
       if ! ping -c 2 -W 3 raspi >/dev/null 2>&1; then
@@ -85,11 +91,12 @@ let
       done
 
       if [ -n "$problems" ]; then
-        echo "ALERT:$problems"
+        problems="''${problems# }"
+        echo "ALERT: $problems"
         notify-send -u critical -t 0 "Backups are stale" "$problems" || true
         exit 1
       fi
-      echo "ok: newest usable dump is $age days old, pull and mirror last runs succeeded"
+      echo "ok: newest usable dumps in days:''${ages%,}; pull and mirror last runs succeeded"
     '';
   };
 in
@@ -117,7 +124,7 @@ in
 
   systemd.user.services.pull-pi-backup = {
     Unit = {
-      Description = "Pull InvoiceNinja backups from Raspberry Pi";
+      Description = "Pull the Raspberry Pi's backups (InvoiceNinja, SplitPro)";
       After = [ "network-online.target" ];
       Wants = [ "network-online.target" ];
     };

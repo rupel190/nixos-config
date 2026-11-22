@@ -51,6 +51,7 @@ in
 {
   # Health dashboard, here until the Pi runs NixOS; then this file moves to the Pi's host.
   # All on localhost: homepage :8082 (front page), gatus :8083 (up/down + Discord), beszel :8090 (machines)
+  imports = [ ./glance.nix ]; # :8084, on trial against homepage
 
   # tile API keys + the Discord webhook; edit with `ragenix -e health-dashboard.age` inside secrets/
   age.secrets.health-dashboard.file = ../../secrets/health-dashboard.age;
@@ -69,7 +70,7 @@ in
       layout = {
         Health = {
           style = "row";
-          columns = 2;
+          columns = 3;
         };
         Network = {
           style = "row";
@@ -115,6 +116,7 @@ in
             password = "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}";
             version = 2;
           })
+          (tile "Glance" 8084 null)
         ];
       }
       {
@@ -211,6 +213,7 @@ in
 
         (check "dashboard" "homepage" "http://127.0.0.1:8082/" ok)
         (check "dashboard" "beszel" "http://127.0.0.1:8090/api/health" ok)
+        (check "dashboard" "glance" "http://127.0.0.1:8084/api/healthz" ok)
       ];
     };
   };
