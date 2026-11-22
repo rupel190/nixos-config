@@ -97,6 +97,7 @@ in
                   (site "Pi-hole" "di:pi-hole" "http://${pi}:8080/admin" "http://${pi}:8080/admin/")
                   (site "InvoiceNinja" "di:invoice-ninja" "http://${pi}" "http://${pi}/")
                   (site "SplitPro" "mdi:account-cash" "http://${pi}:3000" "http://${pi}:3000/api/healthz")
+                  (site "Paperless" "di:paperless-ngx" "http://${pi}:8000" "http://${pi}:8000/accounts/login/")
                   (site "Mailpit" "mdi:email-outline" "http://${pi}:8025" "http://${pi}:8025/")
                   (
                     site "Router" "di:openwrt" "https://${router}" "https://${router}/"

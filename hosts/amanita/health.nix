@@ -78,6 +78,7 @@ in
         (check "pi" "pi-hole web" "http://${pi}:8080/admin/" ok)
         (check "pi" "invoiceninja" "http://${pi}/" ok)
         (check "pi" "splitpro" "http://${pi}:3000/api/healthz" ok)
+        (check "pi" "paperless" "http://${pi}:8000/accounts/login/" ok)
 
         (ping "network" "router" router)
         (ping "network" "internet" "1.1.1.1")

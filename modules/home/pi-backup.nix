@@ -65,6 +65,17 @@ let
           problems="$problems Newest $app DB dump in /mnt/backup is $age days old (pull-pi-backup)."
         fi
       done
+      # paperless exports a folder rather than a dump; its manifest is rewritten on every nightly run
+      pm=/mnt/backup/current/invoiceninja_rpi/paperless/manifest.json
+      if [ ! -f "$pm" ]; then
+        problems="$problems No Paperless export in $(dirname "$pm")."
+      else
+        age=$(( ( $(date +%s) - $(stat -c %Y "$pm") ) / 86400 ))
+        ages="$ages Paperless $age,"
+        if [ "$age" -gt "$MAX_AGE_DAYS" ]; then
+          problems="$problems Paperless export in /mnt/backup is $age days old (pull-pi-backup)."
+        fi
+      fi
 
       # The Pi is meant to run 24/7 but has lost power for weeks at a time
       if ! ping -c 2 -W 3 raspi >/dev/null 2>&1; then

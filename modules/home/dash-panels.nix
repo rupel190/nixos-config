@@ -66,10 +66,16 @@ let
         printf "$mark %-17s \e[2m%-10s %s\e[0m\n" "$label" "$([ -n "$last" ] && rel "$last" || echo never)" "$([ -n "$next" ] && rel "$next" || echo -)"
       done
 
-      printf '\n\e[1mPI DUMPS\e[0m (newest)\n'
-      for app in invoiceninja splitpro; do
-        # -size +1k skips empty dumps from a failed dump command
-        newest=$(find "/mnt/backup/current/invoiceninja_rpi/$app" -name 'db-*.sql.gz' -size +1k -printf '%T@\n' 2>/dev/null | sort -n | tail -1 | cut -d. -f1)
+      printf '\n\e[1mPI BACKUPS\e[0m (newest)\n'
+      pulled=/mnt/backup/current/invoiceninja_rpi
+      for app in invoiceninja splitpro paperless; do
+        if [ "$app" = paperless ]; then
+          # a folder export, not a dump: its manifest is rewritten every night
+          newest=$(stat -c %Y "$pulled/paperless/manifest.json" 2>/dev/null || true)
+        else
+          # -size +1k skips empty dumps from a failed dump command
+          newest=$(find "$pulled/$app" -name 'db-*.sql.gz' -size +1k -printf '%T@\n' 2>/dev/null | sort -n | tail -1 | cut -d. -f1)
+        fi
         if [ -z "$newest" ]; then printf '\e[31m✗ %-17s none\e[0m\n' "$app"; continue; fi
         if [ $(( (now - newest) / 86400 )) -gt 2 ]; then c=31 m=✗; else c=32 m=✓; fi
         printf "\e[''${c}m$m\e[0m %-17s \e[2m%s\e[0m\n" "$app" "$(rel "$newest")"
