@@ -133,6 +133,9 @@ system reads it. Never run an upgraded app against the data while the old card i
 - Proton Mail Bridge (nixpkgs 3.25.0, has a NixOS module) for Paperless' mail fetch.
 - cloudflared, for the internet route.
 - InvoiceNinja upgrades, each only after a fresh backup and a drill.
+- InvoiceNinja login: a stronger password and two-factor login, then `IN_USER_EMAIL` and
+  `IN_PASSWORD` out of its `.env` (setup-only values in plain text, also inside the weekly config
+  backups).
 - Data off the USB disk (it has dropped out before) onto an NVMe on the Pi 5's PCIe slot.
 
 ## Open questions

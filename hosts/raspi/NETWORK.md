@@ -51,10 +51,13 @@ which forwards every internet port to one device; the tunnel needs no open port 
 
 ## Steps, in this order
 
-1. **Dreame into iot, offline.** Re-join it to `BananaPi_IoT` through its app while iot still has
-   internet, give it a static lease, then a rule rejects iot → wan for its MAC. Its cloud app then
-   stops working. The Hue Bridge stays in lan for now: it is wired, and its app and updates want the
-   cloud; moving it would need a router port in br-iot and mDNS/SSDP across zones for the app.
+1. **Dreame offline, through Valetudo.** The robot is a Dreame L40 Ultra (`r2492`), which Valetudo
+   supports (Fastboot rooting with the Dreame Breakout PCB, seals intact). Until that PCB is done it
+   keeps its internet, so its app works. Once Valetudo runs, it joins `BananaPi_IoT` from Valetudo's
+   own Wi-Fi setup (no cloud needed) and a rule rejects iot → wan for its MAC
+   (`70:c9:32:9f:0e:91`); lan → iot then only needs its web page. The Hue Bridge stays in lan: it is
+   wired, and its app and updates want the cloud; moving it would need a router port in br-iot and
+   mDNS/SSDP across zones for the app.
 2. **lan → iot forwarding**, only once something in lan has to talk to a gadget there (Home Assistant).
 3. **The Pi moves to NixOS** (`MIGRATION.md`), keeping 10.0.0.10: one change at a time.
 4. **dmz:** lan4 leaves br-lan for a new br-dmz (10.0.50.0/24, the Pi at 10.0.50.10), a new zone
