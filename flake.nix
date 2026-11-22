@@ -25,6 +25,10 @@
     # own nixpkgs only for CI checks, so overriding it buys nothing.
     nixos-hardware.url = "github:NixOS/nixos-hardware";
 
+    # Raspberry Pi 5 support (kernel, firmware, bootloader) for hosts/raspi. No nixpkgs.follows: it keeps
+    # its own nixpkgs (26.05 stable), which is what its binary cache was built from
+    nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
+
     hyprland.url = "github:hyprwm/Hyprland";
     hyprland-plugins = {
       url = "github:hyprwm/hyprland-plugins";
@@ -149,6 +153,17 @@
           ./hosts/amanita
           inputs.ragenix.nixosModules.default
         ];
+      };
+
+      # Raspberry Pi 5: the always-on home server (hosts/raspi/MIGRATION.md)
+      nixosConfigurations.raspi = inputs.nixos-raspberrypi.lib.nixosSystem {
+        specialArgs = {
+          inherit inputs self;
+          inherit (inputs) nixos-raspberrypi;
+          username = "rupel";
+          host = "raspi";
+        };
+        modules = [ ./hosts/raspi ];
       };
 
       # Laptop
