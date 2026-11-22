@@ -11,6 +11,7 @@
     # a bootable image: nix build .#nixosConfigurations.raspi.config.system.build.sdImage
     sd-image
     ../../modules/core/beszel-agent.nix
+    ./apps.nix
   ];
 
   # the image module offers zfs; nothing here uses it, and its module would be built for the Pi kernel
@@ -66,6 +67,8 @@
   services.zerotierone.enable = true;
   services.smartd.enable = true;
   virtualisation.docker.enable = true;
+  # the journal lives on the boot stick; Debian kept /var/log on the USB disk to spare its SD card
+  services.journald.extraConfig = "SystemMaxUse=500M";
 
   system.stateVersion = "26.05";
 }
