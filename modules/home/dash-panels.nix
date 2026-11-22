@@ -31,6 +31,60 @@ let
     '';
   };
 
+  # amanita's backup jobs (all user timers) with last and next run, the newest Pi dumps, and the disk
+  backups = pkgs.writeShellApplication {
+    name = "panel-backups";
+    runtimeInputs = [
+      pkgs.systemd
+      pkgs.coreutils
+      pkgs.findutils
+      pkgs.gawk
+      pkgs.util-linux
+    ];
+    text = ''
+      now=$(date +%s)
+      rel() { # seconds since the epoch -> "3h ago" / "in 21h"
+        local d=$(( $1 - now )) w="ago" n
+        if [ "$d" -gt 0 ]; then w="in"; else d=$(( -d )); fi
+        if [ "$d" -lt 3600 ]; then n="$(( d / 60 ))m"
+        elif [ "$d" -lt 172800 ]; then n="$(( d / 3600 ))h"
+        else n="$(( d / 86400 ))d"; fi
+        if [ "$w" = in ]; then echo "in $n"; else echo "$n ago"; fi
+      }
+      stamp() { systemctl --user show --timestamp=unix -p "$2" --value "$1" | tr -d @; }
+
+      printf '\e[1mJOBS\e[0m                last       next\n'
+      for job in "pull-pi-backup:pi pull" "pi-backup-watchdog:pi watchdog" "router-backup:router" \
+                 "rsync-backups:home snapshots" "proton-mirror:proton mirror" "claude-sync-push:claude sync"; do
+        unit=''${job%%:*} label=''${job#*:}
+        last=$(stamp "$unit.timer" LastTriggerUSec) next=$(stamp "$unit.timer" NextElapseUSecRealtime)
+        ended=$(stamp "$unit.service" ExecMainExitTimestamp)
+        result=$(systemctl --user show -p Result --value "$unit.service")
+        # a service that has not run since boot still reports Result=success; say so instead
+        if [ -z "$ended" ]; then mark='\e[2m·\e[0m'
+        elif [ "$result" = success ]; then mark='\e[32m✓\e[0m'
+        else mark="\e[31m✗ $result\e[0m"; fi
+        printf "$mark %-17s \e[2m%-10s %s\e[0m\n" "$label" "$([ -n "$last" ] && rel "$last" || echo never)" "$([ -n "$next" ] && rel "$next" || echo -)"
+      done
+
+      printf '\n\e[1mPI DUMPS\e[0m (newest)\n'
+      for app in invoiceninja splitpro; do
+        # -size +1k skips empty dumps from a failed dump command
+        newest=$(find "/mnt/backup/current/invoiceninja_rpi/$app" -name 'db-*.sql.gz' -size +1k -printf '%T@\n' 2>/dev/null | sort -n | tail -1 | cut -d. -f1)
+        if [ -z "$newest" ]; then printf '\e[31m✗ %-17s none\e[0m\n' "$app"; continue; fi
+        if [ $(( (now - newest) / 86400 )) -gt 2 ]; then c=31 m=✗; else c=32 m=✓; fi
+        printf "\e[''${c}m$m\e[0m %-17s \e[2m%s\e[0m\n" "$app" "$(rel "$newest")"
+      done
+
+      printf '\n\e[1mDISK\e[0m '
+      if mountpoint -q /mnt/backup; then
+        df -h --output=used,size,pcent /mnt/backup | tail -1 | awk '{printf "/mnt/backup  %s of %s (%s)\n", $1, $2, $3}'
+      else
+        printf '\e[31m/mnt/backup not mounted\e[0m\n'
+      fi
+    '';
+  };
+
   failedUnits = pkgs.writeShellApplication {
     name = "panel-failed-units";
     runtimeInputs = [ pkgs.systemd ];
@@ -64,6 +118,7 @@ in
   # Plain-text panels any terminal dashboard can show: mirador through mirador-run, WTF through cmdrunner
   home.packages = [
     health
+    backups
     failedUnits
     security
   ];

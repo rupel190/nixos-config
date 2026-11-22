@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  host,
+  ...
+}:
 let
   # young single-author app, written with heavy AI help (its README says so): pinned to a reviewed tag.
   # v1.22.2 fetches only Open-Meteo, Yahoo's chart endpoint and the RSS feeds in its config, and checks
@@ -36,6 +41,15 @@ let
       every = 30;
       command = "panel-health";
     }
+  ]
+  # the backup jobs and /mnt/backup only exist on amanita
+  ++ lib.optional (host == "amanita") {
+    id = "backups";
+    title = "Backups";
+    every = 300;
+    command = "panel-backups";
+  }
+  ++ [
     {
       id = "failed-units";
       title = "Failed units";
