@@ -7,8 +7,9 @@
     "nvim" = { source = ./nvim; recursive = true; };
     "tridactyl" = { source = ./tridactyl; recursive = true; };
     "keepassxc" = { source = ./keepassxc; recursive = true; };
-    "Blockbench" = { source = ./Blockbench; recursive = true; };
 
+    # Blockbench's own Preferences stay unmanaged: Electron rewrites that file whenever it likes,
+    # and a linked copy made the next switch fail on the backup.
     # jasonjgardner's MCP plugin: while Blockbench is open, Claude builds models in its window.
     # Loaded once by hand (File › Plugins › Load Plugin from File, MCP port 3917 in Settings ›
     # General) and registered with `claude mcp add -s user --transport http blockbench
