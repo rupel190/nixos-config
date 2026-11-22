@@ -133,6 +133,6 @@ system reads it. Never run an upgraded app against the data while the old card i
 
 ## Open questions
 
-- Network zones before anything faces the internet: does the Pi get its own segment (a DMZ next to
-  `lan` and the Wi-Fi-only `iot` network on the router)? Proton Mail Bridge waits for that answer,
-  since a logged-in Bridge lets anyone with root on the Pi read all mail.
+- None for the switch itself. Network zones (a dmz for the Pi, the Dreame offline in iot) are planned
+  in `NETWORK.md`; Proton Mail Bridge waits for the dmz, since a logged-in Bridge lets anyone with
+  root on the Pi read all mail.
