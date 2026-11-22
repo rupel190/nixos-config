@@ -14,7 +14,7 @@
     sd-image
     ../../modules/core/beszel-agent.nix
     ./apps.nix
-    ./adguard.nix
+    ./pihole.nix
   ];
 
   # the image module offers zfs; nothing here uses it, and its module would be built for the Pi kernel

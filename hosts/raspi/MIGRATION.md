@@ -168,13 +168,19 @@ Rollback from here: the Transcend stick boots a working NixOS (with the SD card 
 the Debian image can go back onto the card. The raw app folders and images from before the switch
 are also on amanita (`/mnt/backup/raspi-cold-20261122`).
 
-### After: AdGuard Home in place of Pi-hole (2026-11-22)
+### After: Pi-hole native, AdGuard Home tried and dropped (2026-11-22)
 
-`adguard.nix`: Pi-hole's list, upstreams, local names and reverse lookups, its web port 8080 and `pi.hole`;
-the answers were compared on a test port before the switch. Its settings, login and 90 days of query
-history live on the USB disk (`apps/adguardhome`), and `/var/log` is back there as on Debian, so the SD
-card holds only the system. Pi-hole's folder and image were then deleted from the Pi; amanita's cold copy
-(`/mnt/backup/raspi-cold-20261122`) still holds both.
+AdGuard Home ran for a morning and answered exactly like Pi-hole, but saw one client, the router: every
+lookup comes through the router's dnsmasq, which attaches the asking device's address (`add-subnet`), and
+AdGuard only logs that address where Pi-hole counts it as the client. Pi-hole is back, now from the NixOS
+module (`pihole.nix`) instead of docker, with its history since 2026-08-28 copied from amanita's cold copy.
+Its data is on the USB disk (`apps/pihole`; `ftl.env` holds the login and Glance's app password as hashes,
+since the module's pihole.toml is read-only from Nix), and `/var/log` is back there as on Debian, so the SD
+card holds only the system.
+
+Learned: the module's `lists` fail on every start after the first (UNIQUE constraint) and it never refreshes
+them, so the list lives in Pi-hole's database and `pihole-gravity` refreshes it weekly. A refresh swaps
+gravity.db under FTL: without SIGRTMIN afterwards it keeps reading the old file and stops blocking.
 
 Updates from amanita (fish abbreviation `nos-pi`):
 `nixos-rebuild switch --flake .#raspi --target-host raspi --sudo --option extra-substituters https://nixos-raspberrypi.cachix.org`

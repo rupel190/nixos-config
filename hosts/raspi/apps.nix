@@ -84,7 +84,7 @@ let
         echo "$a: $(du -h "$dir/$a-config-$date.tar.gz" | cut -f1)"
       }
       save invoiceninja docker-compose.yml .env nginx php scripts supervisor Dockerfile
-      save adguardhome AdGuardHome.yaml
+      save pihole ftl.env
       save splitpro docker-compose.yml .env backup.sh
       save paperless docker-compose.yml .env gpt.env backup.sh
     '';

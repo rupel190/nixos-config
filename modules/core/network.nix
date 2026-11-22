@@ -6,7 +6,7 @@
     # Desktop: no battery to save; a dozing Frame dongle delays headset->PC pose packets.
     networkmanager.wifi.powersave = false;
 
-    # DNS - Leave commented to use router's settings (AdGuard Home on the Pi)
+    # DNS - Leave commented to use router's settings (Pi-hole on the Pi)
     # Only override if you need to bypass router DNS
     # nameservers = [ "8.8.8.8" "1.1.1.1" ];
 

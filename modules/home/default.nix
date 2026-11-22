@@ -73,7 +73,7 @@
     ./rsync-backups.nix # weekly home + media snapshots to /mnt/backup
     ./proton-mirror.nix # weekly mirror of /mnt/backup/current to Proton Drive (recovery/ stays local)
     ./router-backup.nix # weekly OpenWrt config backup into /mnt/backup/current/router
-    ./dns-watch.nix # desktop notification when the Pi's AdGuard Home stops answering or blocking, or a device bypasses it
+    ./dns-watch.nix # desktop notification when the Pi-hole stops answering or blocking, or a device bypasses it
     ./udiskie.nix # automount removable drives
     ./flux-kontext.nix # FLUX.1 Kontext [dev] image edits on ROCm (non-commercial licence)
   ] ++ lib.optionals (host == "cordyceps") [

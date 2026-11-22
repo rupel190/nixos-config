@@ -19,7 +19,7 @@ iot → lan       no
 lan → iot       no
 ```
 
-All DNS from lan and iot is redirected to the router, whose dnsmasq forwards to AdGuard Home on the Pi
+All DNS from lan and iot is redirected to the router, whose dnsmasq forwards to Pi-hole on the Pi
 (2 `server=` lines).
 
 Everything sits in lan; the iot network is empty:
