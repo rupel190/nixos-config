@@ -226,6 +226,211 @@ let
   claude-statusline = pkgs.writers.writePython3Bin "claude-statusline"
     { flakeIgnore = [ "E501" ]; } (builtins.readFile ./claude-statusline.py);
 
+  # A Claude Code mod that draws PNGs into the conversation with the terminal's Kitty
+  # graphics: a `show` tool for claude, and /image to pin one above the prompt.
+  # Every session loads it (the wrapper below). Claude Code draws a mod's Image where
+  # the terminal can (kitty, herdr-app) and shows its alt text elsewhere.
+  imageMod =
+    pkgs.runCommand "claude-mod-inline-image"
+      {
+        plugin = builtins.toJSON {
+          name = "inline-image";
+          version = "0.1.0";
+          description = "Show PNGs inline in the conversation, drawn by the terminal; /image pins one above the prompt";
+          types = "./types/index.d.ts";
+        };
+        hooks = builtins.toJSON { modules = [ "./register.tsx" ]; };
+        # The contract for the module's $.state
+        types = ''
+          export type Shown = { path: string; title: string; width: number; height: number }
+
+          declare module "claude-code" {
+            interface PluginState {
+              "inline-image": { shown: Shown | null }
+            }
+          }
+        '';
+        register = # tsx
+          ''
+            import { atom, read, update } from "claude-code"
+            import type { EngineInterface, Register } from "claude-code"
+
+            import type { Shown } from "../types"
+
+            const TOOL_NAME = "mcp__inline-image__show"
+            // A pattern: the laid types list only tools connected at the last reload
+            const TOOL = /^mcp__inline-image__show$/
+            const shown = atom({ plugin: "inline-image", key: "shown" } as const, null)
+
+            // A kitty cell (cell_height 120%) is about this many times taller than wide; herdr's
+            // is 2.6, but the mod API gives no cell size in pixels, so there pictures come out ~15% narrow
+            const CELL_ASPECT = 2.2
+            const MAX_ROWS = 40
+            // An Image carries at most this many bytes; a bigger PNG goes by name instead
+            const MAX_PNG_BYTES = 2 * 1024 * 1024
+
+            // Reads the PNG's size from its header; answers the picture, or a problem
+            const probe = async ($: EngineInterface, path: string, title: string): Promise<Shown | string> => {
+              if (!path.startsWith("/") || !path.toLowerCase().endsWith(".png")) {
+                return "needs the absolute path of a .png file"
+              }
+              try {
+                const { base64 } = await $.fs.read(path, { as: "bytes" })
+                // IHDR: width and height are big-endian 32-bit at bytes 16 and 20
+                const head = atob(base64.slice(0, 32))
+                const u32 = (at: number) =>
+                  ((head.charCodeAt(at) << 24) | (head.charCodeAt(at + 1) << 16) | (head.charCodeAt(at + 2) << 8) | head.charCodeAt(at + 3)) >>> 0
+                return { path, title, width: u32(16), height: u32(20) }
+              } catch {
+                return "cannot read " + path
+              }
+            }
+
+            // The cell box that keeps the picture's shape: MAX_ROWS tall, or narrower if the width runs out
+            const box = (img: Shown, viewportColumns: number | undefined) => {
+              const maxColumns = Math.min(255, Math.max(10, (viewportColumns ?? 80) - 4))
+              let rows = MAX_ROWS
+              let columns = Math.round((rows * CELL_ASPECT * img.width) / img.height)
+              if (columns > maxColumns) {
+                columns = maxColumns
+                rows = Math.max(1, Math.round((columns * img.height) / (img.width * CELL_ASPECT)))
+              }
+              return { columns, rows }
+            }
+
+            // A plugin tool answers text, so the picture travels as JSON in it
+            const parseShown = (output: unknown): Shown | undefined => {
+              if (typeof output !== "string") {
+                return undefined
+              }
+              try {
+                const value: unknown = JSON.parse(output)
+                return typeof value === "object" && value !== null && typeof (value as Shown).path === "string" ? (value as Shown) : undefined
+              } catch {
+                return undefined
+              }
+            }
+
+            // herdr refuses the file medium (t=f, herdr-app#302), so the bytes go inline, read at
+            // draw time; only a PNG over MAX_PNG_BYTES goes by name, which kitty reads and herdr does not
+            const pngSource = async ($: EngineInterface, path: string) => {
+              try {
+                const { base64 } = await $.fs.read(path, { as: "bytes" })
+                return (base64.length * 3) / 4 <= MAX_PNG_BYTES ? { png: base64 } : { file: path, format: "png" as const }
+              } catch {
+                return undefined
+              }
+            }
+
+            export const register: Register = on => {
+              on("session.start", async ($, e, next) => {
+                await $.tool.register({
+                  name: "show",
+                  description:
+                    "Show a PNG image inline in the conversation, drawn by the terminal where the call appears. " +
+                    "Takes the absolute path of a .png file and an optional title.",
+                  inputSchema: {
+                    type: "object",
+                    properties: { path: { type: "string" }, title: { type: "string" } },
+                    required: ["path"],
+                  },
+                  isDeferred: false,
+                })
+                await $.command.register({
+                  name: "image",
+                  description: "Pin a PNG above the prompt: /image <path>; /image alone unpins it",
+                })
+
+                return next(e)
+              })
+
+              // The picture travels in the result, so the row can draw it whenever it is drawn again
+              on("tool.call", { tool: TOOL }, async ($, e) => {
+                // The tool's own arguments sit beside `tool` on the event
+                const input = e as unknown as { path?: unknown; title?: unknown }
+                const img = await probe($, String(input.path ?? ""), String(input.title ?? ""))
+
+                return typeof img === "string" ? { deny: img } : { result: JSON.stringify(img) }
+              })
+
+              on("ui.render", { component: "ToolResult" }, async ($, e, next) => {
+                const img = parseShown(e.props.output)
+                if (e.props.tool !== TOOL_NAME || e.props.isErrored || e.surface !== "terminal" || img === undefined) {
+                  return next(e)
+                }
+
+                const source = await pngSource($, img.path)
+                if (source === undefined) {
+                  return next(e)
+                }
+                const { Box, Image, Text } = $.ui.resolve(e)
+                const { columns, rows } = box(img, e.viewport?.columns)
+                const label = img.title || img.path
+
+                return (
+                  <Box flexDirection="column">
+                    <Text dimColor>{label}</Text>
+                    <Image source={source} columns={columns} rows={rows} alt={label} />
+                  </Box>
+                )
+              })
+
+              on("command.run", { command: "image" }, async ($, e) => {
+                const path = e.args.trim()
+                if (path === "") {
+                  await update($, shown, () => null)
+                  return { text: "Image unpinned." }
+                }
+
+                const img = await probe($, path, "")
+                if (typeof img === "string") {
+                  return { text: img }
+                }
+                await update($, shown, () => img)
+
+                return { text: "Pinned " + path + " above the prompt." }
+              })
+
+              on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
+                const img = await read($, shown)
+                if (img === null || e.surface !== "terminal" || e.props.hasSurvey) {
+                  return next(e)
+                }
+
+                const source = await pngSource($, img.path)
+                if (source === undefined) {
+                  return next(e)
+                }
+                const { Box, Button, Image, Text } = $.ui.resolve(e)
+                const { columns, rows } = box(img, e.viewport?.columns)
+                const label = img.title || img.path
+
+                return (
+                  <Box flexDirection="column">
+                    <Box>
+                      <Text dimColor>{label} </Text>
+                      <Button key="close" label="Close" onPress={() => update($, shown, () => null)} />
+                    </Box>
+                    <Image source={source} columns={columns} rows={rows} alt={label} />
+                  </Box>
+                )
+              })
+            }
+          '';
+        passAsFile = [
+          "plugin"
+          "hooks"
+          "types"
+          "register"
+        ];
+      }
+      ''
+        install -Dm444 "$pluginPath" $out/.claude-plugin/plugin.json
+        install -Dm444 "$hooksPath" $out/hooks/hooks.json
+        install -Dm444 "$typesPath" $out/types/index.d.ts
+        install -Dm444 "$registerPath" $out/hooks/register.tsx
+      '';
+
   # `claude` pulls ~/.claude BEFORE it starts. The SessionStart pull below runs too late for
   # `claude --resume`: its picker lists sessions from local disk before any hook fires, so a
   # session pushed from the other host was missing until the next start. Interactive starts
@@ -233,6 +438,9 @@ let
   # startup tabs launch several at once; a timeout, so an offline start is not blocked.
   # claude-sync-pull (claude-sync.nix) by BARE NAME, like the hooks; it skips while a push runs.
   # The SessionStart pull stays as the fallback.
+  # It also loads imageMod into every session, whatever the terminal. The variable is set, not
+  # appended to, so a copy inherited from an older generation is never loaded twice; load
+  # another mod for one session with --plugin-dir.
   claude-code-raw = inputs.claude-code.packages.${pkgs.stdenv.hostPlatform.system}.default;
   claude-pull-first = pkgs.writeShellScript "claude" ''
     if [ -z "''${CLAUDE_WORKER:-}" ] && [ -t 0 ] && [ -t 1 ] && command -v claude-sync-pull >/dev/null; then
@@ -244,6 +452,7 @@ let
         claude-sync-pull 60 || true
       fi
     fi
+    export CLAUDE_CODE_PLUGIN_DIRS=${imageMod}
     exec ${claude-code-raw}/bin/claude "$@"
   '';
   claude-code = pkgs.symlinkJoin {
