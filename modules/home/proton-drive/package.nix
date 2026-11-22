@@ -7,6 +7,7 @@
   makeWrapper,
   libsecret,
   glib,
+  util-linux,
 }:
 # Official Proton Drive CLI (ProtonDriveApps/sdk), a Bun --compile binary.
 # Only the interpreter is patched: strip or an rpath rewrite would damage the appended JS payload.
@@ -27,7 +28,9 @@ stdenvNoCC.mkDerivation rec {
     install -Dm755 $src $out/libexec/proton-drive
     patchelf --set-interpreter "$(cat ${stdenv.cc}/nix-support/dynamic-linker)" $out/libexec/proton-drive
     # libsecret is dlopen'd for the keychain credential store
-    makeWrapper $out/libexec/proton-drive $out/bin/proton-drive \
+    # one CLI process at a time: concurrent ones race on the single-use refresh token and the loser deletes the session
+    makeWrapper ${util-linux}/bin/flock $out/bin/proton-drive \
+      --add-flags "\''${XDG_RUNTIME_DIR:-/tmp}/proton-drive-cli.lock $out/libexec/proton-drive" \
       --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libsecret glib ]}
   '';
   meta.mainProgram = "proton-drive";

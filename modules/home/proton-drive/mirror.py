@@ -12,7 +12,8 @@ Quirks this works around:
   - rsync snapshots: only each job's `latest` is mirrored, under a fixed
     remote name, so weekly dated folders don't pile up as full copies
   - parallel CLI processes race on the single-use refresh token after ~24h
-    and the loser deletes the stored session, hence WORKERS = 1
+    and the loser deletes the stored session, hence WORKERS = 1 (the package
+    wrapper also serializes every CLI call, e.g. the daily backup watchdog's)
 """
 
 import json
@@ -20,6 +21,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 DRIVE = "/mnt/backup"  # /mnt/backup/recovery is historical data and deliberately NOT mirrored
@@ -42,7 +44,12 @@ logged_out = threading.Event()
 
 
 def cli(*args):
-    r = subprocess.run(["proton-drive", *args], capture_output=True, text=True)
+    # a keyring read can come back empty for one call (nov 22), so only a repeated "login first" means logged out
+    for wait in (0, 30, 120):
+        time.sleep(wait)
+        r = subprocess.run(["proton-drive", *args], capture_output=True, text=True)
+        if "login first" not in r.stdout + r.stderr:
+            break
     return r.returncode, r.stdout + r.stderr
 
 

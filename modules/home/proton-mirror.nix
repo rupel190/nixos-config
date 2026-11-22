@@ -21,7 +21,8 @@ let
           break
         fi
         ok=0
-        case "''${out:-}" in *"login first"* | *"Invalid access token"*) break ;; esac
+        # a lone "login first" can be a keyring read that came back empty; a real logout just waits out the 10 min
+        case "''${out:-}" in *"Invalid access token"*) break ;; esac
         sleep 30
       done
       # An expired session otherwise surfaces as thousands of per-call failures
