@@ -205,6 +205,7 @@ in
       scur = "systemctl --user restart";
 
       se = "sudoedit";
+      nos = "nh os switch";
       vault = "cd /home/rupel/.local/share/Cryptomator/mnt/Vault";
       mac-trichoderma = "e0:d5:5e:4f:29:42";
       cl = "claude --resume";

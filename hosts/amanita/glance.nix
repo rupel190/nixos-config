@@ -24,10 +24,10 @@ let
   };
 in
 {
-  # Glance on :8084, side by side with Homepage (:8082) until one of them goes; drop this import in health.nix to remove it
+  # Glance on :8084, the front page (it won over Homepage)
   services.glance = {
     enable = true;
-    # reuses Homepage's Pi-hole app password from the same secret
+    # the Pi-hole app password, still under the name Homepage gave it
     environmentFile = secret.path;
     # open to the LAN like Jellyfin; no login, so anyone on the Wi-Fi sees it
     openFirewall = true;
@@ -119,7 +119,6 @@ in
               size = "small";
               widgets = [
                 (monitor "Dashboards" [
-                  (lan "Homepage" 8082 "/")
                   (lan "Gatus" 8083 "/")
                   (lan "Beszel" 8090 "/api/health")
                 ])
@@ -130,7 +129,6 @@ in
                     "henrygd/beszel"
                     "TwiN/gatus"
                     "glanceapp/glance"
-                    "gethomepage/homepage"
                     "oss-apps/split-pro"
                     "jellyfin/jellyfin"
                     "pi-hole/pi-hole"

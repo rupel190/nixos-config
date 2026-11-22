@@ -1,6 +1,5 @@
-{ config, lib, ... }:
+{ config, ... }:
 let
-  amanita = "10.0.0.20";
   pi = "10.0.0.10";
   router = "10.0.0.1";
   secret = config.age.secrets.health-dashboard;
@@ -28,160 +27,17 @@ let
         query-type = "A";
       };
     };
-
-  # Homepage tile for an app on amanita; keys come from the secret as HOMEPAGE_VAR_<NAME>_KEY.
-  # The link opens `host`: localhost only works on amanita, its LAN address everywhere once the app's port is open
-  tileOn = host: name: port: widget: {
-    ${name} = {
-      href = "http://${host}:${toString port}";
-      icon = "${lib.toLower name}.svg";
-      siteMonitor = "http://127.0.0.1:${toString port}";
-    }
-    // lib.optionalAttrs (widget != null) {
-      # key = null drops the key for widgets that need none
-      widget = lib.filterAttrs (_: v: v != null) (
-        {
-          type = lib.toLower name;
-          url = "http://127.0.0.1:${toString port}";
-          key = "{{HOMEPAGE_VAR_${lib.toUpper name}_KEY}}";
-        }
-        // widget
-      );
-    };
-  };
-  tile = tileOn "localhost";
-  lanTile = tileOn amanita;
 in
 {
   # Health dashboard, here until the Pi runs NixOS; then this file moves to the Pi's host.
-  # All open to the LAN: homepage :8082 (front page), gatus :8083 (up/down + Discord), beszel :8090 (machines)
-  imports = [ ./glance.nix ]; # :8084, on trial against homepage
+  # All open to the LAN: glance :8084 (front page), gatus :8083 (up/down + Discord), beszel :8090 (machines)
+  imports = [ ./glance.nix ];
 
-  # tile API keys + the Discord webhook; edit with `ragenix -e health-dashboard.age` inside secrets/
+  # the Discord webhook and the Pi-hole app password; the HOMEPAGE_VAR_* names outlived Homepage.
+  # Edit with `ragenix -e health-dashboard.age -i ~/.ssh/id_ed25519_fresh` inside secrets/
   age.secrets.health-dashboard.file = ../../secrets/health-dashboard.age;
   # an edited secret only reaches the apps through a restart
   systemd.services.gatus.restartTriggers = [ secret.file ];
-  systemd.services.homepage-dashboard.restartTriggers = [ secret.file ];
-
-  services.homepage-dashboard = {
-    enable = true;
-    # open to the LAN like Jellyfin; no login, so anyone on the Wi-Fi sees it (keys stay server-side)
-    openFirewall = true;
-    allowedHosts = lib.concatMapStringsSep "," (h: "${h}:8082") [
-      "localhost"
-      "127.0.0.1"
-      amanita
-      "amanita"
-      "amanita.lan"
-    ];
-    environmentFiles = [ secret.path ];
-    settings = {
-      title = "amanita";
-      theme = "dark";
-      color = "slate";
-      headerStyle = "clean";
-      layout = {
-        Health = {
-          style = "row";
-          columns = 3;
-        };
-        Network = {
-          style = "row";
-          columns = 4;
-        };
-        Media = {
-          style = "row";
-          columns = 4;
-        };
-      };
-    };
-    widgets = [
-      {
-        resources = {
-          cpu = true;
-          memory = true;
-          cputemp = true;
-          uptime = true;
-          disk = [
-            "/"
-            "/mnt/silo"
-          ];
-        };
-      }
-      {
-        datetime = {
-          text_size = "md";
-          format = {
-            dateStyle = "long";
-            timeStyle = "short";
-            hour12 = false;
-          };
-        };
-      }
-    ];
-    services = [
-      {
-        Health = [
-          (lanTile "Gatus" 8083 { key = null; })
-          (lanTile "Beszel" 8090 {
-            key = null;
-            username = "{{HOMEPAGE_VAR_BESZEL_USER}}";
-            password = "{{HOMEPAGE_VAR_BESZEL_PASSWORD}}";
-            version = 2;
-          })
-          (lanTile "Glance" 8084 null)
-        ];
-      }
-      {
-        Network = [
-          {
-            Pi-hole = {
-              href = "http://${pi}:8080/admin";
-              icon = "pi-hole.svg";
-              widget = {
-                type = "pihole";
-                url = "http://${pi}:8080";
-                version = 6;
-                key = "{{HOMEPAGE_VAR_PIHOLE_KEY}}";
-              };
-            };
-          }
-          {
-            InvoiceNinja = {
-              href = "http://${pi}";
-              icon = "invoice-ninja.svg";
-              siteMonitor = "http://${pi}";
-            };
-          }
-          {
-            SplitPro = {
-              # LAN only for now; login codes land in Mailpit at :8025
-              href = "http://${pi}:3000";
-              icon = "mdi-account-cash";
-              siteMonitor = "http://${pi}:3000/api/healthz";
-            };
-          }
-          {
-            Router = {
-              href = "https://${router}";
-              icon = "openwrt.svg";
-            };
-          }
-        ];
-      }
-      {
-        Media = [
-          (lanTile "Jellyfin" 8096 { enableBlocks = true; })
-          (tile "Sonarr" 8989 { enableQueue = true; })
-          (tile "Radarr" 7878 { enableQueue = true; })
-          (tile "Prowlarr" 9696 { })
-          (tile "SABnzbd" 8085 { })
-          (tile "Bazarr" 6767 { })
-          (lanTile "RomM" 8070 null)
-        ];
-      }
-    ];
-  };
 
   services.gatus = {
     enable = true;
@@ -226,7 +82,6 @@ in
         (ping "network" "router" router)
         (ping "network" "internet" "1.1.1.1")
 
-        (check "dashboard" "homepage" "http://127.0.0.1:8082/" ok)
         (check "dashboard" "beszel" "http://127.0.0.1:8090/api/health" ok)
         (check "dashboard" "glance" "http://127.0.0.1:8084/api/healthz" ok)
       ];

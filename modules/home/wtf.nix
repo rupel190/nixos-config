@@ -21,7 +21,6 @@ let
     { port = 8085; path = "/api?mode=version"; lan = false; } # sabnzbd
     { port = 6767; path = "/"; lan = false; } # bazarr
     { port = 8070; path = "/"; lan = true; } # romm
-    { port = 8082; path = "/"; lan = true; } # homepage
     { port = 8083; path = "/"; lan = true; } # gatus
     { port = 8090; path = "/api/health"; lan = true; } # beszel
     { port = 8084; path = "/api/healthz"; lan = true; } # glance

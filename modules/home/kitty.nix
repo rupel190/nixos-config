@@ -10,13 +10,19 @@ let
       sessions="$HOME/.claude/sessions"
       mkdir -p "$(dirname "$out")"
 
-      # Per tab: every foreground pid of its windows, and the active window's cwd.
-      # Only the main window (scratch and yazi windows have their own class), and not
-      # the system tabs: kitty-start adds those on every start, saved they'd come back twice.
-      tabs=$(kitten @ ls | jq -c '.[] | select(.is_active and .wm_class == "kitty") | .tabs[]
+      # Only the main window counts; scratch and yazi windows have their own class
+      ls=$(kitten @ ls)
+      if ! jq -e 'any(.[]; .is_active and .wm_class == "kitty")' <<<"$ls" >/dev/null; then
+        notify-send -a kitty "Nothing saved, only the main kitty window's tabs count"
+        exit 1
+      fi
+
+      # Per tab: every foreground pid of its windows, and the active window's cwd. Not the
+      # system tabs: kitty-start adds those on every start, saved they'd come back twice.
+      tabs=$(jq -c '.[] | select(.is_active and .wm_class == "kitty") | .tabs[]
         | select(any(.windows[]; .user_vars.system == "1") | not)
         | {pids: [.windows[].foreground_processes[].pid],
-           cwd: (first(.windows[] | select(.is_active) | .cwd) // .windows[0].cwd)}')
+           cwd: (first(.windows[] | select(.is_active) | .cwd) // .windows[0].cwd)}' <<<"$ls")
 
       file="# kitty-save-tabs, $(date -Is)"$'\n'
       count=0
@@ -36,13 +42,14 @@ let
         count=$((count + 1))
       done <<<"$tabs"
 
-      if [ "$count" -eq 0 ]; then
-        notify-send -a kitty "Nothing saved, only the main kitty window's tabs count (the system tabs come back on their own)"
-        exit 1
-      fi
+      # Only system tabs open: saving that clears the saved tabs
       tmp=$(mktemp "$out.XXXXXX")
       printf '%s' "$file" >"$tmp" && mv "$tmp" "$out"
-      notify-send -a kitty "Saved $count tabs ($claude claude)"
+      if [ "$count" -eq 0 ]; then
+        notify-send -a kitty "Saved no tabs: kitty starts with just the system tabs"
+      else
+        notify-send -a kitty "Saved $count tabs ($claude claude)"
+      fi
     '';
   };
 
