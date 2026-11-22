@@ -12,21 +12,34 @@ let
         echo "another proton-mirror is still running; skipping"
         exit 0
       fi
+      # At boot the notification daemon may not be up yet; a failed notify must not end the run unlogged
+      notify() { echo "''${*: -2}"; notify-send "$@" || true; }
+      # A boot-time catch-up starts before /mnt/backup is mounted and the network answers: wait up to 10 min
+      for _ in $(seq 20); do
+        if mountpoint -q /mnt/backup && out=$(proton-drive filesystem list /my-files 2>&1); then
+          ok=1
+          break
+        fi
+        ok=0
+        case "''${out:-}" in *"login first"* | *"Invalid access token"*) break ;; esac
+        sleep 30
+      done
       # An expired session otherwise surfaces as thousands of per-call failures
-      if ! out=$(proton-drive filesystem list /my-files 2>&1); then
-        case "$out" in
-          *"login first"*) notify-send -u critical "Proton mirror: logged out" "run: proton-drive auth login" ;;
-          *) notify-send -u critical "Proton mirror: Drive unreachable" "$(echo "$out" | tail -n 1)" ;;
+      if [ "$ok" -ne 1 ]; then
+        echo "''${out:-/mnt/backup is not mounted}"
+        case "''${out:-}" in
+          *"login first"* | *"Invalid access token"*) notify -u critical -t 0 "Proton mirror: logged out" "run: proton-drive auth login" ;;
+          "") notify -u critical -t 0 "Proton mirror failed" "/mnt/backup is not mounted" ;;
+          *) notify -u critical -t 0 "Proton mirror: Drive unreachable" "$(echo "$out" | tail -n 1)" ;;
         esac
-        echo "$out"
         exit 1
       fi
       rc=0
       python3 ${./proton-drive/mirror.py} || rc=$?
       case "$rc" in
-        0) notify-send "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup" ;;
-        3) notify-send -u critical "Proton mirror: logged out mid-run" "run: proton-drive auth login" ;;
-        *) notify-send -u critical "Proton mirror failed" "see: journalctl --user -u proton-mirror" ;;
+        0) notify "Proton mirror complete" "/mnt/backup/current → Proton Drive /my-files/backup" ;;
+        3) notify -u critical -t 0 "Proton mirror: logged out mid-run" "run: proton-drive auth login" ;;
+        *) notify -u critical -t 0 "Proton mirror failed" "see: journalctl --user -u proton-mirror" ;;
       esac
       exit "$rc"
     '';

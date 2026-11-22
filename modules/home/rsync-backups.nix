@@ -16,6 +16,8 @@ let
         "/.local/share/Steam/steamapps/common" "/.local/share/Steam/steamapps/shadercache"
         "/.local/share/Steam/steamapps/workshop" "/.local/share/Steam/steamapps/downloading"
         "/.local/share/Steam/steamapps/temp"
+        # Steam's web and library caches: hundreds of files churn weekly, each a slow remote delete in the mirror
+        "/.local/share/Steam/config/htmlcache/" "/.local/share/Steam/appcache/"
         "/games/beamng-mod-backups" "/games/gtav-layers" "/.local/share/gnome-boxes"
         # app caches (Electron/Chromium/Firefox, Flatpak)
         "/.config/**/Cache/" "/.config/**/Code Cache/" "/.config/**/GPUCache/" "/.config/**/DawnCache/"
@@ -59,8 +61,15 @@ let
     name = "rsync-backups";
     runtimeInputs = with pkgs; [ rsync libnotify coreutils findutils util-linux ];
     text = ''
+      # At boot the notification daemon may not be up yet; a failed notify must not end the run unlogged
+      notify() { echo "''${*: -2}"; notify-send "$@" || true; }
+      # A boot-time catch-up starts before /mnt/backup is mounted: wait up to 10 min
+      for _ in $(seq 20); do
+        mountpoint -q /mnt/backup && break
+        sleep 30
+      done
       if ! mountpoint -q /mnt/backup; then
-        notify-send -u critical "Backup failed" "/mnt/backup is not mounted"
+        notify -u critical "Backup failed" "/mnt/backup is not mounted"
         exit 1
       fi
 
@@ -73,7 +82,7 @@ let
         # a missing source (e.g. silo not mounted) would otherwise pass as exit 23 and rotate it away
         for s in "$@"; do
           if [ ! -e "$s" ]; then
-            notify-send -u critical "Backup failed" "$name: $s missing"
+            notify -u critical "Backup failed" "$name: $s missing"
             failed=1
             return
           fi
@@ -89,7 +98,7 @@ let
         rsync -aHAX --delete --delete-excluded "''${opts[@]}" "$@" "$dest/$date/" || rc=$?
         # 23 = some files unreadable, 24 = files vanished mid-run; the snapshot is still usable
         if [ "$rc" -ne 0 ] && [ "$rc" -ne 23 ] && [ "$rc" -ne 24 ]; then
-          notify-send -u critical "Backup failed" "$name: rsync exit $rc"
+          notify -u critical "Backup failed" "$name: rsync exit $rc"
           failed=1
           return
         fi
@@ -98,7 +107,7 @@ let
         find "$dest" -mindepth 1 -maxdepth 1 -type d -name '????-??-??' | sort | head -n -${toString keep} | xargs -r rm -rf --
         local note=""
         [ "$rc" -ne 0 ] && note=" (rsync exit $rc, see journal)"
-        notify-send "Backup complete" "$name → $date$note"
+        notify "Backup complete" "$name → $date$note"
       }
 
       ${pkgs.lib.concatMapStrings runJob jobs}

@@ -1,8 +1,8 @@
 """Mirror /mnt/backup/current to Proton Drive with the official proton-drive CLI.
 
 Each run makes the remote an exact copy of the local tree:
-  1. plan: walk the tree, list what should exist, create the remote folders (in parallel)
-  2. prune: trash + permanently delete what disappeared since the last run
+  1. plan: walk the tree, list what should exist, create the remote folders the last run didn't have
+  2. prune: trash + permanently delete what disappeared since the last run, in batches
   3. save the plan as the new manifest (a killed run loses nothing: the next one re-plans)
   4. upload in parallel (the CLI skips files whose content is unchanged)
 
@@ -28,13 +28,16 @@ REMOTE = os.environ.get("MIRROR_REMOTE", "/my-files/backup")
 SNAPSHOTS = "rsync-weekly-bak"
 EXCLUDE = {"Passwords.key"}  # by name, anywhere: the keyfile must never sit next to its database
 STATE = os.environ.get("MIRROR_STATE", os.path.expanduser("~/.local/state/proton-mirror/manifest"))
+FOLDERS = STATE + ".folders"  # remote folders known to exist after the last run
 BATCH = 200  # local paths per upload call
+PRUNE_BATCH = 50  # remote paths per trash/delete call; each call walks the remote tree from the root
 WORKERS = 1  # upload calls at a time; >1 logs the CLI out at token refresh (see top)
 SPLIT = 2000  # folders with more files are split up, so the workers share them
 
 LOGGED_OUT = 3  # exit code the wrapper turns into a "log in again" notification
 
 failures = []
+suspect = set()  # remote folders a create or upload failed for: not trusted to exist next run
 logged_out = threading.Event()
 
 
@@ -77,6 +80,7 @@ def create_folders(folders):
                 created.add(f)
             else:
                 failures.append(f"create-folder {f}: {out.strip()}")
+                suspect.add(f)
 
     with ThreadPoolExecutor(WORKERS) as pool:
         for depth in sorted(by_depth):
@@ -156,14 +160,36 @@ def prune(old, new):
     for p in sorted(old - new):
         if not (tops and tops[-1].endswith("/") and p.startswith(tops[-1])):
             tops.append(p)
-    for p in tops:
-        rel = p.rstrip("/")
-        rc, out = cli("filesystem", "trash", remote(rel))
-        if rc != 0:
-            failures.append(f"trash {rel}: {out.strip()}")
-            continue
-        rc, out = cli("filesystem", "delete", "/trash/" + rel.rsplit("/", 1)[-1])
-        print(f"removed {rel}" if rc == 0 else f"trashed (not deleted) {rel}: {out.strip()}", flush=True)
+
+    def each(cmd, batch, target, record=True):
+        """Run cmd on the whole batch; if that fails, one path at a time. Returns the paths that succeeded."""
+        if not batch:
+            return []
+        rc, out = cli("filesystem", cmd, *map(target, batch))
+        if rc == 0:
+            return batch
+        if "login first" in out:
+            logged_out.set()
+            return []
+        done = []
+        for rel in batch:
+            rc, out = cli("filesystem", cmd, target(rel))
+            if "login first" in out:
+                logged_out.set()
+                break
+            if rc == 0:
+                done.append(rel)
+            elif record:
+                failures.append(f"{cmd} {rel}: {out.strip()}")
+        return done
+
+    for i in range(0, len(tops), PRUNE_BATCH):
+        if logged_out.is_set():
+            return
+        trashed = each("trash", [p.rstrip("/") for p in tops[i:i + PRUNE_BATCH]], remote)
+        deleted = set(each("delete", trashed, lambda rel: "/trash/" + rel.rsplit("/", 1)[-1], record=False))
+        for rel in trashed:
+            print(f"removed {rel}" if rel in deleted else f"trashed (not deleted) {rel}", flush=True)
 
 
 def upload(job):
@@ -176,6 +202,12 @@ def upload(job):
         logged_out.set()
     if rc != 0:
         failures.append(f"upload into {rel or '/'}: exit {rc}")
+        suspect.add(rel)
+
+
+def save_folders(folders):
+    with open(FOLDERS, "w") as f:
+        f.write("\n".join(sorted(folders - suspect)) + "\n")
 
 
 def main():
@@ -184,18 +216,27 @@ def main():
     manifest, jobs, folders = set(), [], set()
     plan_dir(LOCAL, "", manifest, jobs, folders, top=True)
     plan_snapshots(manifest, jobs, folders)
-    print(f"planned {len(manifest)} paths, {len(folders)} folders, {len(jobs)} upload calls", flush=True)
-    create_folders(folders)
+    known = set()
+    if os.path.exists(FOLDERS):
+        with open(FOLDERS) as f:
+            known = set(f.read().splitlines())
+    print(f"planned {len(manifest)} paths, {len(folders)} folders ({len(folders - known)} new), {len(jobs)} upload calls", flush=True)
+    create_folders(folders - known)
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    save_folders(folders)
 
     if os.path.exists(STATE):
         with open(STATE) as f:
             prune(set(f.read().splitlines()), manifest)
-    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    if logged_out.is_set():  # the old manifest stays, so the next run finishes the prune
+        print("Proton Drive session lost mid-run; remaining work skipped", file=sys.stderr)
+        sys.exit(LOGGED_OUT)
     with open(STATE, "w") as f:
         f.write("\n".join(sorted(manifest)) + "\n")
 
     with ThreadPoolExecutor(WORKERS) as pool:
         list(pool.map(upload, jobs))
+    save_folders(folders)
 
     if logged_out.is_set():
         print("Proton Drive session lost mid-run; remaining uploads skipped", file=sys.stderr)
