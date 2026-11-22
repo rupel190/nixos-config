@@ -14,7 +14,8 @@
     ./surge.nix # download manager
     ./darya.nix # disk usage visualizer
     ./tuinews.nix # rss reader with pictures
-    ./mirador.nix # terminal dashboard: clocks, weather, tasks, notes, markets
+    ./mirador.nix # terminal dashboard: clocks, weather, tasks, notes, markets, and our own panels
+    ./dash-panels.nix # plain-text panels for the terminal dashboards (health from gatus, failed units, security)
     ./wtf.nix # terminal dashboard of plugin modules: services, machines, git, github, security
     ./btop # resouces monitor
     ./bat.nix # better cat command

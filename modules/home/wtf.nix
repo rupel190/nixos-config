@@ -30,28 +30,6 @@ let
     a: "http://${if onAmanita then "127.0.0.1" else amanita}:${toString a.port}${a.path}"
   ) (lib.filter (a: onAmanita || a.lan) apps);
 
-  # cmdrunner panels: any command's output, refreshed
-  failedUnits = pkgs.writeShellApplication {
-    name = "wtf-failed-units";
-    runtimeInputs = [ pkgs.systemd ];
-    text = ''
-      f=$(systemctl --failed --no-legend --plain; systemctl --user --failed --no-legend --plain)
-      echo "''${f:-none, system or user}"
-    '';
-  };
-  # WTF's own security module asks ufw/nft/iptables, which need root, and so reports "No firewall"
-  securityFacts = pkgs.writeShellApplication {
-    name = "wtf-security";
-    runtimeInputs = [ pkgs.systemd pkgs.gawk pkgs.iproute2 ];
-    text = ''
-      echo "firewall  $(systemctl is-active firewall.service || true)"
-      echo "dns       $(awk '/^nameserver/ {printf "%s ", $2}' /etc/resolv.conf)"
-      echo "vpn       $(ip -br addr | awk '$1 ~ /^(zt|wg|tun|proton)/ {printf "%s %s  ", $1, $3}')"
-      echo "sessions"
-      loginctl list-sessions --no-legend | awk '$6 != "manager" {print "  " $3, $4, $7}'
-    '';
-  };
-
   # the github module reads its token from the environment: borrow gh's login instead of storing another
   wtf = pkgs.writeShellScriptBin "wtf" ''
     WTF_GITHUB_TOKEN=$(${pkgs.gh}/bin/gh auth token 2>/dev/null || true) exec ${pkgs.wtfutil}/bin/wtfutil "$@"
@@ -63,9 +41,10 @@ in
   # One screen of WTF modules, a tab in kitty; every module is listed at https://wtfutil.com/modules/
   xdg.configFile."wtf/config.yml".source = (pkgs.formats.yaml { }).generate "wtf-config.yml" {
     wtf = {
+      # negative sizes are shares of the window (tview), so the grid fits any tab width
       grid = {
-        columns = [ 60 60 60 ];
-        rows = [ 10 10 12 12 ];
+        columns = [ (-1) (-1) (-1) ];
+        rows = [ (-10) (-10) (-12) (-12) ];
       };
       refreshInterval = 1;
       mods = {
@@ -126,7 +105,7 @@ in
           enabled = true;
           position = at 1 0 1 1;
           refreshInterval = 60;
-          cmd = "${failedUnits}/bin/wtf-failed-units";
+          cmd = "panel-failed-units"; # dash-panels.nix
         };
         git = {
           enabled = true;
@@ -163,7 +142,7 @@ in
           enabled = true;
           position = at 3 2 1 1;
           refreshInterval = 300;
-          cmd = "${securityFacts}/bin/wtf-security";
+          cmd = "panel-security"; # dash-panels.nix
         };
       }
       # the laptop shows its battery where amanita shows what Spotify plays
