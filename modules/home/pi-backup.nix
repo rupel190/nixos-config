@@ -78,7 +78,8 @@ let
       fi
 
       # The Pi is meant to run 24/7 but has lost power for weeks at a time
-      if ! ping -c 2 -W 3 raspi >/dev/null 2>&1; then
+      # IPv4: the router's DNS can still hold IPv6 addresses from an old lease the Pi no longer has
+      if ! ping -4 -c 2 -W 3 raspi >/dev/null 2>&1; then
         problems="$problems raspi is not answering ping."
       fi
 

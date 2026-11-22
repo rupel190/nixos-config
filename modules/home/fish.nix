@@ -206,6 +206,8 @@ in
 
       se = "sudoedit";
       nos = "nh os switch";
+      # the Pi, built here (its kernel from the nixos-raspberrypi cache) and switched over ssh
+      nos-pi = "nixos-rebuild switch --flake ~/projects/nixos-config#raspi --target-host raspi --sudo --option extra-substituters https://nixos-raspberrypi.cachix.org";
       vault = "cd /home/rupel/.local/share/Cryptomator/mnt/Vault";
       mac-trichoderma = "e0:d5:5e:4f:29:42";
       cl = "claude --resume";

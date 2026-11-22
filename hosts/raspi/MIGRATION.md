@@ -132,6 +132,24 @@ while the SD card is out. Once both carry the NixOS image they also share its pa
    write the NixOS image onto it, copy the host keys and zerotier identity in. Reboot without the
    stick: NixOS from the SD card, the same setup as before. The stick stays as a NixOS rescue system.
 
+### Stage 1 done 2026-11-22
+
+NixOS from the stick at 08:56, all apps up at 09:30. Checked: InvoiceNinja's counts, newest invoice,
+total and table checksums identical to the drill; Pi-hole answers and blocks; all 18 Gatus checks; all
+four backup jobs wrote on NixOS and amanita pulled them, watchdog green; Beszel agent connected;
+ZeroTier the same node (`20d3ee29a0`) and address; ssh with the old host key, no warning.
+
+Learned on the way:
+- The image's root-partition growing fails on a USB stick (it computes partition "18" for
+  `/dev/sdb2`); grown by hand with `sfdisk -N 2` and `resize2fs`. The SD card is the case it is written for.
+- Loading the 6.8 GB of saved images took about 25 minutes on the stick, which writes many small files slowly.
+- The clock read 20:56 until NTP synced, so the backup timers fired at boot before any app ran (harmless).
+- The router's DNS still held Debian's IPv6 lease (`::fc2`), so the watchdog pings over IPv4 now.
+- Debian's `cmdline.txt` fix for memory accounting does not carry over: it is `boot.kernelParams` here.
+
+Updates from amanita (fish abbreviation `nos-pi`):
+`nixos-rebuild switch --flake .#raspi --target-host raspi --sudo --option extra-substituters https://nixos-raspberrypi.cachix.org`
+
 ## Rollback
 
 - Before stage 2: power off, stick out, SD card in: Debian starts with everything as before.

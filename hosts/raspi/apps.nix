@@ -121,18 +121,25 @@ in
 
     invoiceninja-backup = {
       description = "Nightly InvoiceNinja dump and files into ${backups}/invoiceninja";
-      serviceConfig.ExecStart = lib.getExe invoiceninjaBackup;
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = lib.getExe invoiceninjaBackup;
+      };
       unitConfig.RequiresMountsFor = backups;
     };
     config-backup = {
       description = "Weekly copy of every app's compose, .env and conf into ${backups}/configs";
-      serviceConfig.ExecStart = lib.getExe configBackup;
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = lib.getExe configBackup;
+      };
       unitConfig.RequiresMountsFor = backups;
     };
     splitpro-backup = {
       description = "Nightly SplitPro dump (${apps}/splitpro/backup.sh)";
       path = backupPath;
       serviceConfig = {
+        Type = "oneshot";
         User = "rupel";
         ExecStart = "${pkgs.bash}/bin/bash ${apps}/splitpro/backup.sh";
       };
@@ -142,6 +149,7 @@ in
       description = "Nightly Paperless export (${apps}/paperless/backup.sh)";
       path = backupPath;
       serviceConfig = {
+        Type = "oneshot";
         User = "rupel";
         ExecStart = "${pkgs.bash}/bin/bash ${apps}/paperless/backup.sh";
       };

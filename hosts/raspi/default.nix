@@ -18,6 +18,12 @@
 
   # the image module offers zfs; nothing here uses it, and its module would be built for the Pi kernel
   boot.supportedFilesystems.zfs = lib.mkForce false;
+  # the Pi firmware passes cgroup_disable=memory; later arguments win. Without memory accounting
+  # Beszel shows no per-container stats and docker cannot limit memory
+  boot.kernelParams = [
+    "cgroup_enable=memory"
+    "cgroup_memory=1"
+  ];
 
   networking.hostName = "raspi";
   # the router's static lease gives this MAC 10.0.0.10
