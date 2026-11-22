@@ -26,12 +26,14 @@ data on a 1 TB WD USB disk).
 | Paperless | Docker: paperless-ngx 3.3.2, redis, paperless-gpt v0.31.0 | `apps/paperless/data` | rupel cron 02:30 `document_exporter` → `backups/paperless` | native `services.paperless` (nixpkgs has 3.3.2), data copied |
 | Beszel agent | Docker 0.21.0 | – | – | native, like `modules/core/beszel-agent.nix` |
 | ZeroTier | Debian service | `/var/lib/zerotier-one` (identity: keep it, or the node gets a new address) | none | `services.zerotierone` with the old identity copied in |
-| CUPS | Debian service, 127.0.0.1 only | ? | – | open question |
+| CUPS | Debian service, 127.0.0.1 only, no printer attached | – | – | drop (the Brother label printer works from the desktops, `modules/core/printing.nix`) |
 | smartmontools | Debian service | – | – | `services.smartd` |
 | ufw | 22, 53, 443, 8080, 30814/udp, 8083 (old), 45876 from amanita | – | – | `networking.firewall` |
 | `/var/log` | bind-mounted onto `/mnt/usbhdd/logs/var-log` to spare the SD card | | | journald setting, decide |
-| BeamMP | `/opt/beamng-server` is empty, nothing listens on 30814/udp | | | drop (confirm) |
-| snapd, wayvnc, desktop bits, 13 exited containers (screego, crater, 15–17 months old) | | | | drop |
+| BeamMP | server in `/opt/beamng-server` (binary, config, log), not running, no unit; ufw 30814/udp still open | | | drop |
+| Desktop | lightdm running a session; wayvnc installed but off | | | drop: headless |
+| snapd | installed, no snaps | | | drop |
+| 13 exited containers | screego, crater, 15–17 months old | | | drop |
 
 amanita pulls `/mnt/usbhdd/backups` daily at 03:45 (`pull-pi-backup`), the watchdog checks it at
 12:00, and the weekly Proton mirror takes it offsite.
@@ -59,7 +61,8 @@ henrygd/beszel-agent:0.21.0
   agenix with the Pi's new host key, beszel agent, zerotier, smartd, docker.
 - Built on amanita (aarch64 through binfmt emulation, kernel from the project's binary cache), first
   boot from an SD image of that config, later switches with `nh os switch --target-host`.
-- Static 10.0.0.10, hostname `raspi`, USB disk by UUID with `nofail` as today.
+- Boots from the SD card as today. Static 10.0.0.10, hostname `raspi`, USB disk by UUID with
+  `nofail` as today.
 - Containers through `virtualisation.oci-containers`, images referenced by digest and loaded from
   the saved tarballs below, so nothing depends on upstream tags still existing.
 
@@ -80,6 +83,27 @@ henrygd/beszel-agent:0.21.0
    - SplitPro: pg_dump into postgres 17.7; the balances page matches the Pi.
    - Paperless: `document_importer` into an empty 3.3.2; document count matches, a random document opens.
    - Only when all three pass: switch.
+
+### Drill results
+
+**InvoiceNinja, part 1, the data: passed 2026-11-22.** The 02:00 dump as pulled to amanita
+(`db-20261122-020001.sql.gz`, 104 KB), restored into MySQL 8.4.5 by the Pi's digest with no network,
+matches the live database line for line. The script is `drill-invoiceninja-db.sh` (session scratchpad
+for now; it belongs next to the backups once the Pi runs NixOS).
+
+```
+clients 2 · invoices 10 (9 not deleted) · payments 9 · recurring 0 · quotes 0 · credits 0
+expenses 27 · documents 41 · users 1 · tables 75
+newest invoice 0009 · 2026-04-20 · 3480.00 · invoice total 35712.00 = payment total 35712.00
+invoices last changed 2026-05-11 12:04:40
+CHECKSUM TABLE equal for clients, invoices, payments, paymentables, recurring_invoices, documents
+(v5 has no invoice_items table: line items live inside invoices)
+```
+
+**InvoiceNinja, part 2, the app: still to do.** The same app image on amanita with the restored
+`storage` and `public` and the backed-up `.env`, cut off from the internet so it cannot send mail
+or run reminders: log in, open the newest invoice's PDF, open a few of the 41 documents. That is
+what proves the files tarball and `APP_KEY` work, which the checksums cannot.
 
 ## Switch day
 
@@ -109,6 +133,6 @@ system reads it. Never run an upgraded app against the data while the old card i
 
 ## Open questions
 
-- CUPS on the Pi: is a printer attached, or is it a leftover?
-- BeamMP: drop it?
-- Boot from the SD card as today, or from an NVMe?
+- Network zones before anything faces the internet: does the Pi get its own segment (a DMZ next to
+  `lan` and the Wi-Fi-only `iot` network on the router)? Proton Mail Bridge waits for that answer,
+  since a logged-in Bridge lets anyone with root on the Pi read all mail.
