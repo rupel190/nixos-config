@@ -62,7 +62,7 @@ in
           timeout = 5;
           # urlcheck sends HEAD; splitpro's health URL refuses that (405), its manifest does not
           urls = appUrls ++ [
-            "http://${pi}:8080/admin/"
+            "http://${pi}:8080/"
             "http://${pi}/"
             "http://${pi}:3000/manifest.json"
           ];

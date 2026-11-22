@@ -17,7 +17,7 @@ let
   };
   ok = [ "[STATUS] == 200" ];
   ping = group: name: host: check group name "icmp://${host}" [ "[CONNECTED] == true" ];
-  # asks Pi-hole directly, so it also catches "answers but stopped blocking"
+  # asks the Pi's DNS (AdGuard Home) directly, so it also catches "answers but stopped blocking"
   dns =
     name: query: condition:
     check "pi" name pi [ condition ]
@@ -33,7 +33,7 @@ in
   # All open to the LAN: glance :8084 (front page), gatus :8083 (up/down + Discord), beszel :8090 (machines)
   imports = [ ./glance.nix ];
 
-  # the Discord webhook and the Pi-hole app password; the HOMEPAGE_VAR_* names outlived Homepage.
+  # the Discord webhook (and Pi-hole's app password, unused since AdGuard Home took over).
   # Edit with `ragenix -e health-dashboard.age -i ~/.ssh/id_ed25519_fresh` inside secrets/
   age.secrets.health-dashboard.file = ../../secrets/health-dashboard.age;
   # an edited secret only reaches the apps through a restart
@@ -73,9 +73,9 @@ in
         (check "media" "romm" "http://127.0.0.1:8070/api/heartbeat" ok)
 
         (ping "pi" "pi" pi)
-        (dns "pi-hole answers" "example.com" "[DNS_RCODE] == NOERROR")
-        (dns "pi-hole blocks ads" "doubleclick.net" "[BODY] == 0.0.0.0")
-        (check "pi" "pi-hole web" "http://${pi}:8080/admin/" ok)
+        (dns "dns answers" "example.com" "[DNS_RCODE] == NOERROR")
+        (dns "dns blocks ads" "doubleclick.net" "[BODY] == 0.0.0.0")
+        (check "pi" "adguard web" "http://${pi}:8080/" ok)
         (check "pi" "invoiceninja" "http://${pi}/" ok)
         (check "pi" "splitpro" "http://${pi}:3000/api/healthz" ok)
         (check "pi" "paperless" "http://${pi}:8000/accounts/login/" ok)

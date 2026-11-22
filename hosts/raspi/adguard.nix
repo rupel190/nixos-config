@@ -1,9 +1,6 @@
 { pkgs, ... }:
 let
   router = "10.0.0.1";
-  # Test phase: next to Pi-hole, DNS on 5300 and the web page on 3001. At the cutover DNS moves to 53
-  # and the web page to Pi-hole's 8080, and the pihole app goes.
-  dnsPort = 5300;
 
   # Sets the web page's login inside AdGuard's own file (kept across starts by mutableSettings), so the
   # password and its hash never enter this repo: ssh -t raspi sudo adguard-login
@@ -39,15 +36,16 @@ in
   services.adguardhome = {
     enable = true;
     host = "0.0.0.0";
-    # the firewall keeps it shut until it has a login: ssh -L 3001:127.0.0.1:3001 raspi
-    port = 3001;
+    # Pi-hole's old web port, so bookmarks keep working
+    port = 8080;
+    openFirewall = true;
     # merged into AdGuard's own file on every start, so what only lives there stays: the login,
     # which is why its password hash never enters this repo
     mutableSettings = true;
     settings = {
       dns = {
         bind_hosts = [ "0.0.0.0" ];
-        port = dnsPort;
+        port = 53;
         upstream_dns = [
           "1.1.1.1"
           "2606:4700:4700::1111"
@@ -70,6 +68,20 @@ in
         protection_enabled = true;
         filtering_enabled = true;
         blocking_mode = "null_ip";
+        # answered here without going upstream, as Pi-hole did: amanita's pihole-watch asks it
+        rewrites_enabled = true;
+        rewrites = [
+          {
+            domain = "pi.hole";
+            answer = "10.0.0.10";
+            enabled = true;
+          }
+        ];
+      };
+      # every lookup in the house, kept about as long as Pi-hole did (91 days)
+      querylog = {
+        file_enabled = true;
+        interval = "2160h";
       };
       filters = [
         {
@@ -82,9 +94,19 @@ in
     };
   };
 
-  # the test port, for the LAN only
-  networking.firewall.extraCommands = ''
-    iptables -A nixos-fw -p udp -s 10.0.0.0/24 --dport ${toString dnsPort} -j nixos-fw-accept
-    iptables -A nixos-fw -p tcp -s 10.0.0.0/24 --dport ${toString dnsPort} -j nixos-fw-accept
-  '';
+  # its settings, login and query history on the USB disk like every app's data, so the SD card only
+  # holds the system and a dead card loses nothing
+  fileSystems."/var/lib/private/AdGuardHome" = {
+    device = "/mnt/usbhdd/apps/adguardhome";
+    fsType = "none";
+    options = [
+      "bind"
+      "nofail"
+    ];
+    depends = [ "/mnt/usbhdd" ];
+  };
+  systemd.services.adguardhome.unitConfig.RequiresMountsFor = "/var/lib/private/AdGuardHome";
+
+  networking.firewall.allowedTCPPorts = [ 53 ];
+  networking.firewall.allowedUDPPorts = [ 53 ];
 }

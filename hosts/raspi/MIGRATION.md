@@ -168,6 +168,14 @@ Rollback from here: the Transcend stick boots a working NixOS (with the SD card 
 the Debian image can go back onto the card. The raw app folders and images from before the switch
 are also on amanita (`/mnt/backup/raspi-cold-20261122`).
 
+### After: AdGuard Home in place of Pi-hole (2026-11-22)
+
+`adguard.nix`: Pi-hole's list, upstreams, local names and reverse lookups, its web port 8080 and `pi.hole`;
+the answers were compared on a test port before the switch. Its settings, login and 90 days of query
+history live on the USB disk (`apps/adguardhome`), and `/var/log` is back there as on Debian, so the SD
+card holds only the system. Pi-hole's folder stays on the disk: to go back, `systemctl stop adguardhome`
+and `docker compose up -d --pull never` in `apps/pihole`.
+
 Updates from amanita (fish abbreviation `nos-pi`):
 `nixos-rebuild switch --flake .#raspi --target-host raspi --sudo --option extra-substituters https://nixos-raspberrypi.cachix.org`
 

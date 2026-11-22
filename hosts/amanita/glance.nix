@@ -1,9 +1,8 @@
-{ config, lib, ... }:
+{ lib, ... }:
 let
   amanita = "10.0.0.20";
   pi = "10.0.0.10";
   router = "10.0.0.1";
-  secret = config.age.secrets.health-dashboard;
 
   # monitor row: the link opens `url`, the dot comes from `check`
   site = title: icon: url: check: {
@@ -27,8 +26,6 @@ in
   # Glance on :8084, the front page (it won over Homepage)
   services.glance = {
     enable = true;
-    # the Pi-hole app password, still under the name Homepage gave it
-    environmentFile = secret.path;
     # open to the LAN like Jellyfin; no login, so anyone on the Wi-Fi sees it
     openFirewall = true;
     settings = {
@@ -94,7 +91,7 @@ in
                   (lan "RomM" 8070 "/api/heartbeat")
                 ])
                 (monitor "Pi and network" [
-                  (site "Pi-hole" "di:pi-hole" "http://${pi}:8080/admin" "http://${pi}:8080/admin/")
+                  (site "AdGuard Home" "di:adguard-home" "http://${pi}:8080" "http://${pi}:8080/")
                   (site "InvoiceNinja" "di:invoice-ninja" "http://${pi}" "http://${pi}/")
                   (site "SplitPro" "mdi:account-cash" "http://${pi}:3000" "http://${pi}:3000/api/healthz")
                   (site "Paperless" "di:paperless-ngx" "http://${pi}:8000" "http://${pi}:8000/accounts/login/")
@@ -107,13 +104,6 @@ in
                     }
                   )
                 ])
-                {
-                  type = "dns-stats";
-                  service = "pihole-v6";
-                  url = "http://${pi}:8080";
-                  password = "\${HOMEPAGE_VAR_PIHOLE_KEY}";
-                  hour-format = "24h";
-                }
               ];
             }
             {
@@ -132,7 +122,7 @@ in
                     "glanceapp/glance"
                     "oss-apps/split-pro"
                     "jellyfin/jellyfin"
-                    "pi-hole/pi-hole"
+                    "AdguardTeam/AdGuardHome"
                     "invoiceninja/invoiceninja"
                   ];
                 }
@@ -143,5 +133,4 @@ in
       ];
     };
   };
-  systemd.services.glance.restartTriggers = [ secret.file ];
 }

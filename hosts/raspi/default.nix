@@ -78,8 +78,14 @@
   services.beszel.agent.package = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.beszel;
   services.smartd.enable = true;
   virtualisation.docker.enable = true;
-  # the journal lives on the boot stick; Debian kept /var/log on the USB disk to spare its SD card
   services.journald.extraConfig = "SystemMaxUse=500M";
+  # logs on the USB disk, as on Debian, to spare the SD card the constant small writes
+  fileSystems."/var/log" = {
+    device = "/mnt/usbhdd/logs/nixos-var-log";
+    fsType = "none";
+    options = [ "bind" "nofail" ];
+    depends = [ "/mnt/usbhdd" ];
+  };
 
   system.stateVersion = "26.05";
 }

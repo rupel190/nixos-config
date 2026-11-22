@@ -15,7 +15,7 @@ let
         done
   '';
 
-  # The router sends DNS to the Pi-hole first and falls back to Cloudflare, so an outage is silent; this makes it loud
+  # The router sends DNS to AdGuard Home first and falls back to Cloudflare, so an outage is silent; this makes it loud
   watchScript = pkgs.writeShellApplication {
     name = "pihole-watch";
     runtimeInputs = with pkgs; [ dnsutils libnotify coreutils gnugrep openssh ];
@@ -24,16 +24,16 @@ let
       seen="''${XDG_STATE_HOME:-$HOME/.local/state}/pihole-watch/dns-bypass-seen"
       ask() { dig +short +time=3 +tries=2 "$@" | grep -q .; }
 
-      # the router names its own address itself: no answer there means this PC is offline, not the Pi-hole
+      # the router names its own address itself: no answer there means this PC is offline, not AdGuard Home
       ask @${router} -x ${router} || exit 0
 
-      # pi.hole is answered by the Pi-hole without going upstream, so this tests the Pi-hole, not the internet
+      # pi.hole is answered by AdGuard Home without going upstream, so this tests AdGuard Home, not the internet
       if ! ask @${pihole} pi.hole A; then
-        problem="Pi-hole is down"
+        problem="AdGuard Home is down"
         detail="No ad blocking: the router is using Cloudflare instead"
-      # doubleclick.net is on every blocklist: a real address means the Pi-hole answers but lost its lists (its disk dropped out once)
+      # doubleclick.net is on every blocklist: a real address means AdGuard Home answers but lost its lists (its disk dropped out once)
       elif [ "$(dig +short +time=3 +tries=2 @${pihole} doubleclick.net A)" != "0.0.0.0" ]; then
-        problem="Pi-hole is not blocking"
+        problem="AdGuard Home is not blocking"
         detail="It answers, but ads get through"
       else
         problem=""
@@ -45,7 +45,7 @@ let
           notify-send -u critical -t 0 "$problem" "$detail"
         else
           rm -f "$state"
-          notify-send "Pi-hole is back" "Ad blocking is on again"
+          notify-send "AdGuard Home is back" "Ad blocking is on again"
         fi
       fi
 
@@ -68,11 +68,11 @@ let
           *) who="a DNS server" ;;
         esac
         if [ "$port" = 53 ]; then
-          outcome="redirected to the Pi-hole"
+          outcome="redirected to AdGuard Home"
         elif [[ "$dev" == 10.0.100.* ]]; then
           outcome="encrypted DNS, blocked"
         else
-          outcome="encrypted DNS, so it skipped the Pi-hole"
+          outcome="encrypted DNS, so it skipped AdGuard Home"
         fi
         via=""
         [[ "$dev" == *:* ]] && via=" over IPv6"
@@ -85,7 +85,7 @@ in
   home.packages = [ watchScript ];
 
   systemd.user.services.pihole-watch = {
-    Unit.Description = "Notify when the Pi-hole stops answering or blocking, or a device tries another DNS server";
+    Unit.Description = "Notify when AdGuard Home stops answering or blocking, or a device tries another DNS server";
     Unit.X-RestartIfChanged = false;
     Service = {
       Type = "oneshot";
@@ -94,7 +94,7 @@ in
   };
 
   systemd.user.timers.pihole-watch = {
-    Unit.Description = "Check the Pi-hole every 2 minutes";
+    Unit.Description = "Check AdGuard Home every 2 minutes";
     Timer = {
       OnBootSec = "2min";
       OnUnitActiveSec = "2min";

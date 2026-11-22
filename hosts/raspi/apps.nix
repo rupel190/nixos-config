@@ -84,7 +84,7 @@ let
         echo "$a: $(du -h "$dir/$a-config-$date.tar.gz" | cut -f1)"
       }
       save invoiceninja docker-compose.yml .env nginx php scripts supervisor Dockerfile
-      save pihole docker-compose.yml .env update.fish
+      save adguardhome AdGuardHome.yaml
       save splitpro docker-compose.yml .env backup.sh
       save paperless docker-compose.yml .env gpt.env backup.sh
     '';
@@ -125,7 +125,6 @@ in
   };
 
   systemd.services = {
-    pihole = app "pihole" "";
     invoiceninja = app "invoiceninja" "";
     splitpro = app "splitpro" "";
     # paperless-gpt (profile gpt) only once gpt.env holds its token; without one it would restart forever
