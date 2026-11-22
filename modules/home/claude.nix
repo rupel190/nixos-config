@@ -19,15 +19,6 @@ let
     '';
   };
 
-  # term-image MCP server (WezTerm only: images in a split beside claude). server.py
-  # comes from the pinned terminal-image-mcp flake input; launched via uv with
-  # the Nix python so uv doesn't download a non-runnable interpreter on NixOS.
-  termImageServer = {
-    type = "stdio";
-    command = "${pkgs.uv}/bin/uv";
-    args = [ "run" "--python" "${pkgs.python3}/bin/python3" "${inputs.terminal-image-mcp}/server.py" ];
-  };
-
   # The hooks settings.json points at. writeShellApplication rather than the
   # hand-written files these came from: runtime dependencies become explicit (a
   # missing jq used to fail at runtime, inside a hook, silently), shellcheck
@@ -482,23 +473,6 @@ in
     claude-desktop-with-fhs
   ];
 
-  # Register term-image declaratively by merging it into ~/.claude.json — the
-  # file Claude owns and rewrites constantly, so we can't manage it with
-  # home.file (that would make it read-only and wipe Claude's state). Instead
-  # we jq-merge just our one entry on each switch, atomically, preserving
-  # everything else. Same result as `claude mcp add -s user`, but reproducible
-  # and without a CLI wrapper (--mcp-config is variadic and breaks subcommands).
-  config.home.activation.termImageMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    cfg="$HOME/.claude.json"
-    entry=${lib.escapeShellArg (builtins.toJSON termImageServer)}
-    if [ -e "$cfg" ]; then
-      ${pkgs.jq}/bin/jq --argjson e "$entry" '.mcpServers."term-image" = $e' "$cfg" > "$cfg.hm-tmp"
-    else
-      ${pkgs.jq}/bin/jq -n --argjson e "$entry" '{mcpServers:{"term-image":$e}}' > "$cfg.hm-tmp"
-    fi
-    $DRY_RUN_CMD mv "$cfg.hm-tmp" "$cfg"
-  '';
-
   # Agent-facing skills that live in their own git repos. They are authored
   # content Claude never writes, so nix owns the path and claude-sync excludes
   # it — a /nix/store symlink must never be synced to a machine that did not
@@ -518,7 +492,8 @@ in
       inputs.claude-skill-interaction-tests;
 
   # settings.json is Claude-owned and rewritten in place, so home.file would make
-  # it read-only. Merge just our keys, same approach as termImageMcp above.
+  # it read-only and wipe Claude's state. Instead jq merges just our keys on each
+  # switch, atomically.
   #
   # ⚠️ `.hooks` is set WHOLESALE, not merged per-event: nix owns the hook set
   # now, so a hook added through Claude's /hooks UI is dropped on the next

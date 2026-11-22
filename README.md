@@ -240,7 +240,6 @@ tera and btop on workspace 9. kitty has no mux, so closing or crashing the windo
 | `nix-flatpak` | Flatpak integration |
 | `claude-code`, `claude-desktop` | AI coding assistant and desktop app |
 | `claude-skill-*` | Claude Code skills, pinned as flake inputs |
-| `terminal-image-mcp` | MCP server showing images in a split beside claude (git+ssh) |
 | `ragenix` | age secret management |
 | `surge` | Download manager |
 | `plasticityAppImage` | Plasticity CAD |

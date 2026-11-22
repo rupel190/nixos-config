@@ -1492,7 +1492,6 @@
         "singify": "singify",
         "spicetify-nix": "spicetify-nix",
         "surge": "surge",
-        "terminal-image-mcp": "terminal-image-mcp",
         "wezterm": "wezterm",
         "yazi-plugins": "yazi-plugins",
         "zen-browser": "zen-browser"
@@ -1719,22 +1718,6 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
-      }
-    },
-    "terminal-image-mcp": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1793032254,
-        "narHash": "sha256-4fJIJVKUE6huOQtfp6LFaPpgDXnP9P8KiEoQRbc4LI8=",
-        "ref": "refs/heads/main",
-        "rev": "71dc066cf747c3e7bb8927077dd6bda804763d55",
-        "revCount": 11,
-        "type": "git",
-        "url": "ssh://git@github.com/rupel190/terminal-image-mcp"
-      },
-      "original": {
-        "type": "git",
-        "url": "ssh://git@github.com/rupel190/terminal-image-mcp"
       }
     },
     "treefmt-nix": {

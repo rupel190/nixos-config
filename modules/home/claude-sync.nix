@@ -87,8 +87,7 @@ let
       # internals across. doublestar syntax, matched against the relative path.
       - "**/.git/**"
 
-    # ~/.claude.json is rewritten per machine by home.activation.termImageMcp and
-    # its term-image entry embeds absolute /nix/store paths. Never sync it.
+    # MCP servers are set up per machine. Never sync ~/.claude.json.
     mcp_sync: false
   '';
 
