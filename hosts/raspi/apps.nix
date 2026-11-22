@@ -86,7 +86,8 @@ let
       save invoiceninja docker-compose.yml .env nginx php scripts supervisor Dockerfile
       save pihole ftl.env
       save splitpro docker-compose.yml .env backup.sh
-      save paperless docker-compose.yml .env gpt.env backup.sh
+      save paperless native.env
+      save paperless-gpt docker-compose.yml gpt.env
     '';
   };
 in
@@ -127,8 +128,8 @@ in
   systemd.services = {
     invoiceninja = app "invoiceninja" "";
     splitpro = app "splitpro" "";
-    # paperless-gpt (profile gpt) only once gpt.env holds its token; without one it would restart forever
-    paperless = app "paperless" "$(grep -q '^PAPERLESS_API_TOKEN=.' gpt.env && echo --profile gpt)";
+    # next to the native Paperless (paperless.nix)
+    paperless-gpt = app "paperless-gpt" "";
 
     invoiceninja-backup = {
       description = "Nightly InvoiceNinja dump and files into ${backups}/invoiceninja";
@@ -159,24 +160,12 @@ in
       };
       unitConfig.RequiresMountsFor = backups;
     };
-    paperless-backup = {
-      description = "Nightly Paperless export (${apps}/paperless/backup.sh)";
-      after = [ "paperless.service" ];
-      path = backupPath;
-      serviceConfig = {
-        Type = "oneshot";
-        User = "rupel";
-        ExecStart = "${pkgs.bash}/bin/bash ${apps}/paperless/backup.sh";
-      };
-      unitConfig.RequiresMountsFor = backups;
-    };
   };
 
   # same times as the crontabs on Debian; amanita pulls at 03:45
   systemd.timers = {
     invoiceninja-backup = timer "*-*-* 02:00:00";
     splitpro-backup = timer "*-*-* 02:15:00";
-    paperless-backup = timer "*-*-* 02:30:00";
     config-backup = timer "Sun *-*-* 03:00:00";
   };
 }

@@ -28,6 +28,9 @@
     # Raspberry Pi 5 support (kernel, firmware, bootloader) for hosts/raspi. No nixpkgs.follows: it keeps
     # its own nixpkgs (26.05 stable), which is what its binary cache was built from
     nixos-raspberrypi.url = "github:nvmd/nixos-raspberrypi/main";
+    # Paperless for the Pi: a nixos-unstable revision whose aarch64 paperless-ngx (3.5.1) hydra has built; the
+    # main nixpkgs' 3.3.2 would build ~36 packages under emulation, 26.05's 2.20 is older than the data
+    nixpkgs-paperless.url = "github:NixOS/nixpkgs/2786a2a72088ecf32aea5b3ec52099e6a7cff78f";
 
     hyprland.url = "github:hyprwm/Hyprland";
     hyprland-plugins = {

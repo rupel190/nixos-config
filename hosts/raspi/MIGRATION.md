@@ -197,14 +197,17 @@ fallback.
 
 ## Afterwards, one at a time
 
-- Pi-hole → AdGuard Home (native module), with its widgets for Glance.
-- Paperless → native module (version-matched), then upgrades.
+- Done 2026-11-22: Pi-hole native; AdGuard Home was tried and dropped (see above).
+- Done 2026-11-22: Paperless native at 3.5.1, module and package from the `nixpkgs-paperless` input (hydra
+  had its aarch64 build; the main nixpkgs' 3.3.2 would have built ~36 packages under emulation). The data
+  stayed in `apps/paperless/data`, the docker files sit in `apps/paperless/docker-era`, paperless-gpt moved
+  to `apps/paperless-gpt`, and the module's exporter replaced backup.sh (same folder, 02:30). Raw copy
+  from before: `backups/paperless-before-native-20261122.tar.gz`.
 - Proton Mail Bridge (nixpkgs 3.25.0, has a NixOS module) for Paperless' mail fetch.
 - cloudflared, for the internet route.
 - InvoiceNinja upgrades, each only after a fresh backup and a drill.
-- InvoiceNinja login: a stronger password and two-factor login, then `IN_USER_EMAIL` and
-  `IN_PASSWORD` out of its `.env` (setup-only values in plain text, also inside the weekly config
-  backups).
+- InvoiceNinja login: stronger password set and `IN_USER_EMAIL`/`IN_PASSWORD` out of its `.env`
+  (2026-11-22; init.sh only reads them for an empty database). Two-factor login still to do.
 - Data off the USB disk (it has dropped out before) onto an NVMe on the Pi 5's PCIe slot.
 
 ## Open questions
