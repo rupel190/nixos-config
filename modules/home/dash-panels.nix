@@ -31,14 +31,13 @@ let
     '';
   };
 
-  # amanita's backup jobs (all user timers) with last and next run, the newest Pi dumps, and the disk
+  # amanita's backup jobs (all user timers) with last and next run, and the newest Pi dumps
   backups = pkgs.writeShellApplication {
     name = "panel-backups";
     runtimeInputs = [
       pkgs.systemd
       pkgs.coreutils
       pkgs.findutils
-      pkgs.gawk
       pkgs.util-linux
     ];
     text = ''
@@ -76,11 +75,9 @@ let
         printf "\e[''${c}m$m\e[0m %-17s \e[2m%s\e[0m\n" "$app" "$(rel "$newest")"
       done
 
-      printf '\n\e[1mDISK\e[0m '
-      if mountpoint -q /mnt/backup; then
-        df -h --output=used,size,pcent /mnt/backup | tail -1 | awk '{printf "/mnt/backup  %s of %s (%s)\n", $1, $2, $3}'
-      else
-        printf '\e[31m/mnt/backup not mounted\e[0m\n'
+      # space is on mirador's disk panel; only say why everything above went red
+      if ! mountpoint -q /mnt/backup; then
+        printf '\n\e[31m✗ /mnt/backup is not mounted\e[0m\n'
       fi
     '';
   };
