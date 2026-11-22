@@ -5,6 +5,7 @@
     ./media.nix
     ./health.nix
     ./ollama-pi.nix
+    ./aarch64-builds.nix
     ./../../modules/core
     inputs.nix-flatpak.nixosModules.nix-flatpak
   ];
