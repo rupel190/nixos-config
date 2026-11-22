@@ -1,6 +1,6 @@
 { pkgs, ... }:
 let
-  pihole = "10.0.0.10";
+  pi = "10.0.0.10";
   router = "10.0.0.1";
 
   # Runs on the router: one line per recorded attempt, "device server port v4", where v4 is the device's IPv4
@@ -17,22 +17,23 @@ let
 
   # The router sends DNS to AdGuard Home first and falls back to Cloudflare, so an outage is silent; this makes it loud
   watchScript = pkgs.writeShellApplication {
-    name = "pihole-watch";
+    name = "dns-watch";
     runtimeInputs = with pkgs; [ dnsutils libnotify coreutils gnugrep openssh ];
     text = ''
-      state="''${XDG_RUNTIME_DIR:-/tmp}/pihole-problem"
-      seen="''${XDG_STATE_HOME:-$HOME/.local/state}/pihole-watch/dns-bypass-seen"
+      state="''${XDG_RUNTIME_DIR:-/tmp}/dns-problem"
+      seen="''${XDG_STATE_HOME:-$HOME/.local/state}/dns-watch/dns-bypass-seen"
       ask() { dig +short +time=3 +tries=2 "$@" | grep -q .; }
 
       # the router names its own address itself: no answer there means this PC is offline, not AdGuard Home
       ask @${router} -x ${router} || exit 0
 
-      # pi.hole is answered by AdGuard Home without going upstream, so this tests AdGuard Home, not the internet
-      if ! ask @${pihole} pi.hole A; then
+      # doubleclick.net is on every blocklist and answered from it, not upstream: no answer means AdGuard Home is
+      # down, a real address that it answers without its lists
+      answer=$(dig +short +time=3 +tries=2 @${pi} doubleclick.net A || true)
+      if [ -z "$answer" ]; then
         problem="AdGuard Home is down"
         detail="No ad blocking: the router is using Cloudflare instead"
-      # doubleclick.net is on every blocklist: a real address means AdGuard Home answers but lost its lists (its disk dropped out once)
-      elif [ "$(dig +short +time=3 +tries=2 @${pihole} doubleclick.net A)" != "0.0.0.0" ]; then
+      elif [ "$answer" != "0.0.0.0" ]; then
         problem="AdGuard Home is not blocking"
         detail="It answers, but ads get through"
       else
@@ -84,16 +85,16 @@ in
 {
   home.packages = [ watchScript ];
 
-  systemd.user.services.pihole-watch = {
+  systemd.user.services.dns-watch = {
     Unit.Description = "Notify when AdGuard Home stops answering or blocking, or a device tries another DNS server";
     Unit.X-RestartIfChanged = false;
     Service = {
       Type = "oneshot";
-      ExecStart = "${watchScript}/bin/pihole-watch";
+      ExecStart = "${watchScript}/bin/dns-watch";
     };
   };
 
-  systemd.user.timers.pihole-watch = {
+  systemd.user.timers.dns-watch = {
     Unit.Description = "Check AdGuard Home every 2 minutes";
     Timer = {
       OnBootSec = "2min";

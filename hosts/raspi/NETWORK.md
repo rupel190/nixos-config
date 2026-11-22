@@ -19,7 +19,7 @@ iot → lan       no
 lan → iot       no
 ```
 
-All DNS from lan and iot is redirected to the router, whose dnsmasq forwards to Pi-hole on the Pi
+All DNS from lan and iot is redirected to the router, whose dnsmasq forwards to AdGuard Home on the Pi
 (2 `server=` lines).
 
 Everything sits in lan; the iot network is empty:
@@ -63,7 +63,7 @@ which forwards every internet port to one device; the tunnel needs no open port 
 4. **dmz:** lan4 leaves br-lan for a new br-dmz (10.0.50.0/24, the Pi at 10.0.50.10), a new zone
    with the rules above, and the router's DNS (`server=` lines, redirects) pointed at the new address.
    The address also changes in the repo, where each file defines it once (`hosts/amanita/health.nix`,
-   `glance.nix`, `ollama-pi.nix`, `modules/home/wtf.nix`, `pihole-watch.nix`), on the Pi (Paperless
+   `glance.nix`, `ollama-pi.nix`, `modules/home/wtf.nix`, `dns-watch.nix`), on the Pi (Paperless
    `.env` and compose, SplitPro `.env` and compose), in the DHCP static lease and the `raspi` ssh
    entry. Once Gatus and the Beszel hub run on the Pi, dmz → lan also gets their checks and the agent
    port 45876.

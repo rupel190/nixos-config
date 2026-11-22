@@ -68,15 +68,6 @@ in
         protection_enabled = true;
         filtering_enabled = true;
         blocking_mode = "null_ip";
-        # answered here without going upstream, as Pi-hole did: amanita's pihole-watch asks it
-        rewrites_enabled = true;
-        rewrites = [
-          {
-            domain = "pi.hole";
-            answer = "10.0.0.10";
-            enabled = true;
-          }
-        ];
       };
       # every lookup in the house, kept about as long as Pi-hole did (91 days)
       querylog = {
