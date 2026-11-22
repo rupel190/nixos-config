@@ -73,7 +73,7 @@ in
         };
         Network = {
           style = "row";
-          columns = 3;
+          columns = 4;
         };
         Media = {
           style = "row";
@@ -139,6 +139,14 @@ in
             };
           }
           {
+            SplitPro = {
+              # LAN only for now; login codes land in Mailpit at :8025
+              href = "http://${pi}:3000";
+              icon = "mdi-account-cash";
+              siteMonitor = "http://${pi}:3000/api/healthz";
+            };
+          }
+          {
             Router = {
               href = "https://${router}";
               icon = "openwrt.svg";
@@ -196,6 +204,7 @@ in
         (dns "pi-hole blocks ads" "doubleclick.net" "[BODY] == 0.0.0.0")
         (check "pi" "pi-hole web" "http://${pi}:8080/admin/" ok)
         (check "pi" "invoiceninja" "http://${pi}/" ok)
+        (check "pi" "splitpro" "http://${pi}:3000/api/healthz" ok)
 
         (ping "network" "router" router)
         (ping "network" "internet" "1.1.1.1")
@@ -206,6 +215,11 @@ in
     };
   };
 
-  # agents join once the hub has an account: Add System there shows the key they need
   services.beszel.hub.enable = true;
+  # amanita's own agent; the hub reaches it on 127.0.0.1:45876, the firewall stays shut until the Pi hosts the hub
+  services.beszel.agent = {
+    enable = true;
+    # the hub's public key from Add System; only the hub's private half can connect, so it's fine in the repo
+    environment.KEY = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPrLP1o+Zn4S0mz2CoesVkgmNi5/5HpXojgasEuZcsui";
+  };
 }

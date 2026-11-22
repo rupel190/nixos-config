@@ -2,6 +2,8 @@
 {
   programs.btop = {
     enable = true;
+    # AMD GPU panel: btop reads amdgpu only through ROCm SMI, which the default build leaves out
+    package = pkgs.btop.override { rocmSupport = true; };
 
     settings = {
       color_theme = "catppuccin_macchiato";
