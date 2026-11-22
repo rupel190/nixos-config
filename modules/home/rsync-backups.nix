@@ -18,6 +18,8 @@ let
         "/.local/share/Steam/steamapps/temp"
         # Steam's web and library caches: hundreds of files churn weekly, each a slow remote delete in the mirror
         "/.local/share/Steam/config/htmlcache/" "/.local/share/Steam/appcache/"
+        # unlocked Cryptomator vaults: the encrypted vault (~/OneDrive/Vault) is backed up, never its plaintext view
+        "/.local/share/Cryptomator/mnt/"
         "/games/beamng-mod-backups" "/games/gtav-layers" "/.local/share/gnome-boxes"
         # app caches (Electron/Chromium/Firefox, Flatpak)
         "/.config/**/Cache/" "/.config/**/Code Cache/" "/.config/**/GPUCache/" "/.config/**/DawnCache/"
