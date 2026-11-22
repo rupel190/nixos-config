@@ -60,7 +60,7 @@ let
       new_tab ${p}
       launch --var system=1 ${p}
 
-    '') [ "pulsemixer" "tera" "btop" "tuinews" "mirador" "wtf" ]
+    '') [ "pulsemixer" "tera" "btop" "tuinews" "mirador" ]
   );
 
   # The one kitty window, at login and from SUPER+W when none is open:

@@ -97,8 +97,7 @@ let
     '';
   };
 
-  # firewall, DNS, VPN and sessions, all readable without root (WTF's own security module needs root
-  # for the firewall and so reports "No firewall")
+  # firewall, DNS, VPN and sessions, all readable without root
   security = pkgs.writeShellApplication {
     name = "panel-security";
     runtimeInputs = [
@@ -118,7 +117,7 @@ let
   };
 in
 {
-  # Plain-text panels any terminal dashboard can show: mirador through mirador-run, WTF through cmdrunner
+  # Plain-text panels for mirador (through mirador-run); any terminal dashboard can show them
   home.packages = [
     health
     backups
