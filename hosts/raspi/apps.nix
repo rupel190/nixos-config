@@ -8,8 +8,10 @@ let
   # `--pull never`: only the images loaded from /mnt/usbhdd/images run, so nothing upgrades by accident.
   app = name: extra: {
     description = "${name}, from ${apps}/${name}/docker-compose.yml";
+    # wants, not requires: a restart of the image loader (any update that touches it) would
+    # otherwise restart every app with it
     after = [ "docker-images.service" ];
-    requires = [ "docker-images.service" ];
+    wants = [ "docker-images.service" ];
     unitConfig.RequiresMountsFor = "${apps}/${name}";
     wantedBy = [ "multi-user.target" ];
     path = [
@@ -96,14 +98,24 @@ in
     requires = [ "docker.service" ];
     unitConfig.RequiresMountsFor = images;
     wantedBy = [ "multi-user.target" ];
-    path = [ pkgs.docker ];
+    path = [
+      pkgs.docker
+      pkgs.systemd
+    ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       TimeoutStartSec = "30min";
     };
-    # manifest.txt: "<image:tag>  id=...  digest  size", one line per tarball named after the tag
+    # manifest.txt: "<image:tag>  id=...  digest  size", one line per tarball named after the tag.
+    # The Pi has no clock battery: a fresh card boots at the image's build date, and a clock jump by NTP
+    # mid-load expires docker's lease ("lease does not exist"), so wait for the synced time first
     script = ''
+      for _ in $(seq 1 90); do
+        if [ "$(timedatectl show -p NTPSynchronized --value)" = yes ]; then break; fi
+        sleep 2
+      done
+
       while read -r ref _; do
         if docker image inspect "$ref" >/dev/null 2>&1; then continue; fi
         echo "loading $ref"
@@ -121,6 +133,8 @@ in
 
     invoiceninja-backup = {
       description = "Nightly InvoiceNinja dump and files into ${backups}/invoiceninja";
+      # a timer firing during boot waits for the app instead of failing against it
+      after = [ "invoiceninja.service" ];
       serviceConfig = {
         Type = "oneshot";
         ExecStart = lib.getExe invoiceninjaBackup;
@@ -137,6 +151,7 @@ in
     };
     splitpro-backup = {
       description = "Nightly SplitPro dump (${apps}/splitpro/backup.sh)";
+      after = [ "splitpro.service" ];
       path = backupPath;
       serviceConfig = {
         Type = "oneshot";
@@ -147,6 +162,7 @@ in
     };
     paperless-backup = {
       description = "Nightly Paperless export (${apps}/paperless/backup.sh)";
+      after = [ "paperless.service" ];
       path = backupPath;
       serviceConfig = {
         Type = "oneshot";

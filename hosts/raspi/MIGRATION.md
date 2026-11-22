@@ -1,8 +1,9 @@
 # raspi: Debian → NixOS
 
-Status: plan, nothing switched yet. Written 2026-11-22 from an inventory of the running Pi
-(Raspberry Pi 5 Model B Rev 1.1, Debian 12, kernel 6.12.34+rpt-rpi-2712, root on a 64 GB SD card,
-data on a 1 TB WD USB disk).
+Status: **done 2026-11-22.** The Pi runs NixOS 26.05 from its SD card, data on the USB disk as
+before (stage 2 below). Written the same day from an inventory of the Debian Pi (Raspberry Pi 5
+Model B Rev 1.1, Debian 12, kernel 6.12.34+rpt-rpi-2712, root on a 64 GB SD card, data on a 1 TB WD
+USB disk); what follows is the plan as carried out, with what each stage taught.
 
 ## Ground rules
 
@@ -146,6 +147,26 @@ Learned on the way:
 - The clock read 20:56 until NTP synced, so the backup timers fired at boot before any app ran (harmless).
 - The router's DNS still held Debian's IPv6 lease (`::fc2`), so the watchdog pings over IPv4 now.
 - Debian's `cmdline.txt` fix for memory accounting does not carry over: it is `boot.kernelParams` here.
+
+### Stage 2 done 2026-11-22
+
+The Debian card, saved whole onto the USB disk first (`/mnt/usbhdd/images/debian-sd-20261122.img.zst`,
+9.7 GB for the 64 GB card, `zstd -t` clean), then written with NixOS by `write-stick.sh`. NixOS from
+the SD card at 10:00, all apps up 10:13. Checked again: InvoiceNinja's counts, total and checksums as
+in the drill; Pi-hole answers and blocks; Gatus; all four backups on the card, pulled, watchdog green;
+memory accounting on (no docker warning, no Beszel errors).
+
+Learned on the way:
+- On the SD card the root partition grew by itself (58 GB).
+- The Pi has no clock battery: the fresh card booted at the image's build date (2026-03-17), NTP jumped
+  the clock mid image-load and docker's lease expired ("lease does not exist"). The image loader now
+  waits for the synced time; the backup units wait for their apps when a timer fires during boot.
+- Loading the images took 6½ minutes on the card, against 25 on the stick.
+- The apps only `want` the image loader: with `requires`, every update touching the loader restarted all of them.
+
+Rollback from here: the Transcend stick boots a working NixOS (with the SD card out), and from there
+the Debian image can go back onto the card. The raw app folders and images from before the switch
+are also on amanita (`/mnt/backup/raspi-cold-20261122`).
 
 Updates from amanita (fish abbreviation `nos-pi`):
 `nixos-rebuild switch --flake .#raspi --target-host raspi --sudo --option extra-substituters https://nixos-raspberrypi.cachix.org`
