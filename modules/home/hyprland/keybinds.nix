@@ -165,6 +165,10 @@ in
         # Maximize is its own state, apart from floating: SUPER+F cannot undo it
         (bind "${mod} + M" (dsp ''hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })''))
         (bind "${mod} + P" (dsp "hl.dsp.window.pseudo()")) # dwindle
+        # Workspace + window snapshot (layout-snapshot.nix), like ctrl+shift+s in kitty.
+        # Restore launches the apps that are not running yet onto their saved workspaces.
+        (bind "${sysMod} + S" (exec "hypr-layout-save"))
+        (bind "${sysMod} + R" (exec "hypr-layout-restore"))
         (bind "${mod} + V" (layoutmsgIn "dwindle" "togglesplit"))
 
         # Notifications

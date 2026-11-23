@@ -4,6 +4,7 @@
     ./hyprland.nix
     ./config.nix
     ./keybinds.nix
+    ./layout-snapshot.nix
     ./hyprlock.nix
     ./hypridle.nix
     ./hyprsunset.nix
