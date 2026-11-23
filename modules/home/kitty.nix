@@ -91,6 +91,8 @@ in
       modify_font = "cell_height 120%";
       background_opacity = "0.95";
       confirm_os_window_close = 0;
+      # Selecting text copies it to the system clipboard
+      copy_on_select = "clipboard";
       # Hyprland reports a filled tile as maximized; remembered, every new kitty opened maximized over the others
       remember_window_size = "no";
 
@@ -131,6 +133,11 @@ in
       "ctrl+alt+j" = "neighboring_window down";
       "ctrl+alt+k" = "neighboring_window up";
       "ctrl+alt+l" = "neighboring_window right";
+      # Same keys as WezTerm's AdjustPaneSize; the arrows shadow kitty's scroll_line_up/down
+      "ctrl+shift+left" = "resize_window narrower 2";
+      "ctrl+shift+right" = "resize_window wider 2";
+      "ctrl+shift+up" = "resize_window shorter 2";
+      "ctrl+shift+down" = "resize_window taller 2";
       "ctrl+shift+z" = "toggle_layout stack"; # zoom: the pane fills the tab
       "shift+up" = "scroll_to_prompt -1";
       "shift+down" = "scroll_to_prompt 1";
