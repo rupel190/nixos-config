@@ -41,21 +41,6 @@ let
 
   claudeHookPkgs = [
     (mkHook {
-      name = "claude-hook-notify";
-      file = ./claude-hooks/notify.sh;
-      bashOptions = [ "nounset" ];
-      # wezterm and kitty are the same packages as wezterm.nix and kitty.nix, so
-      # naming them costs no extra build. The script still guards with `command -v`.
-      runtimeInputs = with pkgs; [
-        jq
-        wezterm
-        kitty
-        libnotify
-        gnused
-        coreutils
-      ];
-    })
-    (mkHook {
       name = "claude-hook-tab-status";
       file = ./claude-hooks/tab-status.sh;
       bashOptions = [ "nounset" ];
@@ -110,10 +95,6 @@ let
       {
         matcher = "";
         hooks = [
-          {
-            type = "command";
-            command = "claude-hook-notify";
-          }
           {
             type = "command";
             command = "claude-hook-tab-status set";
@@ -514,6 +495,7 @@ in
   # switch. Add it here instead. Everything else in the file — enabledPlugins,
   # permissions, editorMode — is Claude's and survives untouched.
   # cleanupPeriodDays: the 30-day default deletes synced sessions, and push then deletes them from R2.
+  # preferredNotifChannel: Claude's own popups (kitty, Ghostty) stay off, herdr-app does the alerting.
   config.home.activation.claudeSettings = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     cfg="$HOME/.claude/settings.json"
     sl=${lib.escapeShellArg (builtins.toJSON {
@@ -525,10 +507,12 @@ in
     mkdir -p "$HOME/.claude"
     if [ -e "$cfg" ]; then
       ${pkgs.jq}/bin/jq --argjson s "$sl" --argjson h "$hk" \
-        '.statusLine = $s | .hooks = $h | .cleanupPeriodDays = 36500' "$cfg" > "$cfg.hm-tmp"
+        '.statusLine = $s | .hooks = $h | .cleanupPeriodDays = 36500
+          | .preferredNotifChannel = "notifications_disabled"' "$cfg" > "$cfg.hm-tmp"
     else
       ${pkgs.jq}/bin/jq -n --argjson s "$sl" --argjson h "$hk" \
-        '{statusLine:$s, hooks:$h, cleanupPeriodDays:36500}' > "$cfg.hm-tmp"
+        '{statusLine:$s, hooks:$h, cleanupPeriodDays:36500,
+          preferredNotifChannel:"notifications_disabled"}' > "$cfg.hm-tmp"
     fi
     $DRY_RUN_CMD mv "$cfg.hm-tmp" "$cfg"
   '';

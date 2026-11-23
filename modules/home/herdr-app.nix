@@ -89,7 +89,7 @@ let
       # - herdr-app#533: graphics reply arrives after DA1; drop once fixed. Without it Claude
       #   Code decides there is no Kitty graphics and the image mod (claude.nix) draws alt text.
       # - kitty's variables go, for an app started from a kitty shell: the claude hooks would
-      #   paint and notify that kitty window, and TERMINFO names kitty's terminfo.
+      #   paint that kitty tab, and TERMINFO names kitty's terminfo.
       makeWrapper $out/libexec/herdr-app/herdr-app $out/bin/herdr-app \
         --prefix PATH : ${lib.makeBinPath [ herdr-core ]} \
         --set CLAUDE_CODE_FORCE_TERMINAL_IMAGES 1 \
