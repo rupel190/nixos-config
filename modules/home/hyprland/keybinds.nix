@@ -142,9 +142,8 @@ let
       })
     end'';
 
-  # amanita has workspaces 1-7 only (7 = the single scrolling tape on HDMI-A-2);
-  # a bind to 8/9/10 there would just conjure an empty workspace on whichever
-  # monitor has focus.
+  # amanita stops at 8 (HDMI-A-2: 7 = the scrolling tape, 8 = herdr-trains); a bind
+  # to 9/10 there would just conjure an empty workspace on whichever monitor has focus.
   digits = map toString (lib.range 1 (if host == "amanita" then 8 else 9));
 in
 {
@@ -314,7 +313,7 @@ in
         (bind "${sysMod} + 2" laptopMirrorToggle)
       ]
       # Switch workspaces with mainMod + [0-9]; move with mainMod + ALT + [0-9].
-      # 0 maps to workspace 10.
+      # 0 maps to workspace 10 (not on amanita).
       ++ (map (d: bind "${mod} + ${d}" (toWorkspace d)) digits)
       ++ lib.optionals (host != "amanita") [ (bind "${mod} + 0" (toWorkspace "10")) ]
       ++ (map (d: bind "${mod} + ALT + ${d}" (moveToWorkspace d)) digits)

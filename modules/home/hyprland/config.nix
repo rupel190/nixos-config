@@ -68,7 +68,7 @@
           mfact = 0.60;
         };
 
-        # Scrolling layout — used on workspaces 7-9 (portrait HDMI-A-2).
+        # Scrolling layout — used on workspace 7 (portrait HDMI-A-2).
         # https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
         scrolling = {
           direction = "down"; # vertical tape; new windows grow downward

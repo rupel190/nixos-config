@@ -11,7 +11,7 @@ import { idle } from "ags/time"
 //
 // Monitor comes from the client itself rather than being inferred from the
 // workspace number. The numbering in workspaces.nix happens to encode it today
-// (1-3 DP-1, 4-6 DP-2, 7-9 HDMI-A-2), but that stops being true the moment
+// (1-3 DP-1, 4-6 DP-2, 7-8 HDMI-A-2), but that stops being true the moment
 // dynamic `workspace, empty` workspaces get adopted.
 
 const hyprland = AstalHyprland.get_default()
