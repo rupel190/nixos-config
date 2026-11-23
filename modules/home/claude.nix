@@ -491,6 +491,20 @@ in
     else
       inputs.claude-skill-interaction-tests;
 
+  # Relay and Relay Comments for Obsidian, one repo with several skills. Named one by one, so a
+  # skill added upstream is not loaded unread; a new one also needs its exclude in claude-sync.nix.
+  config.home.file.".claude/skills/relay".source = "${inputs.claude-skill-relay}/skills/relay";
+  config.home.file.".claude/skills/relay-comments".source =
+    "${inputs.claude-skill-relay}/skills/relay-comments";
+  config.home.file.".claude/skills/relay-obsidian-plugin".source =
+    "${inputs.claude-skill-relay}/skills/relay-obsidian-plugin";
+  config.home.file.".claude/skills/relay-setup".source =
+    "${inputs.claude-skill-relay}/skills/relay-setup";
+  config.home.file.".claude/skills/relay-self-hosting".source =
+    "${inputs.claude-skill-relay}/skills/relay-self-hosting";
+  config.home.file.".claude/skills/obsidian-vault-setup".source =
+    "${inputs.claude-skill-relay}/skills/obsidian-vault-setup";
+
   # settings.json is Claude-owned and rewritten in place, so home.file would make
   # it read-only and wipe Claude's state. Instead jq merges just our keys on each
   # switch, atomically.

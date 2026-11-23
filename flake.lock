@@ -248,6 +248,22 @@
         "url": "ssh://git@github.com/rupel190/claude-interaction-tests"
       }
     },
+    "claude-skill-relay": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792650461,
+        "narHash": "sha256-M0ESPO0lBaQLoBMn3PyFkeDD4asDbmETMsSpvHLRDSo=",
+        "owner": "No-Instructions",
+        "repo": "relay-skills",
+        "rev": "1b9b4b7c3918705227847a2962d96b84af3a57bd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "No-Instructions",
+        "repo": "relay-skills",
+        "type": "github"
+      }
+    },
     "corefonts": {
       "flake": false,
       "locked": {
@@ -1586,6 +1602,7 @@
         "claude-desktop": "claude-desktop",
         "claude-skill-beamng-vehicle-values": "claude-skill-beamng-vehicle-values",
         "claude-skill-interaction-tests": "claude-skill-interaction-tests",
+        "claude-skill-relay": "claude-skill-relay",
         "disko": "disko",
         "drovr": "drovr",
         "home-manager": "home-manager",

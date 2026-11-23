@@ -115,6 +115,13 @@
       flake = false;
     };
 
+    # Third-party: System 3's skills for Relay (Obsidian), several under skills/. Read the diff
+    # before bumping, they are instructions to the agent.
+    claude-skill-relay = {
+      url = "github:No-Instructions/relay-skills";
+      flake = false;
+    };
+
     ragenix = {
       url = "github:yaxitech/ragenix";
       inputs.nixpkgs.follows = "nixpkgs";

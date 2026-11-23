@@ -71,7 +71,7 @@ let
       - tasks
 
     exclude:
-      # Both are nix-managed now (home.file in claude.nix), so the path here is
+      # All are nix-managed (home.file in claude.nix), so the path here is
       # a symlink: to /nix/store on cordyceps, to ~/projects on amanita. Syncing
       # either direction lands a path the other machine cannot resolve, and a
       # store symlink is read-only besides. The content travels as a pinned
@@ -79,6 +79,12 @@ let
       - skills/interaction-tests
       - skills/beamng-vehicle-values
       - skills/drovr
+      - skills/relay
+      - skills/relay-comments
+      - skills/relay-obsidian-plugin
+      - skills/relay-setup
+      - skills/relay-self-hosting
+      - skills/obsidian-vault-setup
       # pull filters remote keys by exclude only, not sync_paths
       - history.jsonl
       - "**/*.conflict.*"
