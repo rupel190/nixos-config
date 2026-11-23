@@ -554,6 +554,30 @@
         "type": "github"
       }
     },
+    "herdr-app": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-JpcjtOeWibCGKWPyzIeyMhcJOavG/EJNhiUnDBXIzGg=",
+        "type": "file",
+        "url": "https://releases.herdr.dev/app/latest.json"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://releases.herdr.dev/app/latest.json"
+      }
+    },
+    "herdr-core": {
+      "flake": false,
+      "locked": {
+        "narHash": "sha256-30sfosPheJ2UjJmQgPISlv7EAIXp0XeZJdqFaK6iz0k=",
+        "type": "file",
+        "url": "https://releases.herdr.dev/core/latest.json"
+      },
+      "original": {
+        "type": "file",
+        "url": "https://releases.herdr.dev/core/latest.json"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -1605,6 +1629,8 @@
         "claude-skill-relay": "claude-skill-relay",
         "disko": "disko",
         "drovr": "drovr",
+        "herdr-app": "herdr-app",
+        "herdr-core": "herdr-core",
         "home-manager": "home-manager",
         "hyprgrass": "hyprgrass",
         "hyprland": "hyprland",

@@ -93,6 +93,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Herdr's desktop app and its runtime ship as binaries only, so these are their release manifests
+    # (version, url, sha256); modules/home/herdr-app.nix builds from them. `nix flake update herdr-app
+    # herdr-core` pulls the newest.
+    herdr-app = {
+      url = "file+https://releases.herdr.dev/app/latest.json";
+      flake = false;
+    };
+    herdr-core = {
+      url = "file+https://releases.herdr.dev/core/latest.json";
+      flake = false;
+    };
+
     # drovr: headless Claude Code workers on cheaper backends (home module in
     # modules/home/drovr.nix). A flake with no inputs of its own. git+ssh (not
     # github:) so fetches go over your SSH key and skip GitHub's tarball/codeload

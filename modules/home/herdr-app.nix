@@ -1,22 +1,25 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, inputs, ... }:
 
 # Herdr desktop app (herdr.dev, github.com/herdrdev/herdr-app) and its separate
 # runtime, herdr-core. Not the terminal UI in herdr.nix, and not in nixpkgs, so both
 # are the upstream release binaries from releases.herdr.dev.
 #
 # The app's own updater and the first-run core download write to ~/.local and cannot
-# touch the store: bump the versions and hashes below instead (releases.herdr.dev/
-# {app,core}/latest.json). Layouts and mods live in ~/.config/herdr-app, not here.
+# touch the store. Versions come from the release manifests locked as flake inputs:
+# `nix flake update herdr-app herdr-core` pulls the newest. Layouts and mods live in
+# ~/.config/herdr-app, not here.
 
 let
+  release = input: let m = builtins.fromJSON (builtins.readFile input); in {
+    inherit (m) version;
+    src = pkgs.fetchurl { inherit (m.targets."linux-x86_64") url sha256; };
+  };
+  coreRelease = release inputs.herdr-core;
+  appRelease = release inputs.herdr-app;
+
   herdr-core = pkgs.stdenv.mkDerivation rec {
     pname = "herdr-core";
-    version = "0.1.18";
-
-    src = pkgs.fetchurl {
-      url = "https://releases.herdr.dev/core/${version}/herdr-core-linux-x86_64.tar.gz";
-      hash = "sha256-Wy+Xy0sqnXprLMWUJiggPtn7t8wMK0sJrYpvVkjiRrc=";
-    };
+    inherit (coreRelease) version src;
 
     # Statically linked, so it only needs unpacking.
     sourceRoot = ".";
@@ -34,12 +37,7 @@ let
 
   herdr-app = pkgs.stdenv.mkDerivation rec {
     pname = "herdr-app";
-    version = "0.1.13";
-
-    src = pkgs.fetchurl {
-      url = "https://releases.herdr.dev/app/${version}/herdr-app-linux-x86_64.tar.gz";
-      hash = "sha256-d7C+cqRsoUuzZzZaBBZGQfkUs6aXErrDkdOcVqlZvvQ=";
-    };
+    inherit (appRelease) version src;
 
     nativeBuildInputs = [
       pkgs.autoPatchelfHook

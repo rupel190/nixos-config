@@ -239,6 +239,7 @@ tera and btop on workspace 9. kitty has no mux, so closing or crashing the windo
 | `spicetify-nix`, `singify` | Spotify theming + UltraStar karaoke extension |
 | `nix-flatpak` | Flatpak integration |
 | `claude-code`, `claude-desktop` | AI coding assistant and desktop app |
+| `herdr-app`, `herdr-core` | Herdr desktop app and runtime: their release manifests (`latest.json`), so `nix flake update herdr-app herdr-core` pulls the newest |
 | `claude-skill-*` | Claude Code skills, pinned as flake inputs |
 | `ragenix` | age secret management |
 | `surge` | Download manager |
