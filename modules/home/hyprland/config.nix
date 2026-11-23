@@ -272,6 +272,8 @@
               "signal-desktop"
               "spotify"
               "kitty-start"
+              # herdr-trains follows herdr live on HDMI-A-2's workspace 8 (window_rule below)
+              "godot --path /home/rupel/godot-projects/herdr-trains -- --live"
             ]
           else
             [ ]
@@ -370,15 +372,22 @@
         # DP-2 (center 240Hz monitor): Workspaces 4-6
         { match.class = "^zen$"; workspace = "4"; }
 
-        # HDMI-A-2 (right vertical monitor): Workspaces 7-9
+        # HDMI-A-2 (right vertical monitor): single workspace 7, scrolling tape
         { match.class = "^Slack$"; workspace = "7 silent"; }
         { match.class = "^proton-mail$"; workspace = "7 silent"; }
         { match.class = "^(org\\.keepassxc\\.)?KeePassXC$"; workspace = "7 silent"; }
-        { match.class = "^signal$"; workspace = "8 silent"; }
+        { match.class = "^signal$"; workspace = "7 silent"; }
         # Steam client (not games — those match ^steam_app_ below and go to DP-2)
-        { match.class = "^steam$"; workspace = "8 silent"; }
-        { match.class = "^[Ss]potify$"; workspace = "9 silent"; }
-        { match.class = "^kitty-system$"; workspace = "9 silent"; }
+        { match.class = "^steam$"; workspace = "7 silent"; }
+        # herdr-trains (Godot): the live railway on HDMI-A-2. Its window asks for fullscreen itself.
+        # Render windows of the same project go elsewhere through a runtime rule added later.
+        {
+          name = "herdr-trains-live";
+          match.class = "^herdr-trains$";
+          workspace = "8 silent";
+          no_initial_focus = true;
+        }
+        { match.class = "^[Ss]potify$"; workspace = "7 silent"; }
 
         # Disable resize animation for wezterm only. Hyprland's window-resize animation
         # emits a configure event per frame; TUIs (claude, btop) repaint the whole screen

@@ -53,6 +53,23 @@ let
         local ws = hl.get_active_workspace()
         if ws and ws.tiled_layout == "${layout}" then hl.dispatch(hl.dsp.layout("${msg}")) end
       end'';
+  # On a scrolling workspace move the tape half a screen, anywhere else fall back
+  # to focusing a workspace. sign "-" = down the tape (toward the next window),
+  # "+" = up. Lets one key/button pair serve both kinds of monitor.
+  halfTapeOrWorkspace =
+    sign: ws:
+    dsp ''
+      function()
+        local w = hl.get_active_workspace()
+        if w and w.tiled_layout == "scrolling" then
+          -- monitor width/height are unrotated; a 90/270 output swaps them
+          local m = w.monitor
+          local long = (m.transform % 2 == 1) and m.width or m.height
+          hl.dispatch(hl.dsp.layout("move ${sign}" .. math.floor(long / m.scale / 2)))
+        else
+          hl.dispatch(hl.dsp.focus({ workspace = "${ws}" }))
+        end
+      end'';
   resizeActive =
     x: y: dsp "hl.dsp.window.resize({ x = ${toString x}, y = ${toString y}, relative = true })";
 
@@ -125,17 +142,10 @@ let
       })
     end'';
 
-  digits = [
-    "1"
-    "2"
-    "3"
-    "4"
-    "5"
-    "6"
-    "7"
-    "8"
-    "9"
-  ];
+  # amanita has workspaces 1-7 only (7 = the single scrolling tape on HDMI-A-2);
+  # a bind to 8/9/10 there would just conjure an empty workspace on whichever
+  # monitor has focus.
+  digits = map toString (lib.range 1 (if host == "amanita" then 8 else 9));
 in
 {
   wayland.windowManager.hyprland = {
@@ -155,6 +165,10 @@ in
             end
             hl.dispatch(hl.dsp.exec_cmd("kitty-start"))
           end''))
+        # Workspace + window snapshot (layout-snapshot.nix), like ctrl+shift+s in kitty.
+        # Restore launches the apps that are not running yet onto their saved workspaces.
+        (bind "${sysMod} + S" (exec "hypr-layout-save"))
+        (bind "${sysMod} + R" (exec "hypr-layout-restore"))
         # Throwaway terminal, with its own class so SUPER+W never grabs it.
         (bind "${mod} + T" (exec "kitty --class kitty-scratch"))
         (bind "${mod} + RETURN" (exec "vicinae toggle"))
@@ -165,10 +179,6 @@ in
         # Maximize is its own state, apart from floating: SUPER+F cannot undo it
         (bind "${mod} + M" (dsp ''hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })''))
         (bind "${mod} + P" (dsp "hl.dsp.window.pseudo()")) # dwindle
-        # Workspace + window snapshot (layout-snapshot.nix), like ctrl+shift+s in kitty.
-        # Restore launches the apps that are not running yet onto their saved workspaces.
-        (bind "${sysMod} + S" (exec "hypr-layout-save"))
-        (bind "${sysMod} + R" (exec "hypr-layout-restore"))
         (bind "${mod} + V" (layoutmsgIn "dwindle" "togglesplit"))
 
         # Notifications
@@ -249,8 +259,9 @@ in
         (bind "${mod} + ALT + I" (layoutmsgIn "scrolling" "promote"))
 
         # Mouse workspace navigation
-        (bind "${mod} + mouse:275" (toWorkspace "m+1"))
-        (bind "${mod} + mouse:276" (toWorkspace "m-1"))
+        # On the scrolling monitor (one workspace) the side buttons pan the tape half a screen.
+        (bind "${mod} + mouse:275" (halfTapeOrWorkspace "-" "m+1"))
+        (bind "${mod} + mouse:276" (halfTapeOrWorkspace "+" "m-1"))
         (bind "${mod} + ALT + mouse:275" (moveToWorkspace "m+1"))
         (bind "${mod} + ALT + mouse:276" (moveToWorkspace "m-1"))
         # Same auto-correct for the side-button window moves.
@@ -261,7 +272,7 @@ in
         (bind "${mod} + SPACE" (dsp ''hl.dsp.workspace.toggle_special("magic")''))
         (bind "${mod} + SHIFT + SPACE" (moveToWorkspace "special:magic"))
 
-        # Scrolling layout (workspaces 7-9). mouse_up/down = scroll wheel (free: the
+        # Scrolling layout (workspace 7). mouse_up/down = scroll wheel (free: the
         # existing mouse workspace binds use the side buttons mouse:275/276).
         # NOTE: tried 'move +200/-200' (pixel pan of the tape) — reverted: the wheel
         # event still reaches the focused app, so it panned the tape AND scrolled app
@@ -278,6 +289,13 @@ in
         (bind "${mod} + semicolon" (layoutmsgIn "scrolling" "promote"))
         # NOTE: 'fit expand' removed — on the vertical (direction:down) tape it computed a
         # negative window height and made the window vanish.
+        # Keyboard tape scrolling: the wheel chord loses events to the app under the
+        # cursor, keys never do. Acts on the active (cursor-focused) workspace and is a
+        # no-op on the dwindle monitors. SUPER+J/K (focus down/up) walk the tape too.
+        (bind "${mod} + TAB" (layoutmsgIn "scrolling" "move +col"))
+        (bind "${mod} + SHIFT + TAB" (layoutmsgIn "scrolling" "move -col"))
+        (bind "${mod} + Next" (layoutmsgIn "scrolling" "move +col")) # Page Down
+        (bind "${mod} + Prior" (layoutmsgIn "scrolling" "move -col")) # Page Up
         (bind "${mod} + bracketleft" (layoutmsgIn "scrolling" "consume_or_expel prev")) # merge into previous column
         (bind "${mod} + bracketright" (layoutmsgIn "scrolling" "consume_or_expel next")) # split out to next column
       ]
@@ -298,9 +316,9 @@ in
       # Switch workspaces with mainMod + [0-9]; move with mainMod + ALT + [0-9].
       # 0 maps to workspace 10.
       ++ (map (d: bind "${mod} + ${d}" (toWorkspace d)) digits)
-      ++ [ (bind "${mod} + 0" (toWorkspace "10")) ]
+      ++ lib.optionals (host != "amanita") [ (bind "${mod} + 0" (toWorkspace "10")) ]
       ++ (map (d: bind "${mod} + ALT + ${d}" (moveToWorkspace d)) digits)
-      ++ [ (bind "${mod} + ALT + 0" (moveToWorkspace "10")) ]
+      ++ lib.optionals (host != "amanita") [ (bind "${mod} + ALT + 0" (moveToWorkspace "10")) ]
 
       # Resize window (repeat while held). Arrows are the coarse step (100px),
       # Super+Shift+HJKL the fine step (50px). HJKL follows the same

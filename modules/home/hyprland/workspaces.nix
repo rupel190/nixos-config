@@ -96,7 +96,9 @@ in
             persistent = true;
           }
 
-          # HDMI-A-2 (Right vertical monitor) — scrolling tape, grows downward
+          # HDMI-A-2 (Right vertical monitor) — a scrolling tape that grows downward.
+          # Workspace 9 is gone on purpose (trying scrolling instead of the old
+          # triple-workspace layout); keybinds.nix stops at 8.
           {
             workspace = "7";
             monitor = "HDMI-A-2";
@@ -104,17 +106,12 @@ in
             default = true;
             layout = "scrolling";
           }
+          # herdr-trains, the model railway that shows the agents (~/godot-projects/herdr-trains,
+          # started by the autostart in config.nix): its own workspace, so 7 stays as it is.
           {
             workspace = "8";
             monitor = "HDMI-A-2";
             persistent = true;
-            layout = "scrolling";
-          }
-          {
-            workspace = "9";
-            monitor = "HDMI-A-2";
-            persistent = true;
-            layout = "scrolling";
           }
         ]
       else
