@@ -26,6 +26,25 @@
   # Host-specific configuration
   networking.hostName = "amanita";
 
+  # Local LLMs for opencode. Module defaults keep it on 127.0.0.1 with the firewall closed.
+  services.ollama = {
+    enable = true;
+    package = inputs.nixpkgs-ollama.legacyPackages.${pkgs.stdenv.hostPlatform.system}.ollama-rocm;
+    # Ollama's default context silently truncates opencode's system prompt + tool schemas.
+    # Sized so the fast model's weights + KV cache stay inside 16 GB VRAM.
+    environmentVariables = {
+      OLLAMA_CONTEXT_LENGTH = "32768";
+      # opencode lists every pulled model; a :cloud one would ship prompts and files off-box.
+      OLLAMA_NO_CLOUD = "1";
+    };
+  };
+
+  # Compressed swap in RAM ahead of the disk partition (zram priority 5 > partition's -1).
+  zramSwap = {
+    enable = true;
+    memoryPercent = 25;
+  };
+
   # Gaming mice onboard config: DPI/polling/buttons (piper GUI, ratbagctl CLI)
   services.ratbagd.enable = true;
 
