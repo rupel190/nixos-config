@@ -76,6 +76,7 @@
     ./dns-watch.nix # desktop notification when the Pi-hole stops answering or blocking, or a device bypasses it
     ./udiskie.nix # automount removable drives
     ./flux-kontext.nix # FLUX.1 Kontext [dev] image edits on ROCm (non-commercial licence)
+    ./curseforge.nix # CurseForge Flatpak launcher with the ad column patched out
   ] ++ lib.optionals (host == "cordyceps") [
     ./laptop-only.nix # brightness, battery, touchpad settings
   ];

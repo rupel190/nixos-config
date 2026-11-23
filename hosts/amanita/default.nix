@@ -15,6 +15,12 @@
   services.flatpak.packages = [
     "com.bambulab.BambuStudio"
     "io.exodus.Exodus" # nixpkgs exodus is requireFile pinned to an old zip; Flathub tracks upstream
+    "com.overwolf.curseforge" # registers curseforge:// and cfauth:// itself; the AppImage has no handlers
+  ];
+  # Sandbox only gets ~/Documents/curseforge by default; WoW lives in its Steam prefix, Hytale in its own Flatpak's data
+  services.flatpak.overrides.settings."com.overwolf.curseforge".Context.filesystems = [
+    "~/.local/share/Steam/steamapps/compatdata/3728983471/pfx/drive_c/Program Files (x86)/World of Warcraft"
+    "~/.var/app/com.hypixel.HytaleLauncher/data/Hytale"
   ];
 
   # Host-specific configuration
