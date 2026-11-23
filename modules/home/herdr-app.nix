@@ -150,7 +150,7 @@ in
   ];
 
   # Same keys as herdr.nix where the app has an equivalent: alt+hjkl moves tabs and
-  # spaces, so pane focus is ctrl+shift+hjkl (its layout.switch and picker moved to ctrl+alt+l/k). force: the app creates these files
+  # spaces, so pane focus is ctrl+shift+hjkl (its layout.switch and picker are palette-only, too easy to hit). force: the app creates these files
   # on first start.
   xdg.configFile = lisaMods // {
     "herdr-app/keys.json" = {

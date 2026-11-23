@@ -20,6 +20,7 @@
     "alt-shift-k": "pane.swap:up",
     "alt-shift-l": "pane.swap:right",
     "ctrl-+": "app.zoom_in",
+    "ctrl--": "app.zoom_out",
     "ctrl-0": "app.zoom_reset",
     "ctrl-=": "app.zoom_in",
     "ctrl-1": "tab.select:1",
@@ -54,7 +55,13 @@
     "ctrl-shift-p": "app.palette",
     "ctrl-,": "app.settings",
     "ctrl-shift-\\": "pane.split:right",
+    "ctrl-shift-|": "pane.split:right",
     "ctrl-shift--": "pane.split:down",
+    "ctrl-shift-_": "pane.split:down",
+    "ctrl-|": "pane.split:right",
+    "ctrl-_": "pane.split:down",
+    "ctrl-{": "mod.open:tab-left",
+    "ctrl-}": "mod.open:tab-right",
     "ctrl-shift-[": "mod.open:tab-left",
     "ctrl-shift-]": "mod.open:tab-right",
     "ctrl-shift-w": "tab.close",
@@ -64,9 +71,7 @@
     "f2": "tab.rename",
     "shift-f2": "space.rename",
     "ctrl-shift-h": "space.prev",
-    "ctrl-shift-j": "tab.next",
-    "ctrl-alt-k": "mod.open:picker",
-    "ctrl-alt-l": "layout.switch"
+    "ctrl-shift-j": "tab.next"
   },
   "terminal": {
     "ctrl-backspace": "send:\u0017",
