@@ -1,0 +1,106 @@
+diff -ruN a/include/aquamarine/backend/DRM.hpp b/include/aquamarine/backend/DRM.hpp
+--- a/include/aquamarine/backend/DRM.hpp
++++ b/include/aquamarine/backend/DRM.hpp
+@@ -427,12 +427,13 @@
+                 uint32_t Colorspace;          // not guaranteed to exist
+                 uint32_t hdr_output_metadata; // not guaranteed to exist
+                 uint32_t tile;                // not guaranteed to exist
++                uint32_t broadcast_rgb;       // not guaranteed to exist
+ 
+                 // atomic-modesetting only
+ 
+                 uint32_t crtc_id;
+             } values;
+-            uint32_t props[14] = {0};
++            uint32_t props[15] = {0};
+         };
+         UDRMConnectorProps props;
+ 
+@@ -445,6 +446,14 @@
+             uint32_t props[3] = {0};
+         };
+         UDRMConnectorColorspace colorspace;
++
++        union UDRMConnectorBroadcastRGB {
++            struct {
++                uint32_t Full;
++            } values;
++            uint32_t props[1] = {0};
++        };
++        UDRMConnectorBroadcastRGB broadcastRgb;
+     };
+ 
+     class IDRMImplementation {
+diff -ruN a/src/backend/drm/DRM.cpp b/src/backend/drm/DRM.cpp
+--- a/src/backend/drm/DRM.cpp
++++ b/src/backend/drm/DRM.cpp
+@@ -1771,6 +1771,9 @@
+     if (props.values.Colorspace)
+         getDRMConnectorColorspace(backend->gpu->fd, props.values.Colorspace, &colorspace);
+ 
++    if (props.values.broadcast_rgb)
++        getDRMConnectorBroadcastRGB(backend->gpu->fd, props.values.broadcast_rgb, &broadcastRgb);
++
+     auto name = drmModeGetConnectorTypeName(connector->connector_type);
+     if (!name)
+         name = "ERROR";
+diff -ruN a/src/backend/drm/impl/Atomic.cpp b/src/backend/drm/impl/Atomic.cpp
+--- a/src/backend/drm/impl/Atomic.cpp
++++ b/src/backend/drm/impl/Atomic.cpp
+@@ -280,6 +280,10 @@
+                 add(connector->id, connector->props.values.Colorspace, newColorspace);
+         }
+ 
++        // full RGB on modesets: "Automatic" sends limited on HDMI TV modes since amdgpu 7.3
++        if (data.modeset && connector->props.values.broadcast_rgb && connector->broadcastRgb.values.Full)
++            add(connector->id, connector->props.values.broadcast_rgb, connector->broadcastRgb.values.Full);
++
+         if (connector->props.values.hdr_output_metadata && data.atomic.hdrd)
+             add(connector->id, connector->props.values.hdr_output_metadata, data.atomic.hdrBlob);
+     } else
+diff -ruN a/src/backend/drm/Props.cpp b/src/backend/drm/Props.cpp
+--- a/src/backend/drm/Props.cpp
++++ b/src/backend/drm/Props.cpp
+@@ -20,6 +20,7 @@
+ 
+ static const struct prop_info connector_info[] = {
+ #define INDEX(name) (offsetof(SDRMConnector::UDRMConnectorProps, values.name) / sizeof(uint32_t))
++    {.name = "Broadcast RGB", .index = INDEX(broadcast_rgb)},
+     {.name = "CRTC_ID", .index = INDEX(crtc_id)},
+     {.name = "Colorspace", .index = INDEX(Colorspace)},
+     {.name = "DPMS", .index = INDEX(dpms)},
+@@ -45,6 +46,12 @@
+ #undef INDEX
+ };
+ 
++static const struct prop_info broadcast_rgb_info[] = {
++#define INDEX(name) (offsetof(SDRMConnector::UDRMConnectorBroadcastRGB, values.name) / sizeof(uint32_t))
++    {.name = "Full", .index = INDEX(Full)},
++#undef INDEX
++};
++
+ static const struct prop_info crtc_info[] = {
+ #define INDEX(name) (offsetof(SDRMCRTC::UDRMCRTCProps, values.name) / sizeof(uint32_t))
+     {.name = "ACTIVE", .index = INDEX(active)},           {.name = "CTM", .index = INDEX(ctm)},
+@@ -139,6 +146,10 @@
+         return scanPropertyEnum(fd, id, out->props, colorspace_info, sizeof(colorspace_info) / sizeof(colorspace_info[0]));
+     }
+ 
++    bool getDRMConnectorBroadcastRGB(int fd, uint32_t id, SDRMConnector::UDRMConnectorBroadcastRGB* out) {
++        return scanPropertyEnum(fd, id, out->props, broadcast_rgb_info, sizeof(broadcast_rgb_info) / sizeof(broadcast_rgb_info[0]));
++    }
++
+     bool getDRMCRTCProps(int fd, uint32_t id, SDRMCRTC::UDRMCRTCProps* out) {
+         return scanProperties(fd, id, DRM_MODE_OBJECT_CRTC, out->props, crtc_info, sizeof(crtc_info) / sizeof(crtc_info[0]));
+     }
+diff -ruN a/src/backend/drm/Props.hpp b/src/backend/drm/Props.hpp
+--- a/src/backend/drm/Props.hpp
++++ b/src/backend/drm/Props.hpp
+@@ -5,6 +5,7 @@
+ namespace Aquamarine {
+     bool  getDRMConnectorProps(int fd, uint32_t id, SDRMConnector::UDRMConnectorProps* out);
+     bool  getDRMConnectorColorspace(int fd, uint32_t id, SDRMConnector::UDRMConnectorColorspace* out);
++    bool  getDRMConnectorBroadcastRGB(int fd, uint32_t id, SDRMConnector::UDRMConnectorBroadcastRGB* out);
+     bool  getDRMCRTCProps(int fd, uint32_t id, SDRMCRTC::UDRMCRTCProps* out);
+     bool  getDRMPlaneProps(int fd, uint32_t id, SDRMPlane::UDRMPlaneProps* out);
+     bool  getDRMPlaneColorRange(int fd, uint32_t id, SDRMPlane::UDRMPlaneColorRange* out);

@@ -30,9 +30,14 @@
     # Consumed by modules/core/wayland.nix and modules/home/hyprland.
     # NOTE: patching defeats the hyprland.cachix.org hit below, so Hyprland is a
     # local compile until upstream lands these and they can be dropped.
+    #   aquamarine-broadcast-rgb-full: forces full RGB; kernel 7.3 sends limited on HDMI TV modes and the AVR/TV shows it washed out.
     (_final: prev: {
       hyprland-mirrorfix =
-        inputs.hyprland.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
+        (inputs.hyprland.packages.${prev.stdenv.hostPlatform.system}.default.override (args: {
+          aquamarine = args.aquamarine.overrideAttrs (old: {
+            patches = (old.patches or [ ]) ++ [ ../../patches/aquamarine-broadcast-rgb-full.patch ];
+          });
+        })).overrideAttrs
           (old: {
             patches = (old.patches or [ ]) ++ [
               ../../patches/hyprland-mirror-weakptr.patch
