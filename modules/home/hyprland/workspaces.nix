@@ -44,7 +44,7 @@ in
       # Mirror DP-1 onto the AVR/HDMI-A-1 (dormant while unplugged).
       # Note: mirroring copies DP-1's framebuffer as-is (no re-render); differing
       # aspect ratios will stretch/squish.
-      # See patches/hyprland-mirror-weakptr.patch — unplugging DP-1 while this is
+      # See patches/hyprland-mirror{,-disconnect}-weakptr.patch — unplugging or powering off DP-1 while this is
       # live SEGVs an unpatched Hyprland.
       {
         output = "HDMI-A-1";

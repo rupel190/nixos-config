@@ -23,14 +23,17 @@
     #   mirror-weakptr:         damageMirrorsWith() derefs m_mirrors entries — weak
     #                           refs — without checking expiry, so unplugging a
     #                           mirrored output kills the session on the next frame.
+    #   mirror-disconnect-weakptr: onDisconnect() calls setMirror("") through the same
+    #                           weak refs unchecked, so powering off a mirror source
+    #                           (DP-1) with a stale entry calls it on nullptr.
     #   idle-inhibit-noop-reset: setInhibit() resets every idle notification even
     #                           when the inhibit state is unchanged, so any window
     #                           map/unmap/focus rewinds the idle clock — Steam toasts
     #                           relight a blanked, locked session hours later.
+    #   aquamarine-broadcast-rgb-full: forces full RGB; kernel 7.3 sends limited on HDMI TV modes and the AVR/TV shows it washed out.
     # Consumed by modules/core/wayland.nix and modules/home/hyprland.
     # NOTE: patching defeats the hyprland.cachix.org hit below, so Hyprland is a
     # local compile until upstream lands these and they can be dropped.
-    #   aquamarine-broadcast-rgb-full: forces full RGB; kernel 7.3 sends limited on HDMI TV modes and the AVR/TV shows it washed out.
     (_final: prev: {
       hyprland-mirrorfix =
         (inputs.hyprland.packages.${prev.stdenv.hostPlatform.system}.default.override (args: {
@@ -41,6 +44,7 @@
           (old: {
             patches = (old.patches or [ ]) ++ [
               ../../patches/hyprland-mirror-weakptr.patch
+              ../../patches/hyprland-mirror-disconnect-weakptr.patch
               ../../patches/hyprland-idle-inhibit-noop-reset.patch
             ];
           });

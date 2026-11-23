@@ -1,0 +1,35 @@
+monitor: skip expired mirror weakptrs in onDisconnect
+
+CMonitor::m_mirrors is a std::vector<PHLMONITORREF> — weak references — and can
+hold entries whose monitor is already gone. When the mirrored output itself
+disconnects, onDisconnect() walks that list and calls m->setMirror("") on each
+entry unconditionally, so an expired one calls setMirror with this == nullptr:
+
+    setMirror+0x145: mov 0x538(%r12),%rdx   ; r12 (this) == 0, reading m_mirrorOf
+
+Backtrace is always setMirror() <- onDisconnect() <- onConnect()::lambda#6 <-
+Aquamarine::SDRMConnector::disconnect(). Reproduces by powering off the source
+monitor of a `mirror` rule (DP monitors drop off DRM on power-off).
+
+setMirror("") also erases the caller's entry from the very m_mirrors being
+iterated, so iterate a copy as well.
+
+Applies to Hyprland 8b7aefe32e3459a6e3a92cbd6dd6c638d1b8dbdd (v0.56.0).
+
+--- a/src/output/Monitor.cpp
++++ b/src/output/Monitor.cpp
+@@ -418,8 +418,12 @@
+     }
+ 
+     if (!m_mirrors.empty()) {
+-        for (auto const& m : m_mirrors) {
+-            m->setMirror("");
++        // m_mirrors holds weak refs that may already be expired, and setMirror("")
++        // erases from m_mirrors, so iterate a copy and skip dead entries.
++        const auto mirrors = m_mirrors;
++        for (auto const& m : mirrors) {
++            if (auto mon = m.lock())
++                mon->setMirror("");
+         }
+ 
+         Config::monitorRuleMgr()->scheduleReload();
