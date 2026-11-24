@@ -338,6 +338,16 @@ let
         install -Dm444 "$registerPath" $out/hooks/register.tsx
       '';
 
+  # Ctrl+G opens nvim in a herdr split under the chat; Enter in NORMAL sends and keeps it open.
+  # herdr-app, hc, nvim and wl-paste come from the profile. VISUAL is the bare name, so running
+  # sessions get a new version too.
+  claude-notepad = pkgs.writeShellApplication {
+    name = "claude-notepad";
+    runtimeInputs = with pkgs; [ coreutils findutils gnugrep gnused jq ];
+    runtimeEnv.NOTEPAD_LUA = ./claude-notepad/notepad.lua;
+    text = builtins.readFile ./claude-notepad/claude-notepad.sh;
+  };
+
   # `claude` pulls ~/.claude BEFORE it starts. The SessionStart pull below runs too late for
   # `claude --resume`: its picker lists sessions from local disk before any hook fires, so a
   # session pushed from the other host was missing until the next start. Interactive starts
@@ -360,6 +370,7 @@ let
       fi
     fi
     export CLAUDE_CODE_PLUGIN_DIRS=${imageMod}
+    if [ -n "''${HC_TERMINAL_ID:-}" ]; then export VISUAL=claude-notepad; fi
     exec ${claude-code-raw}/bin/claude "$@"
   '';
   claude-code = pkgs.symlinkJoin {
@@ -383,6 +394,7 @@ in
 
   config.home.packages = claudeHookPkgs ++ [
     claude-code
+    claude-notepad
     pkgs.claude-monitor
     claude-statusline
     pkgs.sox # /voice audio recording (provides `rec`)
@@ -420,6 +432,22 @@ in
     "${inputs.claude-skill-relay}/skills/relay-self-hosting";
   config.home.file.".claude/skills/obsidian-vault-setup".source =
     "${inputs.claude-skill-relay}/skills/obsidian-vault-setup";
+
+  # Esc only does vim's INSERT -> NORMAL; stopping Claude is ctrl+c (any mode) or ctrl+q (NORMAL).
+  # Not rebindable: Esc twice on an empty idle prompt still opens the rewind menu (Esc closes it).
+  config.home.file.".claude/keybindings.json".text = builtins.toJSON {
+    "$schema" = "https://www.schemastore.org/claude-code-keybindings.json";
+    "$docs" = "https://code.claude.com/docs/en/keybindings";
+    bindings = [
+      {
+        context = "Chat";
+        bindings = {
+          escape = null;
+          "ctrl+q" = "chat:cancel";
+        };
+      }
+    ];
+  };
 
   # settings.json is Claude-owned and rewritten in place, so home.file would make
   # it read-only and wipe Claude's state. Instead jq merges just our keys on each
