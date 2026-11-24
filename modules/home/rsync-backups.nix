@@ -74,6 +74,18 @@ let
       sources = [ "/mnt/silo/games" "/mnt/silo/for-others" ];
       excludes = [ ];
     }
+    {
+      # saves of the games in the two other Steam libraries (both merge into one compatdata/ by app id)
+      name = "steam-saves";
+      sources = [
+        "/mnt/games/SteamLibrary/steamapps/compatdata"
+        "/mnt/nvme950/SteamLibrary/steamapps/compatdata"
+      ];
+      excludes = [
+        "drive_c/windows/" "drive_c/Program Files/" "drive_c/Program Files (x86)/" "pfx/dosdevices/"
+        "drive_c/users/steamuser/AppData/Local/Temp/"
+      ];
+    }
   ];
 
   runJob = job: ''
