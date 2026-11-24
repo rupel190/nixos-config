@@ -11,7 +11,7 @@ let
       name = "home-core";
       sources = [ "${home}/" ];
       excludes = [
-        "/.cache" "/.npm" "/.yarn" "/Downloads" "/dday-recovery" "/playground"
+        "/.cache" "/.npm" "/.yarn" "/Downloads" "/dday-recovery"
         "/Videos" "/Pictures" "/Music" "/.local/share/Trash"
         "/.local/share/Steam/steamapps/common" "/.local/share/Steam/steamapps/shadercache"
         "/.local/share/Steam/steamapps/workshop" "/.local/share/Steam/steamapps/downloading"
@@ -69,9 +69,9 @@ let
       excludes = [ ];
     }
     {
-      # silo folders that exist nowhere else (console saves, others' phone and photo backups)
+      # silo folders that exist nowhere else (console saves, others' phone and photo backups, RomM's save states)
       name = "silo";
-      sources = [ "/mnt/silo/games" "/mnt/silo/for-others" ];
+      sources = [ "/mnt/silo/games" "/mnt/silo/for-others" "/mnt/silo/romm/assets" ];
       excludes = [ ];
     }
     {
@@ -86,10 +86,27 @@ let
         "drive_c/users/steamuser/AppData/Local/Temp/"
       ];
     }
+    {
+      # games that save into their own folder (Half-Life: Alyx, RetroArch, …); the three libraries merge into common/
+      name = "game-folder-saves";
+      sources = [
+        "${home}/.local/share/Steam/steamapps/common"
+        "/mnt/games/SteamLibrary/steamapps/common"
+        "/mnt/nvme950/SteamLibrary/steamapps/common"
+      ];
+      flags = [
+        "--prune-empty-dirs" "--include=*/"
+        "--include=[Ss][Aa][Vv][Ee]/**" "--include=[Ss][Aa][Vv][Ee][Ss]/**"
+        "--include=[Ss]aved[Gg]ames/**" "--include=[Ss]ave[Gg]ame*/**" "--include=RetroArch/states/**"
+        "--exclude=*"
+      ];
+      excludes = [ ];
+    }
   ];
 
   runJob = job: ''
     snapshot ${job.name} \
+      ${pkgs.lib.escapeShellArgs (job.flags or [ ])} \
       ${pkgs.lib.concatMapStringsSep " " (e: "--exclude=${pkgs.lib.escapeShellArg e}") job.excludes} \
       -- ${pkgs.lib.escapeShellArgs job.sources}
   '';

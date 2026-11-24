@@ -4,6 +4,7 @@
     ./hardware-configuration.nix
     ./media.nix
     ./health.nix
+    ./service-backup.nix
     ./ollama-pi.nix
     ./aarch64-builds.nix
     ./../../modules/core
