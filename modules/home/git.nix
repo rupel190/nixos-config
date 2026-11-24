@@ -1,5 +1,35 @@
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
+let
+  # commit-msg hook: drops the lines Claude Code appends to a commit message. Human co-authors stay.
+  stripAiTrailers = pkgs.writeShellApplication {
+    name = "strip-ai-trailers";
+    runtimeInputs = with pkgs; [
+      coreutils
+      gnugrep
+      gnused
+    ];
+    bashOptions = [
+      "errexit"
+      "nounset"
+    ];
+    text = ''
+      msg="$1"
+      lines='^(co-authored-by:.*<noreply@anthropic\.com>|claude-session:[[:space:]]*https://claude\.ai/.*)[[:space:]]*$'
+      grep -qiE "$lines" "$msg" || exit 0
+      tmp="$(mktemp)"
+      grep -viE "$lines" "$msg" > "$tmp" || true
+      # the blank line that stood above the trailers goes with them
+      sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$tmp" > "$msg"
+      rm -f "$tmp"
+    '';
+  };
+in
 {
+  # A path that survives rebuilds. Git before 2.54 ignores the hook setting below, so repos whose
+  # devshell ships an older git need it as .git/hooks/commit-msg:
+  #   ln -s ~/.config/git/strip-ai-trailers .git/hooks/commit-msg
+  xdg.configFile."git/strip-ai-trailers".source = lib.getExe stripAiTrailers;
+
   programs = {
     git = {
       enable = true;
@@ -11,6 +41,13 @@
 
         init.defaultBranch = "main";
         core.editor = "nvim";
+
+        # Runs alongside a repo's own hooks; core.hooksPath would replace them (git-lfs, husky).
+        # Off for one repo: git config hook.strip-ai-trailers.enabled false
+        hook.strip-ai-trailers = {
+          command = lib.getExe stripAiTrailers;
+          event = "commit-msg";
+        };
 
         alias = {
           st = "status";
