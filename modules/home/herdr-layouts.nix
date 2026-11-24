@@ -7,7 +7,8 @@
 #   office-dusty  fetches ipapi.co (your IP -> location) and open-meteo.com for weather
 #   lcars         polls 127.0.0.1 (Shepherdr, not installed: silent) and opens URLs with xdg-open
 #   rooms         menu items call macOS `open`/`pbcopy`, which do nothing here; also gh/git
-#   traveler      runs find/stat/mkdir/open in ~/.config/herdr-app/data/inbox, reads job files
+#   traveler      runs find/stat/mkdir/open in ~/.config/herdr-app/data/inbox (macOS paths,
+#                 patched below), reads job files
 #   command-center rewrites its own theme file (kept writable, see the activation below)
 # The rest only read git or `hc ls`. A layout's mods start the first time it is shown.
 
@@ -24,6 +25,7 @@ let
       mods,
       themes ? [ ],
       rename ? null, # name the repo's `office` goes by here
+      patch ? "",
     }:
     let
       pkg =
@@ -46,6 +48,7 @@ let
                 $out/layouts/${rename}.json
               { grep -rl 'mods/office/' $out/mods/${rename} || true; } | xargs -r sed -i 's#mods/office/#mods/${rename}/#g'
             ''
+            + patch
           );
       link = dir: f: {
         name = "herdr-app/${dir}/${f}";
@@ -58,6 +61,11 @@ let
         map (link "layouts") layouts ++ map (link "themes") themes ++ map (link "mods") mods
       );
     };
+
+  # detached: a mod's exec waits for the program and fails after 30 s
+  inboxOpen = pkgs.writeShellScript "herdr-inbox-open" ''
+    ${pkgs.util-linux}/bin/setsid -f ${pkgs.xdg-utils}/bin/xdg-open "$1" </dev/null >/dev/null 2>&1
+  '';
 
   all = [
     # command-center: its theme is written by the mod, so it is copied below, not linked.
@@ -192,6 +200,17 @@ let
         "traveler-spaces"
         "traveler-tabs"
       ];
+      # inbox calls /bin/mkdir and BSD stat; %f is the raw mode, 8xxx = regular file
+      patch = ''
+        substituteInPlace $out/mods/inbox/main.js \
+          --replace-fail '"/bin/mkdir"' '"${pkgs.coreutils}/bin/mkdir"'
+        substituteInPlace $out/mods/inbox/lib.js \
+          --replace-fail '"/usr/bin/find"' '"${pkgs.findutils}/bin/find"' \
+          --replace-fail '"/usr/bin/stat", "-f", "%m %z %N"' '"${pkgs.coreutils}/bin/stat", "-c", "%Y %s %n"' \
+          --replace-fail '"/usr/bin/stat", args: ["-f", "%HT", path]' '"${pkgs.coreutils}/bin/stat", args: ["-c", "%f", path]' \
+          --replace-fail 'String(stdout ?? "").trim() === "Regular File"' '/^8[0-9a-f]{3}$/.test(String(stdout ?? "").trim())' \
+          --replace-fail '"/usr/bin/open"' '"${inboxOpen}"'
+      '';
     })
   ];
 
