@@ -7,66 +7,6 @@
 let
   getProgramName = pkg: pkg.meta.mainProgram or pkg.pname or (lib.getName pkg);
   allowedCmds = lib.concatStringsSep "\n" (map getProgramName config.home.packages);
-
-  # Background weather refresh: fetch GeoSphere Austria's AROME model (via the
-  # Open-Meteo gateway, which serves the same model already in local time, with
-  # apparent temperature, precip probability and WMO weather codes precomputed)
-  # and render the labeled panel into the cache that loginShellInit prints
-  # beneath fastfetch. Two tables sit SIDE BY SIDE to use the terminal width:
-  # left = "rest of today" (one row per period from the hourly array: now/
-  # morning/noon/evening/night), right = "next 3 days" (one row per day from the
-  # daily aggregates: low-high temp, max rain %, sky). We request forecast_days=4
-  # so daily[0] is today and daily[1..3] are the three days after. Coordinates
-  # are WIEN/HOHE WARTE (GeoSphere station 11035 — the same station ORF shows for
-  # Vienna); swap lat/lon to retarget. curl/jq paths are pinned so the systemd
-  # timer works regardless of PATH. ic() maps WMO weather codes to emoji, always
-  # the last glyph of a cell so their double display-width can't shift a column.
-  # Each left cell is a fixed 30 ASCII cols + 1 emoji (2 wide) = 32, so padding
-  # only the emoji-free header to 32 lands the right table at the same screen
-  # column on every row (assumes the emoji render 2-wide, true in WezTerm).
-  # hourly is full-day local, so the period indices are just the hour: 9/12/18/21;
-  # the daily .time values are plain dates, so drow() derives the weekday name via
-  # strptime|mktime|gmtime|strftime. The atomic .tmp -> mv keeps the last good
-  # copy when offline.
-  weatherUpdate = pkgs.writeShellScript "weather-update" ''
-    cache="$HOME/.cache/weather-panel"
-    ${pkgs.curl}/bin/curl -fsS --max-time 8 'https://api.open-meteo.com/v1/forecast?latitude=48.2486&longitude=16.3564&models=geosphere_seamless&timezone=Europe%2FVienna&forecast_days=4&current=temperature_2m,apparent_temperature,weather_code,is_day&hourly=temperature_2m,precipitation_probability,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' 2>/dev/null \
-      | ${pkgs.jq}/bin/jq -r '
-          def rpad($n): . as $s | $s + (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end);
-          def lpad($n): . as $s | (($n - ($s|length)) as $k | if $k>0 then " "*$k else "" end) + $s;
-          def ic($c; $night):
-            if   $c == 0 then (if $night then "🌙" else "☀️" end)
-            elif ($c == 1 or $c == 2) then "⛅"
-            elif $c == 3 then "☁️"
-            elif ($c == 45 or $c == 48) then "🌫️"
-            elif (($c >= 71 and $c <= 77) or $c == 85 or $c == 86) then "🌨️"
-            elif $c >= 95 then "⛈️"
-            elif $c >= 51 then "🌧️"
-            else "🌦️" end;
-          .current as $cur | .hourly as $h | .daily as $d
-          | def row($l; $i; $night):
-              "  " + ($l|rpad(8)) + ($h.temperature_2m[$i]|round|tostring|lpad(2)) + " °C   "
-              + (("rain " + ($h.precipitation_probability[$i]|tostring|lpad(3)) + " %")|rpad(12))
-              + ic($h.weather_code[$i]; $night);
-            def drow($i):
-              "  " + (($d.time[$i]|strptime("%Y-%m-%d")|mktime|gmtime|strftime("%a"))|rpad(8))
-              + ($d.temperature_2m_min[$i]|round|tostring|lpad(2)) + "–" + ($d.temperature_2m_max[$i]|round|tostring|lpad(2)) + " °C   "
-              + (("rain " + ($d.precipitation_probability_max[$i]|tostring|lpad(3)) + " %")|rpad(12))
-              + ic($d.weather_code[$i]; false);
-            ("  " + ("now"|rpad(8)) + ($cur.temperature_2m|round|tostring|lpad(2)) + " °C   "
-              + (("feels " + ($cur.apparent_temperature|round|tostring) + " °C")|rpad(12))
-              + ic($cur.weather_code; ($cur.is_day == 0))) as $now
-            | ("Hohe Warte · rest of today"|rpad(32)) + "   " + "Hohe Warte · next 3 days",
-              $now                      + "   " + drow(1),
-              row("morning"; 9;  false) + "   " + drow(2),
-              row("noon";    12; false) + "   " + drow(3),
-              row("evening"; 18; false),
-              row("night";   21; true)
-        ' > "$cache.tmp" 2>/dev/null \
-      && test -s "$cache.tmp" \
-      && mv "$cache.tmp" "$cache" \
-      || rm -f "$cache.tmp"
-  '';
 in
 {
   xdg.configFile."tldr-allowlist".text = allowedCmds;
@@ -126,11 +66,6 @@ in
     loginShellInit = ''
       if status is-interactive
         fastfetch
-        if test -f $HOME/.cache/weather-panel
-          echo
-          cat $HOME/.cache/weather-panel
-          echo
-        end
         tldr-installed
       end
     '';
@@ -357,17 +292,6 @@ in
         '';
       };
 
-      # Manual weather: force a refresh, then show the panel. Startup does NOT use
-      # this — loginShellInit prints the timer-warmed cache directly, so it never
-      # waits on the network. Run `weather` any time you want it fresh right now.
-      weather = {
-        description = "Refresh and show the weather panel (rest of today + next 3 days, with rain %)";
-        body = ''
-          ${weatherUpdate}
-          test -f $HOME/.cache/weather-panel; and cat $HOME/.cache/weather-panel; or echo "weather unavailable"
-        '';
-      };
-
       # Godot launcher shortcut
       godot = "command godot --rendering-driver opengl3 $argv";
 
@@ -455,26 +379,6 @@ in
     Unit.Description = "Refresh the tldr page cache weekly";
     Timer = {
       OnCalendar = "weekly";
-      Persistent = true;
-    };
-    Install.WantedBy = [ "timers.target" ];
-  };
-
-  # Keep the weather cache warm OFF the interactive path (loginShellInit prints
-  # it on every shell start, so it must never block on the network). Same idea
-  # as tldr-update: a oneshot refresh, here on a 15-minute timer plus on boot.
-  systemd.user.services.weather-update = {
-    Unit.Description = "Refresh the cached weather forecast";
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${weatherUpdate}";
-    };
-  };
-  systemd.user.timers.weather-update = {
-    Unit.Description = "Refresh the cached weather forecast every 15 minutes";
-    Timer = {
-      OnBootSec = "1min";
-      OnUnitActiveSec = "15min";
       Persistent = true;
     };
     Install.WantedBy = [ "timers.target" ];

@@ -88,6 +88,9 @@ in
     };
 
     settings = {
+      # A login shell, as in WezTerm: fastfetch only runs in those
+      shell = "/run/current-system/sw/bin/fish --login";
+
       modify_font = "cell_height 120%";
       background_opacity = "0.95";
       confirm_os_window_close = 0;

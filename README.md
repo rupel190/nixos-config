@@ -67,7 +67,7 @@ on a `host` specialArg rather than split into separate trees.
         ├── claude-sync.nix    # Sync ~/.claude across machines
         ├── clouddrives.nix    # OneDrive sync
         ├── darya.nix          # Disk usage visualizer
-        ├── fastfetch.nix      # Fetch tool + weather panel
+        ├── fastfetch.nix      # Fetch tool
         ├── fish.nix           # Shell
         ├── fzf.nix            # Fuzzy finder
         ├── git.nix            # Version control
