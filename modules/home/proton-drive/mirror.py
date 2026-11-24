@@ -29,6 +29,11 @@ LOCAL = os.environ.get("MIRROR_LOCAL", DRIVE + "/current")  # overrides are for 
 REMOTE = os.environ.get("MIRROR_REMOTE", "/my-files/backup")
 SNAPSHOTS = "rsync-weekly-bak"
 EXCLUDE = {"Passwords.key"}  # by name, anywhere: the keyfile must never sit next to its database
+CORE = f"{SNAPSHOTS}/home-core/latest"
+EXCLUDE_PATHS = {  # by remote path: kept on the backup drive only
+    f"{CORE}/.local/share/BeamNG/BeamNG.drive/current/mods/repo",  # downloaded mods, 31 GB
+    f"{CORE}/.claude/projects",  # transcripts, 13 GB; the big ones change with every session
+}
 STATE = os.environ.get("MIRROR_STATE", os.path.expanduser("~/.local/state/proton-mirror/manifest"))
 FOLDERS = STATE + ".folders"  # remote folders known to exist after the last run
 BATCH = 200  # local paths per upload call
@@ -103,8 +108,8 @@ def entries(path):
         return []
 
 
-def skipped(e):
-    return e.name in EXCLUDE or e.is_symlink() or not (e.is_file() or e.is_dir())
+def skipped(e, rel):
+    return e.name in EXCLUDE or rel in EXCLUDE_PATHS or e.is_symlink() or not (e.is_file() or e.is_dir())
 
 
 def scan(path, rel, manifest):
@@ -112,7 +117,7 @@ def scan(path, rel, manifest):
     clean, count = True, 0
     for e in entries(path):
         child = f"{rel}/{e.name}" if rel else e.name
-        if skipped(e):
+        if skipped(e, child):
             clean = False
         elif e.is_dir():
             manifest.add(child + "/")
@@ -130,7 +135,7 @@ def plan_dir(path, rel, manifest, jobs, folders, top=False):
     whole = []  # files and symlink-free folders: uploaded together in batches
     for e in sorted(entries(path), key=lambda e: e.name):
         child = f"{rel}/{e.name}" if rel else e.name
-        if (top and e.name == SNAPSHOTS) or skipped(e):
+        if (top and e.name == SNAPSHOTS) or skipped(e, child):
             continue
         if e.is_file():
             manifest.add(child)

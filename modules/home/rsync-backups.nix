@@ -26,9 +26,26 @@ let
         "/.config/**/DawnGraphiteCache/" "/.config/**/DawnWebGPUCache/" "/.config/**/GrShaderCache/"
         "/.config/**/ShaderCache/" "/.config/**/Service Worker/CacheStorage/"
         "/.config/**/Service Worker/ScriptCache/" "/.config/**/Crashpad/" "/.config/**/cache2/"
-        "/.var/app/*/cache/"
+        "/.var/app/*/cache/" "/.var/app/*/config/**/Cache/" "/.var/app/*/config/**/Code Cache/"
+        "/.var/app/*/config/**/GPUCache/" "/.var/app/*/config/**/Dawn*Cache/"
+        "/.var/app/*/config/**/CacheStorage/" "/.var/app/*/config/**/ScriptCache/"
+        "/.var/app/*/config/CurseForge/agent/FileCache/"
+        "/.config/zen/*/storage/default/*/cache/" "/.config/chromium-headless/" "/.config/.wrangler/logs/"
+        "/.local/share/vicinae/clipboard-data/" "/.local/share/digikam/thumbnails-digikam.db"
+        "/.claude/jobs/*/tmp/"
         # re-downloadable dependencies
         "node_modules/" ".venv/" "__pycache__/" "/projects/**/.claude/worktrees/"
+        ".yarn/cache/" ".yarn/unplugged/" "/go/pkg/" "/.m2/repository/"
+        "/.arduino15/packages/" "/.arduino15/staging/"
+        "/projects/nixpkgs-wezterm-fix/" # its one unpushed commit is nixpkgs-wezterm-fix.patch next to it
+        # build caches, rebuilt by the project
+        ".godot/" ".next/"
+        # programs: Steam's runtimes and Proton builds, Bitwig's sound packages, the Hytale and MXA clients (its Mods and game files stay in)
+        "/.local/share/Steam/steamrt64/" "/.local/share/Steam/compatibilitytools.d/"
+        "/.local/share/Steam/ubuntu12_32/" "/.local/share/Steam/ubuntu12_64/" "/.local/share/Steam/linux32/"
+        "/.local/share/Steam/linux64/" "/.local/share/Steam/steamui/" "/.local/share/Steam/clientui/"
+        "/.BitwigStudio/installed-packages/" "/.var/app/com.hypixel.HytaleLauncher/data/Hytale/install/"
+        "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/users/steamuser/AppData/Roaming/mxa-launcher/clients/*/versions/"
         "/.local/share/nvim/lazy/" "/.local/share/nvim/mason/" "/.local/share/pnpm/"
         "/.bun/install/cache/" "/.cargo/registry/" "/.cargo/git/"
         "/.local/share/containers/" "/.local/share/flatpak/" "/.local/share/uv/"
@@ -38,8 +55,8 @@ let
         "/projects/recustomize/stitching-pipeline/tests/output/variants/"
         "/projects/recustomize/stitching-pipeline/tests/output/renderer-history/"
         "/projects/recustomize/stitching-pipeline/tests/output/test_segmentation/"
-        # Proton prefixes: keep each game's users/ dir (saves), drop the Windows install
-        "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/windows/"
+        # Wine and Proton prefixes: keep each game's users/ dir (saves), drop the Windows install
+        "drive_c/windows/"
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files/"
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/Program Files (x86)/"
         "/.local/share/Steam/steamapps/compatdata/*/pfx/drive_c/users/steamuser/AppData/Local/Temp/"
