@@ -150,7 +150,7 @@ Full list in `modules/home/hyprland/keybinds.nix`.
 | `SUPER+SHIFT+R` | Read the clipboard aloud (say-clip) |
 | `SUPER+,` / `SUPER+.` | Scrolling layout: cycle column width |
 | `SUPER+;` | Scrolling layout: promote window to its own column |
-| `SUPER+[` / `SUPER+]` | Scrolling layout: consume / expel column |
+| `SUPER+[` / `SUPER+]` | Scrolling layout: consume / expel column; dwindle: rotate the split |
 | `CTRL+SUPER+ALT+L` | Lock now |
 | `CTRL+SUPER+ALT+M` | All monitors off |
 | `CTRL+SUPER+ALT+1..3` | One monitor off (amanita) |

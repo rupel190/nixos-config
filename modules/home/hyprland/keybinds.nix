@@ -178,7 +178,6 @@ in
         # Maximize is its own state, apart from floating: SUPER+F cannot undo it
         (bind "${mod} + M" (dsp ''hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })''))
         (bind "${mod} + P" (dsp "hl.dsp.window.pseudo()")) # dwindle
-        (bind "${mod} + V" (layoutmsgIn "dwindle" "togglesplit"))
 
         # Notifications
         (bind "${mod} + N" (exec "swaync-client -t"))
@@ -297,6 +296,9 @@ in
         (bind "${mod} + Prior" (layoutmsgIn "scrolling" "move -col")) # Page Up
         (bind "${mod} + bracketleft" (layoutmsgIn "scrolling" "consume_or_expel prev")) # merge into previous column
         (bind "${mod} + bracketright" (layoutmsgIn "scrolling" "consume_or_expel next")) # split out to next column
+        # Same keys on the dwindle workspaces: rotate the window around its split partner.
+        (bind "${mod} + bracketleft" (layoutmsgIn "dwindle" "rotatesplit -90")) # counterclockwise
+        (bind "${mod} + bracketright" (layoutmsgIn "dwindle" "rotatesplit 90")) # clockwise
       ]
 
       # Blank one screen at a time, left to right: 1 = DP-1, 2 = DP-2 (OLED),
