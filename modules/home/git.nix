@@ -15,11 +15,12 @@ let
     text = ''
       msg="$1"
       lines='^(co-authored-by:.*<noreply@anthropic\.com>|claude-session:[[:space:]]*https://claude\.ai/.*)[[:space:]]*$'
-      grep -qiE "$lines" "$msg" || exit 0
+      # LC_ALL=C and -a: otherwise grep drops text from a message that is not valid UTF-8
+      LC_ALL=C grep -aqiE "$lines" "$msg" || exit 0
       tmp="$(mktemp)"
-      grep -viE "$lines" "$msg" > "$tmp" || true
+      LC_ALL=C grep -aviE "$lines" "$msg" > "$tmp" || true
       # the blank line that stood above the trailers goes with them
-      sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$tmp" > "$msg"
+      LC_ALL=C sed -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$tmp" > "$msg"
       rm -f "$tmp"
     '';
   };
