@@ -51,6 +51,12 @@ let
       sources = [ videos "${home}/Pictures" "${home}/Music" ];
       excludes = [ ];
     }
+    {
+      # silo folders that exist nowhere else (console saves, others' phone and photo backups)
+      name = "silo";
+      sources = [ "/mnt/silo/games" "/mnt/silo/for-others" ];
+      excludes = [ ];
+    }
   ];
 
   runJob = job: ''
