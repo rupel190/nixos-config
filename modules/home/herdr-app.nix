@@ -86,8 +86,8 @@ let
       # already runs keeps the environment it started with. So:
       # - herdr-app#533: graphics reply arrives after DA1; drop once fixed. Without it Claude
       #   Code decides there is no Kitty graphics and the image mod (claude.nix) draws alt text.
-      # - kitty's variables go, for an app started from a kitty shell: the claude hooks would
-      #   paint that kitty tab, and TERMINFO names kitty's terminfo.
+      # - kitty's variables go, for an app started from a kitty shell: programs would
+      #   think they run in kitty, and TERMINFO names kitty's terminfo.
       makeWrapper $out/libexec/herdr-app/herdr-app $out/bin/herdr-app \
         --prefix PATH : ${lib.makeBinPath [ herdr-core ]} \
         --set CLAUDE_CODE_FORCE_TERMINAL_IMAGES 1 \

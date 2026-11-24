@@ -56,7 +56,7 @@ on a `host` specialArg rather than split into separate trees.
         ├── audio-switch/      # Default-output ring (bar click + CTRL+SUPER+ALT+A)
         ├── btop/              # Resource monitor
         ├── cava/              # Audio visualizer
-        ├── claude-hooks/      # Claude Code hooks (tab status, session checks), shellchecked
+        ├── claude-hooks/      # Claude Code hooks (session checks), shellchecked
         ├── discord/           # Vesktop (Discord + Vencord)
         ├── dotfiles/          # nvim, yazi, tridactyl, gh, …
         ├── projects/          # Declared ~/projects checkouts + drift audit

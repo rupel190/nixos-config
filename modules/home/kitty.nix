@@ -154,8 +154,8 @@ in
     ]) [ 1 2 3 4 5 6 7 8 9 ]);
 
     # What a WezTerm shell passes on when kitty is started from one. Left in,
-    # claude's tab hook would paint a WezTerm tab and programs would think they
-    # run in WezTerm. The image mod loads through the claude wrapper (claude.nix).
+    # programs would think they run in WezTerm. The image mod loads through the
+    # claude wrapper (claude.nix).
     extraConfig = ''
       env WEZTERM_PANE
       env WEZTERM_UNIX_SOCKET

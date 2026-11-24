@@ -41,18 +41,6 @@ let
 
   claudeHookPkgs = [
     (mkHook {
-      name = "claude-hook-tab-status";
-      file = ./claude-hooks/tab-status.sh;
-      bashOptions = [ "nounset" ];
-      runtimeInputs = with pkgs; [
-        jq
-        kitty
-        coreutils
-      ];
-    })
-    # Old name: sessions read their hooks at startup, so those started before the rename still call it
-    (pkgs.writeShellScriptBin "claude-hook-wezterm-status" ''exec claude-hook-tab-status "$@"'')
-    (mkHook {
       name = "claude-hook-check-ignore-vs-index";
       file = ./claude-hooks/check-ignore-vs-index.sh;
       bashOptions = [
@@ -91,38 +79,7 @@ let
   # /nix/store path from this machine would dangle. Same rule as the statusline
   # below, and the same reason `claude-sync pull -q` is spelled this way.
   claudeHooks = {
-    Notification = [
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "claude-hook-tab-status set";
-          }
-        ];
-      }
-    ];
-    PostToolUse = [
-      {
-        matcher = "*";
-        hooks = [
-          {
-            type = "command";
-            command = "claude-hook-tab-status working";
-          }
-        ];
-      }
-    ];
     SessionEnd = [
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "claude-hook-tab-status clear";
-          }
-        ];
-      }
       # Pushes run on the hourly timer (claude-sync.nix) plus once here, detached so exit doesn't wait
       {
         matcher = "";
@@ -163,28 +120,6 @@ let
             command = "test -n \"$CLAUDE_WORKER\" || claude-hook-check-vault-freshness 2>/dev/null || true";
             timeout = 15;
             statusMessage = "Checking DECISIONS.md against its source...";
-          }
-        ];
-      }
-    ];
-    Stop = [
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "claude-hook-tab-status done";
-          }
-        ];
-      }
-    ];
-    UserPromptSubmit = [
-      {
-        matcher = "";
-        hooks = [
-          {
-            type = "command";
-            command = "claude-hook-tab-status working";
           }
         ];
       }

@@ -209,56 +209,14 @@
            return nil
          end
 
-         -- Claude Code sessions announce "I want something" by dropping a marker file
-         -- named <pane-id>.<status> here; ~/.claude/hooks/wezterm-status.sh writes it on
-         -- the Notification hook and removes it once the prompt is answered. A file
-         -- rather than a user var because claude's hooks have no controlling terminal,
-         -- and writing the SetUserVar escape to claude's pty injects bytes into a
-         -- fullscreen TUI mid-repaint -- enough to wedge the terminal's colour state.
-         local CLAUDE_ATTENTION_DIR = (os.getenv("XDG_RUNTIME_DIR") or "/tmp") .. "/claude-attention"
-         local CLAUDE_ALERTS = {
-           permission = { icon = wezterm.nerdfonts.md_shield_alert, fg = "#181926", bg = "#ed8796" },
-           waiting = { icon = wezterm.nerdfonts.md_message_alert, fg = "#181926", bg = "#f5a97f" },
-         }
-
-         -- wezterm.glob is async ("attempt to yield from outside a coroutine") and
-         -- format-tab-title is not, so the directory is read on the status tick
-         -- (status_update_interval, 500ms) and the result cached for the renderer.
-         local claude_markers = {}
          -- drovr workers ("drovr 2▶ 1✓"); helper from programs.drovr.weztermHelper.
          local drovr_ok, drovr = pcall(dofile, os.getenv("HOME") .. "/.local/share/drovr/wezterm.lua")
          local drovr_status = ""
          wezterm.on("update-status", function()
-           local ok, markers = pcall(wezterm.glob, CLAUDE_ATTENTION_DIR .. "/*")
-           claude_markers = ok and markers or {}
            drovr_status = drovr_ok and drovr.status() or ""
          end)
 
-         -- Claude can sit in any pane of the tab, not only the active one.
-         -- A marker outlives its session when claude dies without firing the clear hook,
-         -- and WEZTERM_PANE is only unique within one mux -- a standalone wezterm numbers
-         -- its panes from 0 again, so markers collide with unrelated panes here. Both
-         -- leave a shell wearing an alert; require the pane to still look like claude.
-         local function claude_alert(tab)
-           local markers = claude_markers
-           if #markers == 0 then return nil end
-
-           local panes = tab.panes
-           if type(panes) ~= "table" or #panes == 0 then panes = { tab.active_pane } end
-           for _, pane in ipairs(panes) do
-             local id = pane and pane.pane_id
-             if id and split_status_glyph(pane.title or "") then
-               for _, marker in ipairs(markers) do
-                 local pane_id, status = marker:match("([^/]+)%.([^.]+)$")
-                 if tonumber(pane_id) == id and CLAUDE_ALERTS[status] then
-                   return CLAUDE_ALERTS[status]
-                 end
-               end
-             end
-           end
-         end
-
-         local function tab_body(tab, pane, alert)
+         local function tab_body(tab, pane)
            -- An explicit title (Ctrl+Shift+E, `wezterm cli set-tab-title`) always wins
            if tab.tab_title and #tab.tab_title > 0 then
              return shorten(tab.tab_title, TAB_TITLE_WIDTH)
@@ -267,8 +225,7 @@
            local title = pane.title or ""
            local glyph, rest = split_status_glyph(title)
            if glyph then
-             -- an alert icon replaces Claude's own status glyph
-             return (alert and "" or glyph .. " ") .. shorten(rest, TAB_TITLE_WIDTH)
+             return glyph .. " " .. shorten(rest, TAB_TITLE_WIDTH)
            end
 
            -- The real process name, when it is more specific than the OSC title
@@ -287,51 +244,18 @@
 
          local function tab_title(tab)
            local pane = tab.active_pane or {}
-           local alert = claude_alert(tab)
-           local text = tab_body(tab, pane, alert)
-           if alert then text = (alert.icon or "!") .. " " .. text end
-           return text .. " "
+           return tab_body(tab, pane) .. " "
          end
 
          -- Tabline plugin
          local tabline = wezterm.plugin.require("https://github.com/michaelbrusegard/tabline.wez")
-
-         -- Paint the entire tab chip (body *and* its powerline separators) while a
-         -- Claude session in it is waiting on you. tabline re-reads its theme for every
-         -- tab it formats, so retinting theme.tab right before it draws colours exactly
-         -- one tab. We must drive that draw ourselves: wezterm gives format-tab-title to
-         -- the FIRST handler registered and takes whatever it returns as final -- nil
-         -- included -- so a pre-hook that returns nil doesn't fall through to tabline,
-         -- it silently drops you back to wezterm's built-in "index: title" tab bar.
-         --
-         -- Only the inactive slots are ever retinted: colour answers two questions here
-         -- and they must not compete. Fill = where am I (mauve pill), fill = what wants
-         -- me (red/peach) only on tabs I'm not on, icon = which prompt is pending.
-         local tab_theme_default
-         wezterm.on("format-tab-title", function(tab, _, _, _, hover, _)
-           local ok, theme = pcall(tabline.get_theme)
-           if ok and type(theme) == "table" and theme.tab then
-             tab_theme_default = tab_theme_default or {
-               inactive = { fg = theme.tab.inactive.fg, bg = theme.tab.inactive.bg },
-               inactive_hover = { fg = theme.tab.inactive_hover.fg, bg = theme.tab.inactive_hover.bg },
-             }
-             local alert = not tab.is_active and claude_alert(tab) or nil
-             for _, key in ipairs({ "inactive", "inactive_hover" }) do
-               local colors = alert or tab_theme_default[key]
-               theme.tab[key].fg = colors.fg
-               theme.tab[key].bg = colors.bg
-             end
-           end
-           return require("tabline.tabs").set_title(tab, hover)
-         end)
 
          tabline.setup({
            options = {
              theme = config.color_scheme or "default",
              -- Stock Catppuccin puts the *brighter* text on inactive tabs and separates
              -- them from the active one by ~9 L* -- unreadable across a wide bar. Flip
-             -- it, and keep the active tab *achromatic*: the alert fills are hues, so a
-             -- fourth hue reads as one of the set -- the brightest neutral chip does not.
+             -- it, with the active tab as the brightest neutral chip.
              -- (Bold can't carry this: config.font is Light, so wezterm's relative bold
              -- resolves to Medium, and forcing Bold needs font_rules = all terminal text.)
              theme_overrides = {
