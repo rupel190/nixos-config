@@ -3,6 +3,7 @@
   imports = [
     ./hardware-configuration.nix
     ./media.nix
+    ./immich.nix
     ./health.nix
     ./service-backup.nix
     ./ollama-pi.nix
