@@ -71,7 +71,7 @@ export default class SpaceBar extends View {
       ? Math.max(10, (root.traffic_lights[0] + 64) / settings().zoom - (sidebar?.hidden ? 0 : sidebar?.size?.px ?? 0))
       : 10;
     const panel = find(root, "panel"), body = find(root, "panel-body");
-    const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), "inbox"];
+    const enabled = shared("workspace.panels") ?? ["files", "changes"];
     this.syncPanel(space, panel, body, enabled);
     const panelButton = (id, label, icon) => {
       const on = panel && !panel.hidden && body?.active === id;
@@ -88,7 +88,6 @@ export default class SpaceBar extends View {
       .child(button("space-new", "+", () => run("space.new")))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/traveler-tabs/art/files.png")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/traveler-tabs/art/changes.png")))
-      .child(panelButton("inbox", "Inbox", "mods/traveler-tabs/art/inbox.png"))
       .when(w?.buttons, el => el.child(button("minimize", w.platform === "windows" ? svg("mods/traveler-tabs/win-min.svg").size(16) : "−", () => run("window.minimize")))
         .child(button("maximize", w.platform === "windows" ? svg(`mods/traveler-tabs/${w.maximized ? "win-restore" : "win-max"}.svg`).size(16) : "□", () => run("window.maximize")))
         .child(button("close-window", w.platform === "windows" ? svg("mods/traveler-tabs/win-close.svg").size(16) : svg("mods/pane/close.svg").size(13), () => run("window.close"))));

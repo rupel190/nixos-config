@@ -3,7 +3,9 @@
 Claude Code pipes the session JSON on stdin; rate_limits.{five_hour,seven_day}
 carry server-side percentages and are absent until the first API response.
 """
+import datetime
 import json
+import os
 import pathlib
 import sys
 import time
@@ -65,16 +67,56 @@ def branch(cwd):
     return None
 
 
-def capture(limits):
-    """Mirror claude-monitor's capture file so its views report official, not estimated."""
-    path = pathlib.Path.home() / ".claude-monitor" / "statusline" / "latest.json"
+def save(path, payload):
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(".tmp")
-        tmp.write_text(json.dumps({"captured_at_epoch": int(time.time()), "rate_limits": limits}))
+        tmp.write_text(json.dumps(payload))
         tmp.replace(path)
     except OSError:
         pass
+
+
+def capture(limits):
+    """Mirror claude-monitor's capture file so its views report official, not estimated."""
+    path = pathlib.Path.home() / ".claude-monitor" / "statusline" / "latest.json"
+    save(path, {"captured_at_epoch": int(time.time()), "rate_limits": limits})
+
+
+def last_reply(transcript, tail=2**20):
+    """Epoch of the main thread's last reply: the prompt cache's hour counts from about there."""
+    try:
+        with open(transcript, "rb") as f:
+            size = f.seek(0, os.SEEK_END)
+            f.seek(max(0, size - tail))
+            lines = f.read().splitlines()
+        for line in reversed(lines):
+            if b'"type":"assistant"' not in line:
+                continue
+            entry = json.loads(line)
+            if entry.get("type") != "assistant" or entry.get("isSidechain"):
+                continue
+            if entry["message"].get("model") != "<synthetic>":
+                return int(datetime.datetime.fromisoformat(entry["timestamp"]).timestamp())
+    except (OSError, TypeError, ValueError, KeyError):
+        return None
+    # pictures Claude just read can fill the tail
+    return last_reply(transcript, 2**24) if tail < min(size, 2**24) else None
+
+
+def herdr_card(data, context, replied):
+    """HP (cache warmth) and MP (context left) for this terminal's card in herdr-traveler-side.nix."""
+    terminal = os.environ.get("HC_TERMINAL_ID", "")
+    if not terminal.isalnum():
+        return
+    path = pathlib.Path.home() / ".config" / "herdr-app" / "data" / "traveler" / "sessions" / f"{terminal}.json"
+    save(path, {
+        "updatedAt": int(time.time()),
+        "repliedAt": replied,
+        "contextRemainingPct": None if context is None else round(100 - max(0, min(context, 100))),
+        "model": (data.get("model") or {}).get("display_name"),
+        "effort": (data.get("effort") or {}).get("level"),
+    })
 
 
 def main():
@@ -88,7 +130,9 @@ def main():
     segments = [f"{DIM}{(data.get('model') or {}).get('display_name', '?')}{OFF}"]
 
     used = (data.get("context_window") or {}).get("used_percentage")
-    if isinstance(used, (int, float)) and not isinstance(used, bool):
+    if not isinstance(used, (int, float)) or isinstance(used, bool):
+        used = None
+    if used is not None:
         segments.append(f"{DIM}ctx{OFF} {bar(used)} {hue(used)}{used:.0f}%{OFF}")
 
     limits = data.get("rate_limits") or {}
@@ -102,8 +146,13 @@ def main():
         if isinstance(reset, (int, float)) and not isinstance(reset, bool) and reset > time.time():
             seg += f"{DIM} ↻{until(reset)}{OFF}"
         segments.append(seg)
-    if limits:
+    replied = last_reply(data.get("transcript_path"))
+    if replied is None and used:
+        replied = 0  # a fork: the parent's context, no reply of its own yet
+    # an idle session keeps redrawing (refreshInterval) with the limits of its last reply
+    if limits and time.time() - (replied or 0) < 120:
         capture(limits)
+    herdr_card(data, used, replied)
 
     name = branch(data.get("cwd") or ".")
     if name:

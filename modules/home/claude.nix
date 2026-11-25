@@ -465,6 +465,7 @@ in
       type = "command";
       command = "claude-statusline";
       padding = 0;
+      refreshInterval = 60; # idle sessions' cards in herdr stay current too
     })}
     hk=${lib.escapeShellArg (builtins.toJSON config.my.claude.hooks)}
     mkdir -p "$HOME/.claude"
