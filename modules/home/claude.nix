@@ -397,7 +397,8 @@ in
     claude-notepad
     pkgs.claude-monitor
     claude-statusline
-    pkgs.sox # /voice audio recording (provides `rec`)
+    pkgs.alsa-utils # /voice records with arecord; sox's `rec` arrives ~2 s late and loses the end
+    pkgs.sox # /voice fallback (provides `rec`)
     claude-desktop-with-fhs
   ];
 
