@@ -56,9 +56,8 @@ target=$(pw-dump | jq -r \
       ([ $present[] | select(.label | ascii_downcase == ($want | ascii_downcase)) ] | first)
       // "unknown"
     else
-      # index() is null when the current default is not in the ring (the Volt,
-      # say); starting at 0 then means one press lands back on the ring instead
-      # of doing nothing.
+      # index() is null when the current default is not in the ring; starting
+      # at 0 then means one press lands back on the ring instead of doing nothing.
       ( ($present | map(.id | tostring) | index($current)) as $i
         | $present[ if $i == null then 0 else (($i + 1) % ($present | length)) end ] )
     end
