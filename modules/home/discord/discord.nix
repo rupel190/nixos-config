@@ -1,4 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
+let
+  # 1.6.9+, see the nixpkgs-vesktop input in flake.nix
+  vesktop = inputs.nixpkgs-vesktop.legacyPackages.${pkgs.stdenv.hostPlatform.system}.vesktop;
+in
 {
   # Vesktop: Discord web + Vencord, own config dir. Settings deliberately left mutable —
   # declaring them writes /nix/store symlinks and the in-app toggles stop saving.
@@ -7,7 +11,7 @@
   programs.vesktop = {
     enable = true;
     # Share picker starts on "Entire System" audio; drop once Vencord/Vesktop#1310 is in.
-    package = pkgs.vesktop.overrideAttrs (o: {
+    package = vesktop.overrideAttrs (o: {
       postPatch = (o.postPatch or "") + ''
         substituteInPlace src/renderer/components/ScreenSharePicker.tsx \
           --replace-fail 'includeSources: "None"' 'includeSources: "Entire System"'

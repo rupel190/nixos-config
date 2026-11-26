@@ -1378,6 +1378,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-vesktop": {
+      "locked": {
+        "lastModified": 1795234589,
+        "narHash": "sha256-f/VVvxf5RsQgWVhUtefoca5ktVg0DA2bnkMOcmSnozo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2786a2a72088ecf32aea5b3ec52099e6a7cff78f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "2786a2a72088ecf32aea5b3ec52099e6a7cff78f",
+        "type": "github"
+      }
+    },
     "nixpkgs_10": {
       "locked": {
         "lastModified": 1791956154,
@@ -1643,6 +1659,7 @@
         "nixpkgs-ollama": "nixpkgs-ollama",
         "nixpkgs-opencode": "nixpkgs-opencode",
         "nixpkgs-paperless": "nixpkgs-paperless",
+        "nixpkgs-vesktop": "nixpkgs-vesktop",
         "plasticityAppImage": "plasticityAppImage",
         "ragenix": "ragenix",
         "singify": "singify",

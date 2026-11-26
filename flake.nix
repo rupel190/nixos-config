@@ -8,6 +8,9 @@
     # opencode 2.1+ reports its status to Herdr itself. This commit fixes the hash that breaks 2.2.5
     # in the channels; move back to nixpkgs once it has reached them.
     nixpkgs-opencode.url = "github:nixos/nixpkgs/c399e1b7fb90789e3e032784ef8ad98ba9907169";
+    # Vesktop 1.6.9+: Vencord updates itself at runtime and removed HeadingTertiary (2026-11-21), which
+    # crashes 1.6.7's screen-share dialog. Same revision as nixpkgs-paperless; drop once nixpkgs has 1.6.9.
+    nixpkgs-vesktop.url = "github:NixOS/nixpkgs/2786a2a72088ecf32aea5b3ec52099e6a7cff78f";
 
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
