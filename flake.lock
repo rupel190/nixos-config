@@ -219,11 +219,11 @@
     "claude-skill-beamng-vehicle-values": {
       "flake": false,
       "locked": {
-        "lastModified": 1779358909,
-        "narHash": "sha256-BNZbtyABx0yhZF7Jtylv7tmo4NrOpFpUfbNcdA+Xl+w=",
+        "lastModified": 1795814827,
+        "narHash": "sha256-YYIMFwNMiX7Ax1SoA1a4R6xpFIQNIF0FEjuy000d3SI=",
         "ref": "refs/heads/main",
-        "rev": "eb213225fd2dc7b208370b2268da36ad93aaccb4",
-        "revCount": 2,
+        "rev": "09f9fdc77b33428a642201e92bd27ff6a3f4c83a",
+        "revCount": 5,
         "type": "git",
         "url": "ssh://git@github.com/rupel190/beamng-vehicle-values"
       },
