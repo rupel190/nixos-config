@@ -26,6 +26,8 @@ in
       delfin # jellyfin client: native gtk, plays through mpv
       anki # flashcards; plain, not withAddons, which locks the in-app add-on manager
       igir # rom sorter: verifies against no-intro/redump dats, writes romm's per-platform folders
+      dolphin-emu # gamecube/wii: reads romm's ngc and wii folders in place, saves stay in ~/.local/share/dolphin-emu
+      eden # switch: reads romm's switch folder; needs prod.keys and firmware dumped from your own console
       digikam # photo organizer
       bitwig-studio # audio daw
       # transcribe music by ear (unfree); upstream deletes each superseded tarball, so nixpkgs' 9.70.1 404s
