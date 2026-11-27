@@ -75,6 +75,8 @@ in
     port = 8091; # API behind nginx; module default 8080 is a common dev-server port
     dataDir = roms;
     nginx.virtualHost = "amanita";
+    # reset/invite links; the module builds http://amanita from the vhost name and drops the :8070 listen port
+    extraEnvironment.ROMM_BASE_URL = "http://amanita:8070";
   };
   services.nginx.virtualHosts.amanita.listen = [
     {
